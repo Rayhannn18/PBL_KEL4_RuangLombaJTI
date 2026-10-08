@@ -5,7 +5,7 @@
     'placeholder' => '',
     'autocomplete' => null,
     'aside' => null,
-    'check' => null, // nama aturan validasi centang hijau (lihat resources/js/auth.js)
+    'check' => null,
 ])
 @php
     $isPassword = $type === 'password';

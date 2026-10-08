@@ -17,7 +17,7 @@ class RegisterRequest extends FormRequest
     public function rules(): array
     {
         $role = UserRole::tryFrom((string) $this->input('role')) ?? UserRole::Mahasiswa;
-        $domain = $role->emailDomain();
+        $domain = $role->requiredEmailDomain();
 
         return [
             'role' => ['required', Rule::enum(UserRole::class)],
@@ -32,10 +32,10 @@ class RegisterRequest extends FormRequest
                 'email:rfc',
                 'max:255',
                 'unique:users,email',
-                // Cocokkan persis domain; "@polinema.ac.id" tidak boleh lolos sebagai "@student.polinema.ac.id".
-                fn (string $attribute, mixed $value, \Closure $fail) => str_ends_with((string) $value, '@'.$domain)
+                // Hanya dosen yang wajib memakai email kampus; mahasiswa bebas.
+                fn (string $attribute, mixed $value, \Closure $fail) => $domain === null || str_ends_with((string) $value, '@'.$domain)
                     ? null
-                    : $fail("Gunakan email kampus dengan domain @{$domain}."),
+                    : $fail("Dosen wajib menggunakan email kampus berdomain @{$domain}."),
             ],
             'password' => ['required', 'confirmed', Password::min(8)],
             'terms' => ['accepted'],
