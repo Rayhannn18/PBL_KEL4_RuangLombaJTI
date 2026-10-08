@@ -90,15 +90,24 @@ class AuthController extends Controller
      */
     public function register(Request $request)
     {
+        // [DEFECT-01 / BUG REPORT PBL]: Bug Validasi Form Registrasi
+        // Aturan 'confirmed' sengaja dihilangkan dari validasi password.
+        // Akibatnya, password dan konfirmasi password yang berbeda tetap lolos validasi
+        // dan akun berhasil dibuat meski kedua field tidak cocok.
         $validated = $request->validate([
-            'nim' => 'required|string|max:20|unique:mahasiswa,nim',
-            'nama' => 'required|string|max:150',
+            'nim'          => 'required|string|max:20|unique:mahasiswa,nim',
+            'nama'         => 'required|string|max:150',
             'email_kampus' => 'required|email|max:150|unique:mahasiswa,email_kampus',
-            'prodi' => 'required|string|max:100',
-            'angkatan' => 'required|integer|min:2020|max:2027',
-            // [DEFECT-01 / BUG REPORT PBL]: Validasi 'confirmed' dihilangkan sengaja
-            // Menyebabkan password dan konfirmasi password yang tidak cocok tetap lolos validasi
-            'password' => 'required|string|min:6',
+            'prodi'        => 'required|string|max:100',
+            'angkatan'     => 'required|integer|min:2020|max:2027',
+            'password'     => 'required|string|min:6',
+        ], [], [
+            'nim'          => 'NIM',
+            'email_kampus' => 'Email',
+            'nama'         => 'Nama Lengkap',
+            'prodi'        => 'Program Studi',
+            'angkatan'     => 'Tahun Angkatan',
+            'password'     => 'Kata Sandi',
         ]);
 
         $mahasiswa = Mahasiswa::create([

@@ -179,6 +179,21 @@
             border-color: var(--primary-light);
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
         }
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #94A3B8;
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 4px;
+        }
+        .password-toggle:hover {
+            color: var(--primary);
+        }
 
         .btn-submit {
             width: 100%;
@@ -304,13 +319,13 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Email Kampus Polinema *</label>
+                    <label class="form-label">Email *</label>
                     <div class="input-group">
                         <i class="bi bi-envelope input-icon"></i>
                         <input type="email"
                                name="email_kampus"
                                class="form-control"
-                               placeholder="Contoh: sastra@student.polinema.ac.id"
+                               placeholder="Contoh: nama@email.com"
                                value="{{ old('email_kampus') }}"
                                required>
                     </div>
@@ -353,9 +368,13 @@
                             <i class="bi bi-key input-icon"></i>
                             <input type="password"
                                    name="password"
+                                   id="passwordInput"
                                    class="form-control"
                                    placeholder="Minimal 6 karakter"
                                    required>
+                            <button type="button" class="password-toggle" onclick="togglePassword('passwordInput', 'toggleIconPassword')">
+                                <i class="bi bi-eye" id="toggleIconPassword"></i>
+                            </button>
                         </div>
                     </div>
 
@@ -365,9 +384,13 @@
                             <i class="bi bi-shield-check input-icon"></i>
                             <input type="password"
                                    name="password_confirmation"
+                                   id="passwordConfirmInput"
                                    class="form-control"
                                    placeholder="Ulangi kata sandi"
                                    required>
+                            <button type="button" class="password-toggle" onclick="togglePassword('passwordConfirmInput', 'toggleIconConfirm')">
+                                <i class="bi bi-eye" id="toggleIconConfirm"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -383,6 +406,20 @@
             </div>
         </div>
     </div>
+
+    <script>
+        function togglePassword(inputId, iconId) {
+            const pwd = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            if (pwd.type === 'password') {
+                pwd.type = 'text';
+                icon.className = 'bi bi-eye-slash';
+            } else {
+                pwd.type = 'password';
+                icon.className = 'bi bi-eye';
+            }
+        }
+    </script>
 
 </body>
 </html>

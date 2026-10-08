@@ -127,37 +127,7 @@
             margin-top: 4px;
         }
 
-        /* Role Selector Tabs */
-        .role-tabs {
-            display: flex;
-            background: #F1F5F9;
-            padding: 4px;
-            border-radius: var(--radius-md);
-            gap: 4px;
-            margin-bottom: 22px;
-        }
-        .role-tab-btn {
-            flex: 1;
-            padding: 8px 10px;
-            font-size: 0.82rem;
-            font-weight: 700;
-            border: none;
-            background: transparent;
-            color: var(--text-muted);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            font-family: inherit;
-        }
-        .role-tab-btn.active {
-            background: #fff;
-            color: var(--primary);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
-        }
+
 
         /* Forms */
         .form-group {
@@ -260,50 +230,7 @@
             border: 1px solid #A7F3D0;
         }
 
-        /* Demo Login Section */
-        .demo-section {
-            margin-top: 24px;
-            padding-top: 20px;
-            border-top: 1px dashed var(--border);
-        }
-        .demo-title {
-            font-size: 0.78rem;
-            text-transform: uppercase;
-            font-weight: 700;
-            color: var(--text-muted);
-            letter-spacing: 0.5px;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .demo-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 8px;
-        }
-        .demo-btn {
-            background: #F8FAFC;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 8px 6px;
-            font-size: 0.76rem;
-            font-weight: 600;
-            color: var(--text-main);
-            text-align: center;
-            text-decoration: none;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            transition: all 0.2s;
-        }
-        .demo-btn:hover {
-            background: var(--primary-soft);
-            border-color: #BFDBFE;
-            color: var(--primary);
-            transform: translateY(-2px);
-        }
+
 
         /* Card footer */
         .auth-footer {
@@ -357,33 +284,19 @@
                 </div>
             @endif
 
-            <!-- Role Selector Tabs -->
-            <div class="role-tabs">
-                <button type="button" class="role-tab-btn active" onclick="selectRole('mahasiswa', this)">
-                    <i class="bi bi-mortarboard"></i> Mahasiswa
-                </button>
-                <button type="button" class="role-tab-btn" onclick="selectRole('dosen', this)">
-                    <i class="bi bi-person-video3"></i> Dosen
-                </button>
-                <button type="button" class="role-tab-btn" onclick="selectRole('admin', this)">
-                    <i class="bi bi-shield-lock"></i> Admin JTI
-                </button>
-            </div>
-
             <!-- Form Login -->
             <form action="{{ route('auth.login') }}" method="POST">
                 @csrf
-                <input type="hidden" name="role" id="roleInput" value="mahasiswa">
 
                 <div class="form-group">
-                    <label class="form-label" id="identifierLabel">NIM atau Email</label>
+                    <label class="form-label">Email</label>
                     <div class="input-group">
-                        <i class="bi bi-person input-icon" id="identifierIcon"></i>
-                        <input type="text"
+                        <i class="bi bi-envelope input-icon"></i>
+                        <input type="email"
                                name="identifier"
                                id="identifierInput"
                                class="form-control"
-                               placeholder="Contoh: 244107060116 atau email mahasiswa"
+                               placeholder="Contoh: nama@email.com"
                                value="{{ old('identifier') }}"
                                required
                                autofocus>
@@ -413,28 +326,6 @@
                 </button>
             </form>
 
-            <!-- Quick Demo 1-Click Login (Sidang & Evaluasi PBL) -->
-            <div class="demo-section">
-                <div class="demo-title">
-                    <i class="bi bi-lightning-charge-fill" style="color: var(--accent);"></i>
-                    Quick Login Demo (1-Klik untuk Sidang PBL)
-                </div>
-                <div class="demo-grid">
-                    <a href="{{ route('auth.quick', 'mahasiswa') }}" class="demo-btn">
-                        <i class="bi bi-mortarboard-fill" style="color: #2563EB; font-size: 1.1rem;"></i>
-                        <span>Mahasiswa</span>
-                    </a>
-                    <a href="{{ route('auth.quick', 'dosen') }}" class="demo-btn">
-                        <i class="bi bi-person-badge-fill" style="color: #0D9488; font-size: 1.1rem;"></i>
-                        <span>Dosen</span>
-                    </a>
-                    <a href="{{ route('auth.quick', 'admin') }}" class="demo-btn">
-                        <i class="bi bi-shield-check" style="color: #DC2626; font-size: 1.1rem;"></i>
-                        <span>Admin</span>
-                    </a>
-                </div>
-            </div>
-
             <!-- Footer Pendaftaran -->
             <div class="auth-footer">
                 Belum memiliki akun mahasiswa? <a href="{{ route('register') }}">Daftar di sini</a>
@@ -443,36 +334,13 @@
     </div>
 
     <script>
-        function selectRole(role, btn) {
-            document.querySelectorAll('.role-tab-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            document.getElementById('roleInput').value = role;
-
-            const label = document.getElementById('identifierLabel');
-            const input = document.getElementById('identifierInput');
-            const icon = document.getElementById('identifierIcon');
-
-            if (role === 'mahasiswa') {
-                label.innerText = 'NIM atau Email';
-                input.placeholder = 'Contoh: 244107060116 atau email mahasiswa';
-                icon.className = 'bi bi-mortarboard input-icon';
-            } else if (role === 'dosen') {
-                label.innerText = 'NIDN atau Email';
-                input.placeholder = 'Contoh: 0012058501 atau email@dosen.com';
-                icon.className = 'bi bi-person-video3 input-icon';
-            } else if (role === 'admin') {
-                label.innerText = 'Email Resmi Admin Kemahasiswaan';
-                input.placeholder = 'Contoh: admin.jti@polinema.ac.id';
-                icon.className = 'bi bi-shield-lock input-icon';
-            }
-        }
-
         function togglePassword() {
             const pwd = document.getElementById('passwordInput');
             const icon = document.getElementById('toggleIcon');
             // [DEFECT-03 / BUG REPORT PBL]: Bug Front-End UI / State Interaction Defect
-            // State toggle macet: hanya mengubah tipe input ke 'text' dan ikon ke 'bi-eye-slash',
-            // namun tidak mengembalikan ke 'password' saat diklik ulang (password tetap terbuka).
+            // Tombol mata hanya bisa menampilkan password (one-way toggle).
+            // State tidak dikembalikan: tipe input diubah ke 'text' dan ikon ke 'bi-eye-slash',
+            // namun tidak ada kondisi else sehingga saat diklik ulang password tetap terbuka.
             pwd.type = 'text';
             icon.className = 'bi bi-eye-slash';
         }

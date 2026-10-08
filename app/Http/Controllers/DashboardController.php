@@ -24,10 +24,12 @@ class DashboardController extends Controller
         $tingkatFilter = $request->query('tingkat', 'semua');
 
         // [DEFECT-02 / BUG REPORT PBL]: Bug Logika Bisnis & Filter Data
-        // Variabel $tahunFilter diterima dari request, tetapi sengaja tidak di-chain ke query Eloquent/DB (e.g. whereYear)
-        // Akibatnya, saat user memilih 'Tahun 2024' atau 'Tahun 2025', angka KPI & statistik tetap menampilkan agregat seluruh data.
+        // Variabel $tahunFilter diterima dari request QUERY STRING, namun sengaja tidak di-chain
+        // ke query Eloquent/DB (tidak ada ->whereYear('created_at', $tahunFilter) atau sejenisnya).
+        // Akibatnya, saat user memilih 'Tahun 2024' atau 'Tahun 2025', angka KPI (Total Lomba,
+        // Lomba Aktif, Total Tim, Total Prestasi) tetap menampilkan agregat seluruh data tanpa filter.
 
-        // 1. KPI Cards Metrics
+        // 1. KPI Cards Metrics (filter tahun $tahunFilter TIDAK diterapkan - intentional bug)
         $totalLomba = Lomba::terverifikasi()->count();
         $lombaAktif = Lomba::terverifikasi()->where('tenggat', '>=', Carbon::today())->count();
         $totalTim = Tim::where('status_tim', 'disetujui')->count();
