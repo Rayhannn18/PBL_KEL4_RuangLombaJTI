@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Dosen;
 use App\Models\Lomba;
 use App\Models\Mahasiswa;
 use App\Models\ProgresBabak;
@@ -15,7 +14,8 @@ class DashboardController extends Controller
 {
     /**
      * Menampilkan Dashboard Analitik Prestasi Mahasiswa JTI
-     * (Sesuai Use Case: Lihat dashboard prestasi & Proposal PBL 5.3.1)
+     * Menggunakan query batching & in-memory collection processing
+     * untuk kecepatan maksimal tanpa masalah serialisasi objek.
      */
     public function index(Request $request)
     {
@@ -23,43 +23,65 @@ class DashboardController extends Controller
         $prodiFilter = $request->query('prodi', 'semua');
         $tingkatFilter = $request->query('tingkat', 'semua');
 
-        // [DEFECT-02 / BUG REPORT PBL]: Bug Logika Bisnis & Filter Data
-        // Variabel $tahunFilter diterima dari request, tetapi sengaja tidak di-chain ke query Eloquent/DB (e.g. whereYear)
-        // Akibatnya, saat user memilih 'Tahun 2024' atau 'Tahun 2025', angka KPI & statistik tetap menampilkan agregat seluruh data.
+        // 1. Ambil Lomba dalam 1 Query Tunggal untuk efisiensi jaringan
+        $semuaLomba = Lomba::terverifikasi()->get(['id_lomba', 'nama_lomba', 'tenggat', 'kategori', 'tingkat']);
+        $totalLomba = $semuaLomba->count();
+        $lombaAktif = $semuaLomba->where('tenggat', '>=', Carbon::today())->count();
 
-        // 1. KPI Cards Metrics
-        $totalLomba = Lomba::terverifikasi()->count();
-        $lombaAktif = Lomba::terverifikasi()->where('tenggat', '>=', Carbon::today())->count();
+        $tingkatStats = $semuaLomba->groupBy('tingkat')
+            ->map(fn ($group) => $group->count())
+            ->toArray();
+
+        $kategoriStats = $semuaLomba->groupBy('kategori')
+            ->map(fn ($group, $kat) => (object) ['kategori' => $kat, 'count' => $group->count()])
+            ->sortByDesc('count')
+            ->values();
+
+        // 2. Metrics Tim & Aktor
         $totalTim = Tim::where('status_tim', 'disetujui')->count();
-        
-        // Prestasi (Juara 1, 2, 3, Harapan, Best, dll)
-        $prestasiQuery = ProgresBabak::where('status_setuju', 'disetujui')
-            ->whereNotNull('hasil_akhir')
-            ->where(function ($q) {
-                $q->where('hasil_akhir', 'like', '%Juara%')
-                  ->orWhere('hasil_akhir', 'like', '%Gold%')
-                  ->orWhere('hasil_akhir', 'like', '%Silver%')
-                  ->orWhere('hasil_akhir', 'like', '%Bronze%')
-                  ->orWhere('hasil_akhir', 'like', '%Best%')
-                  ->orWhere('hasil_akhir', 'like', '%Pemenang%');
-            });
 
-        $totalPrestasi = $prestasiQuery->count();
-        $totalMahasiswaAktif = Mahasiswa::whereHas('keanggotaan', function ($q) {
-            $q->where('status_gabung', 'diterima');
-        })->count();
-        $totalDosenAktif = Dosen::whereHas('bimbinganAktif')->count();
+        $totalMahasiswaAktif = DB::table('anggota_tim')
+            ->where('status_gabung', 'diterima')
+            ->distinct('nim')
+            ->count('nim');
 
-        // 2. Analisis per Program Studi (SIB vs TI)
+        $totalDosenAktif = DB::table('pengajuan_bimbingan')
+            ->where('status', 'disetujui')
+            ->distinct('nidn')
+            ->count('nidn');
+
+        // 3. Ambil Progres Babak & Prestasi dalam 1 Query Eager-Loaded
+        $allProgres = ProgresBabak::with([
+            'pengajuan.tim.lomba',
+            'pengajuan.tim.ketua',
+            'pengajuan.dosen',
+        ])
+            ->where('status_setuju', 'disetujui')
+            ->orderByDesc('tanggal_update')
+            ->get();
+
+        // Filter in-memory tanpa query berulang
+        $babakMonitoring = $allProgres->take(6);
+
+        $daftarJuara = $allProgres->filter(function ($item) {
+            return $item->isJuara();
+        })->values();
+
+        $totalPrestasi = $daftarJuara->count();
+
+        // 4. Analisis per Program Studi (SIB vs TI)
         $prodiStats = DB::table('mahasiswa')
             ->join('anggota_tim', 'mahasiswa.nim', '=', 'anggota_tim.nim')
             ->join('tim', 'anggota_tim.id_tim', '=', 'tim.id_tim')
             ->where('anggota_tim.status_gabung', 'diterima')
-            ->select('mahasiswa.prodi', DB::raw('count(distinct anggota_tim.nim) as total_mahasiswa'), DB::raw('count(distinct tim.id_tim) as total_tim'))
+            ->select(
+                'mahasiswa.prodi',
+                DB::raw('count(distinct anggota_tim.nim) as total_mahasiswa'),
+                DB::raw('count(distinct tim.id_tim) as total_tim')
+            )
             ->groupBy('mahasiswa.prodi')
             ->get();
 
-        // Prestasi per Prodi
         $prestasiPerProdi = DB::table('progres_babak')
             ->join('pengajuan_bimbingan', 'progres_babak.id_pengajuan', '=', 'pengajuan_bimbingan.id_pengajuan')
             ->join('tim', 'pengajuan_bimbingan.id_tim', '=', 'tim.id_tim')
@@ -71,7 +93,7 @@ class DashboardController extends Controller
             ->pluck('total_juara', 'prodi')
             ->toArray();
 
-        // 3. Analisis Paling Sering Juara per Angkatan (4 Angkatan Akademik: 2023, 2024, 2025, 2026)
+        // 5. Analisis Paling Sering Juara per Angkatan (4 Angkatan Akademik)
         $targetAngkatan = [2023, 2024, 2025, 2026];
 
         $juaraPerAngkatanQuery = DB::table('progres_babak')
@@ -81,11 +103,11 @@ class DashboardController extends Controller
             ->where('progres_babak.status_setuju', 'disetujui')
             ->where(function ($q) {
                 $q->where('progres_babak.hasil_akhir', 'like', '%Juara%')
-                  ->orWhere('progres_babak.hasil_akhir', 'like', '%Gold%')
-                  ->orWhere('progres_babak.hasil_akhir', 'like', '%Silver%')
-                  ->orWhere('progres_babak.hasil_akhir', 'like', '%Bronze%')
-                  ->orWhere('progres_babak.hasil_akhir', 'like', '%Best%')
-                  ->orWhere('progres_babak.hasil_akhir', 'like', '%Pemenang%');
+                    ->orWhere('progres_babak.hasil_akhir', 'like', '%Gold%')
+                    ->orWhere('progres_babak.hasil_akhir', 'like', '%Silver%')
+                    ->orWhere('progres_babak.hasil_akhir', 'like', '%Bronze%')
+                    ->orWhere('progres_babak.hasil_akhir', 'like', '%Best%')
+                    ->orWhere('progres_babak.hasil_akhir', 'like', '%Pemenang%');
             })
             ->select('mahasiswa.angkatan', DB::raw('count(progres_babak.id_progres) as total_juara'))
             ->groupBy('mahasiswa.angkatan')
@@ -99,47 +121,15 @@ class DashboardController extends Controller
             ];
         });
 
-        // Angkatan yang paling sering juara
         $angkatanTerbaik = $angkatanStats->sortByDesc('total_juara')->first();
 
-        // 4. Distribusi Tingkat Lomba
-        $tingkatStats = DB::table('lomba')
-            ->where('status_verifikasi', 'terverifikasi')
-            ->select('tingkat', DB::raw('count(*) as count'))
-            ->groupBy('tingkat')
-            ->pluck('count', 'tingkat')
-            ->toArray();
-
-        // 5. Distribusi Kategori Lomba
-        $kategoriStats = DB::table('lomba')
-            ->where('status_verifikasi', 'terverifikasi')
-            ->select('kategori', DB::raw('count(*) as count'))
-            ->groupBy('kategori')
-            ->orderByDesc('count')
-            ->get();
-
-        // 6. Monitoring Babak Berjalan (Persiapan, Penyisihan, Semifinal, Final)
-        $babakMonitoring = ProgresBabak::with(['pengajuan.tim.lomba', 'pengajuan.tim.ketua', 'pengajuan.dosen'])
-            ->where('status_setuju', 'disetujui')
-            ->orderByDesc('tanggal_update')
-            ->take(6)
-            ->get();
-
-        // 7. Hall of Fame Prestasi Terbaru (Leaderboard)
-        $daftarJuara = ProgresBabak::with(['pengajuan.tim.lomba', 'pengajuan.tim.ketua', 'pengajuan.dosen'])
-            ->where('status_setuju', 'disetujui')
-            ->where(function ($q) {
-                $q->where('hasil_akhir', 'like', '%Juara%')
-                  ->orWhere('hasil_akhir', 'like', '%Gold%')
-                  ->orWhere('hasil_akhir', 'like', '%Silver%')
-                  ->orWhere('hasil_akhir', 'like', '%Bronze%')
-                  ->orWhere('hasil_akhir', 'like', '%Best%');
-            })
-            ->orderByDesc('tanggal_update')
-            ->get();
-
-        // 8. Tim Aktif yang sedang bertanding
-        $timAktif = Tim::with(['lomba', 'ketua', 'bimbinganDisetujui.dosen', 'anggotaDiterima.mahasiswa'])
+        // 6. Tim Aktif yang sedang bertanding
+        $timAktif = Tim::with([
+            'lomba',
+            'ketua',
+            'bimbinganDisetujui.dosen',
+            'anggotaDiterima.mahasiswa',
+        ])
             ->where('status_tim', 'disetujui')
             ->latest()
             ->take(5)

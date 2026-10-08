@@ -91,7 +91,7 @@
             left: 0;
             right: 0;
             height: 6px;
-            background: linear-gradient(90deg, #10B981 0%, #3B82F6 50%, #1E40AF 100%);
+            background: linear-gradient(90deg, #1E40AF 0%, #3B82F6 100%);
         }
 
         .brand-header {
@@ -105,11 +105,11 @@
             width: 58px;
             height: 58px;
             border-radius: var(--radius-md);
-            background: linear-gradient(135deg, #10B981 0%, #3B82F6 100%);
+            background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%);
             color: #fff;
             font-size: 1.7rem;
             margin-bottom: 12px;
-            box-shadow: 0 8px 16px rgba(16, 185, 129, 0.25);
+            box-shadow: 0 8px 16px rgba(30, 64, 175, 0.25);
         }
         .brand-title {
             font-size: 1.45rem;
@@ -183,14 +183,14 @@
         .btn-submit {
             width: 100%;
             padding: 12px;
-            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+            background: linear-gradient(135deg, #1E40AF 0%, #2563EB 100%);
             color: #fff;
             border: none;
             border-radius: 8px;
             font-weight: 700;
             font-size: 0.95rem;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
             transition: all 0.2s;
             font-family: inherit;
             display: flex;
@@ -200,9 +200,9 @@
             margin-top: 10px;
         }
         .btn-submit:hover {
-            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            background: linear-gradient(135deg, #1D4ED8 0%, #1E40AF 100%);
             transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
         }
 
         /* Alert */
@@ -304,13 +304,13 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Email Kampus Polinema *</label>
+                    <label class="form-label">Email *</label>
                     <div class="input-group">
                         <i class="bi bi-envelope input-icon"></i>
                         <input type="email"
                                name="email_kampus"
                                class="form-control"
-                               placeholder="Contoh: sastra@student.polinema.ac.id"
+                               placeholder="Contoh: sastrazaky23@gmail.com"
                                value="{{ old('email_kampus') }}"
                                required>
                     </div>
