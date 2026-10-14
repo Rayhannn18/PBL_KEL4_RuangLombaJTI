@@ -11,6 +11,7 @@ class Lomba extends Model
     use HasFactory;
 
     protected $table = 'lomba';
+
     protected $primaryKey = 'id_lomba';
 
     protected $fillable = [
@@ -67,22 +68,22 @@ class Lomba extends Model
         // Keyword Search
         $query->when($filters['search'] ?? null, function ($q, $search) {
             $q->where(function ($sub) use ($search) {
-                $sub->where('nama_lomba', 'like', '%' . $search . '%')
-                    ->orWhere('penyelenggara', 'like', '%' . $search . '%')
-                    ->orWhere('deskripsi', 'like', '%' . $search . '%');
+                $sub->where('nama_lomba', 'like', '%'.$search.'%')
+                    ->orWhere('penyelenggara', 'like', '%'.$search.'%')
+                    ->orWhere('deskripsi', 'like', '%'.$search.'%');
             });
         });
 
         // Kategori Filter
         $query->when($filters['kategori'] ?? null, function ($q, $kategori) {
-            if ($kategori !== 'Semua' && !empty($kategori)) {
+            if ($kategori !== 'Semua' && ! empty($kategori)) {
                 $q->where('kategori', $kategori);
             }
         });
 
         // Tingkat Filter
         $query->when($filters['tingkat'] ?? null, function ($q, $tingkat) {
-            if ($tingkat !== 'Semua' && !empty($tingkat)) {
+            if ($tingkat !== 'Semua' && ! empty($tingkat)) {
                 $q->where('tingkat', $tingkat);
             }
         });
@@ -117,6 +118,7 @@ class Lomba extends Model
             'status_verifikasi' => $status,
             'id_admin' => $adminId,
         ]);
+
         return $this;
     }
 
@@ -128,7 +130,10 @@ class Lomba extends Model
 
     public function getSisaHariAttribute(): int
     {
-        if (!$this->tenggat) return 0;
+        if (! $this->tenggat) {
+            return 0;
+        }
+
         return max(0, (int) Carbon::today()->diffInDays($this->tenggat, false));
     }
 
@@ -137,6 +142,7 @@ class Lomba extends Model
         if ($this->biaya == 0) {
             return 'Gratis';
         }
-        return 'Rp ' . number_format($this->biaya, 0, ',', '.');
+
+        return 'Rp '.number_format($this->biaya, 0, ',', '.');
     }
 }

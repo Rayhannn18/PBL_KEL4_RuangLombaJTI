@@ -260,56 +260,13 @@
             border: 1px solid #A7F3D0;
         }
 
-        /* Demo Login Section */
-        .demo-section {
-            margin-top: 24px;
-            padding-top: 20px;
-            border-top: 1px dashed var(--border);
-        }
-        .demo-title {
-            font-size: 0.78rem;
-            text-transform: uppercase;
-            font-weight: 700;
-            color: var(--text-muted);
-            letter-spacing: 0.5px;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .demo-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 8px;
-        }
-        .demo-btn {
-            background: #F8FAFC;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 8px 6px;
-            font-size: 0.76rem;
-            font-weight: 600;
-            color: var(--text-main);
-            text-align: center;
-            text-decoration: none;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            transition: all 0.2s;
-        }
-        .demo-btn:hover {
-            background: var(--primary-soft);
-            border-color: #BFDBFE;
-            color: var(--primary);
-            transform: translateY(-2px);
-        }
-
         /* Card footer */
         .auth-footer {
-            margin-top: 22px;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
             text-align: center;
-            font-size: 0.85rem;
+            font-size: 0.86rem;
             color: var(--text-muted);
         }
         .auth-footer a {
@@ -376,14 +333,14 @@
                 <input type="hidden" name="role" id="roleInput" value="mahasiswa">
 
                 <div class="form-group">
-                    <label class="form-label" id="identifierLabel">NIM atau Email</label>
+                    <label class="form-label" id="identifierLabel">Email Mahasiswa atau NIM</label>
                     <div class="input-group">
                         <i class="bi bi-person input-icon" id="identifierIcon"></i>
                         <input type="text"
                                name="identifier"
                                id="identifierInput"
                                class="form-control"
-                               placeholder="Contoh: 244107060116 atau email mahasiswa"
+                               placeholder="Contoh: sastra22@gmail.com atau 244107060116"
                                value="{{ old('identifier') }}"
                                required
                                autofocus>
@@ -402,7 +359,7 @@
                                class="form-control"
                                placeholder="Masukkan kata sandi akun Anda"
                                required>
-                        <button type="button" class="password-toggle" onclick="togglePassword()">
+                        <button type="button" class="password-toggle" onclick="togglePassword()" title="Tampilkan/sembunyikan sandi">
                             <i class="bi bi-eye" id="toggleIcon"></i>
                         </button>
                     </div>
@@ -412,28 +369,6 @@
                     <i class="bi bi-box-arrow-in-right"></i> Masuk ke Sistem
                 </button>
             </form>
-
-            <!-- Quick Demo 1-Click Login (Sidang & Evaluasi PBL) -->
-            <div class="demo-section">
-                <div class="demo-title">
-                    <i class="bi bi-lightning-charge-fill" style="color: var(--accent);"></i>
-                    Quick Login Demo (1-Klik untuk Sidang PBL)
-                </div>
-                <div class="demo-grid">
-                    <a href="{{ route('auth.quick', 'mahasiswa') }}" class="demo-btn">
-                        <i class="bi bi-mortarboard-fill" style="color: #2563EB; font-size: 1.1rem;"></i>
-                        <span>Mahasiswa</span>
-                    </a>
-                    <a href="{{ route('auth.quick', 'dosen') }}" class="demo-btn">
-                        <i class="bi bi-person-badge-fill" style="color: #0D9488; font-size: 1.1rem;"></i>
-                        <span>Dosen</span>
-                    </a>
-                    <a href="{{ route('auth.quick', 'admin') }}" class="demo-btn">
-                        <i class="bi bi-shield-check" style="color: #DC2626; font-size: 1.1rem;"></i>
-                        <span>Admin</span>
-                    </a>
-                </div>
-            </div>
 
             <!-- Footer Pendaftaran -->
             <div class="auth-footer">
@@ -453,12 +388,12 @@
             const icon = document.getElementById('identifierIcon');
 
             if (role === 'mahasiswa') {
-                label.innerText = 'NIM atau Email';
-                input.placeholder = 'Contoh: 244107060116 atau email mahasiswa';
+                label.innerText = 'Email Mahasiswa atau NIM';
+                input.placeholder = 'Contoh: sastra22@gmail.com atau 244107060116';
                 icon.className = 'bi bi-mortarboard input-icon';
             } else if (role === 'dosen') {
-                label.innerText = 'NIDN atau Email';
-                input.placeholder = 'Contoh: 0012058501 atau email@dosen.com';
+                label.innerText = 'Email Dosen atau NIP';
+                input.placeholder = 'Contoh: vivin22@gmail.com atau 0012058501';
                 icon.className = 'bi bi-person-video3 input-icon';
             } else if (role === 'admin') {
                 label.innerText = 'Email Resmi Admin Kemahasiswaan';
@@ -470,11 +405,13 @@
         function togglePassword() {
             const pwd = document.getElementById('passwordInput');
             const icon = document.getElementById('toggleIcon');
-            // [DEFECT-03 / BUG REPORT PBL]: Bug Front-End UI / State Interaction Defect
-            // State toggle macet: hanya mengubah tipe input ke 'text' dan ikon ke 'bi-eye-slash',
-            // namun tidak mengembalikan ke 'password' saat diklik ulang (password tetap terbuka).
-            pwd.type = 'text';
-            icon.className = 'bi bi-eye-slash';
+            if (pwd.type === 'password') {
+                pwd.type = 'text';
+                icon.className = 'bi bi-eye-slash';
+            } else {
+                pwd.type = 'password';
+                icon.className = 'bi bi-eye';
+            }
         }
     </script>
 </body>

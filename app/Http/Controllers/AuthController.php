@@ -40,7 +40,7 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'role' => 'required|in:mahasiswa,dosen,admin',
+            'role' => 'nullable|string|in:mahasiswa,dosen,admin',
             'identifier' => 'required|string',
             'password' => 'required|string',
         ]);
@@ -50,39 +50,76 @@ class AuthController extends Controller
         $password = $request->password;
 
         $user = null;
+        $detectedRole = $role;
         $extraInfo = '';
 
-        if ($role === 'mahasiswa') {
-            $user = Mahasiswa::where('nim', $identifier)
-                ->orWhere('email_kampus', $identifier)
-                ->first();
-            $extraInfo = $user ? $user->prodi . ' (' . $user->angkatan . ')' : '';
+        // 1. Coba cari akun berdasarkan role yang dipilih
+        if ($role === 'admin') {
+            $user = Admin::where('email', $identifier)->first();
+            $extraInfo = 'Kemahasiswaan JTI';
         } elseif ($role === 'dosen') {
             $user = Dosen::where('nidn', $identifier)
                 ->orWhere('email_kampus', $identifier)
                 ->first();
             $extraInfo = $user ? $user->bidang_keahlian : '';
-        } elseif ($role === 'admin') {
-            $user = Admin::where('email', $identifier)->first();
-            $extraInfo = 'Kemahasiswaan JTI';
+        } elseif ($role === 'mahasiswa') {
+            $user = Mahasiswa::where('nim', $identifier)
+                ->orWhere('email_kampus', $identifier)
+                ->first();
+            $extraInfo = $user ? $user->prodi.' ('.$user->angkatan.')' : '';
+        }
+
+        // 2. Jika tidak ditemukan di role terpilih, cari secara otomatis ke seluruh aktor
+        // (Mencegah kegagalan jika pengguna mengetik email admin/dosen/mahasiswa tanpa berpindah tab)
+        if (! $user) {
+            $adminCheck = Admin::where('email', $identifier)->first();
+            if ($adminCheck) {
+                $user = $adminCheck;
+                $detectedRole = 'admin';
+                $extraInfo = 'Kemahasiswaan JTI';
+            }
+        }
+
+        if (! $user) {
+            $dosenCheck = Dosen::where('email_kampus', $identifier)
+                ->orWhere('nidn', $identifier)
+                ->first();
+            if ($dosenCheck) {
+                $user = $dosenCheck;
+                $detectedRole = 'dosen';
+                $extraInfo = $dosenCheck->bidang_keahlian;
+            }
+        }
+
+        if (! $user) {
+            $mhsCheck = Mahasiswa::where('email_kampus', $identifier)
+                ->orWhere('nim', $identifier)
+                ->first();
+            if ($mhsCheck) {
+                $user = $mhsCheck;
+                $detectedRole = 'mahasiswa';
+                $extraInfo = $mhsCheck->prodi.' ('.$mhsCheck->angkatan.')';
+            }
         }
 
         if (! $user || ! Hash::check($password, $user->password)) {
-            return back()->with('error', 'Login gagal! Kredensial tidak sesuai atau akun tidak ditemukan.')->withInput();
+            return back()->with('error', 'Login gagal! Email/NIM/NIDN atau kata sandi tidak sesuai.')->withInput();
         }
 
         // Simpan sesi autentikasi
         session([
             'auth_user' => [
-                'id' => $role === 'admin' ? $user->id_admin : ($role === 'dosen' ? $user->nidn : $user->nim),
+                'id' => $detectedRole === 'admin' ? $user->id_admin : ($detectedRole === 'dosen' ? $user->nidn : $user->nim),
                 'nama' => $user->nama,
                 'email' => $user->email_kampus ?? $user->email,
-                'role' => $role,
+                'role' => $detectedRole,
                 'extra' => $extraInfo,
-            ]
+            ],
         ]);
 
-        return redirect()->intended(route('dashboard.analitik'))->with('success', 'Selamat datang kembali, ' . $user->nama . ' (' . ucfirst($role) . ')!');
+        $targetRoute = $detectedRole === 'admin' ? route('admin.index') : route('dashboard.analitik');
+
+        return redirect()->intended($targetRoute)->with('success', 'Selamat datang kembali, '.$user->nama.' ('.ucfirst($detectedRole).')!');
     }
 
     /**
@@ -117,47 +154,11 @@ class AuthController extends Controller
                 'nama' => $mahasiswa->nama,
                 'email' => $mahasiswa->email_kampus,
                 'role' => 'mahasiswa',
-                'extra' => $mahasiswa->prodi . ' (' . $mahasiswa->angkatan . ')',
-            ]
+                'extra' => $mahasiswa->prodi.' ('.$mahasiswa->angkatan.')',
+            ],
         ]);
 
-        return redirect()->route('dashboard.analitik')->with('success', 'Pendaftaran akun mahasiswa berhasil! Selamat bergabung, ' . $mahasiswa->nama . '.');
-    }
-
-    /**
-     * Quick Login Demo (1-Klik untuk Kemudahan Sidang / Presentasi PBL)
-     */
-    public function quickLogin($role)
-    {
-        $user = null;
-        $extraInfo = '';
-
-        if ($role === 'mahasiswa') {
-            $user = Mahasiswa::first();
-            $extraInfo = $user ? $user->prodi . ' (' . $user->angkatan . ')' : '';
-        } elseif ($role === 'dosen') {
-            $user = Dosen::first();
-            $extraInfo = $user ? $user->bidang_keahlian : '';
-        } elseif ($role === 'admin') {
-            $user = Admin::first();
-            $extraInfo = 'Kemahasiswaan JTI';
-        }
-
-        if (! $user) {
-            return redirect()->route('login')->with('error', 'Data demo untuk peran ini belum tersedia.');
-        }
-
-        session([
-            'auth_user' => [
-                'id' => $role === 'admin' ? $user->id_admin : ($role === 'dosen' ? $user->nidn : $user->nim),
-                'nama' => $user->nama,
-                'email' => $user->email_kampus ?? $user->email,
-                'role' => $role,
-                'extra' => $extraInfo,
-            ]
-        ]);
-
-        return redirect()->route('dashboard.analitik')->with('success', 'Mode Demo Aktif: Masuk sebagai ' . ucfirst($role) . ' (' . $user->nama . ')');
+        return redirect()->route('dashboard.analitik')->with('success', 'Pendaftaran akun mahasiswa berhasil! Selamat bergabung, '.$mahasiswa->nama.'.');
     }
 
     /**
@@ -166,6 +167,7 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         session()->forget('auth_user');
+
         return redirect()->route('dashboard.analitik')->with('success', 'Anda telah berhasil keluar dari sistem.');
     }
 }

@@ -125,30 +125,30 @@ CREATE TABLE IF NOT EXISTS progres_babak (
 
 -- Admin
 INSERT INTO admin (id_admin, nama, email, password) VALUES
-(1, 'Admin Kemahasiswaan JTI', 'admin.jti@polinema.ac.id', '$2y$12$tB6e4Uv6pI2K8xQyWb9sA.Z8uRzL1u7aJt6sQx5lQyFmJbQ3xP7qO')
+(1, 'Admin Kemahasiswaan JTI', 'admin.jti@polinema.ac.id', '$2y$12$jPlC939k0JVM.NEmWOo6UebSn0UPlSXF.xnpco1aIBPK6GfB4x83O')
 ON CONFLICT (id_admin) DO NOTHING;
 
 -- Dosen Pembimbing
 INSERT INTO dosen (nidn, nama, email_kampus, password, bidang_keahlian, kuota_bimbingan) VALUES
-('0012058501', 'Ade Ismail, S.Kom., M.T.I.', 'ade.ismail@polinema.ac.id', '$2y$12$tB6e4Uv6pI2K8xQyWb9sA.Z8uRzL1u7aJt6sQx5lQyFmJbQ3xP7qO', 'Software Engineering & Web Development', 6),
-('0015088202', 'Rudy Ariyanto, S.T., M.Cs.', 'rudy.ariyanto@polinema.ac.id', '$2y$12$tB6e4Uv6pI2K8xQyWb9sA.Z8uRzL1u7aJt6sQx5lQyFmJbQ3xP7qO', 'Information Systems & Project Management', 5),
-('0020048603', 'Usman Nurhasan, S.Kom., M.T.', 'usman.nurhasan@polinema.ac.id', '$2y$12$tB6e4Uv6pI2K8xQyWb9sA.Z8uRzL1u7aJt6sQx5lQyFmJbQ3xP7qO', 'Cyber Security & Software Quality Assurance', 5),
-('0024098904', 'Dr. Eng. Rosa Andrie Asmara, S.T., M.T.', 'rosa.andrie@polinema.ac.id', '$2y$12$tB6e4Uv6pI2K8xQyWb9sA.Z8uRzL1u7aJt6sQx5lQyFmJbQ3xP7qO', 'Artificial Intelligence & Computer Vision', 4),
-('0019038705', 'Mimi Nur Hajizah, S.Kom., M.Sc.', 'mimi.nur@polinema.ac.id', '$2y$12$tB6e4Uv6pI2K8xQyWb9sA.Z8uRzL1u7aJt6sQx5lQyFmJbQ3xP7qO', 'UI/UX Design & Human-Computer Interaction', 5)
+('0012058501', 'Ade Ismail, S.Kom., M.T.I.', 'ade.ismail@polinema.ac.id', '$2y$12$jPlC939k0JVM.NEmWOo6UebSn0UPlSXF.xnpco1aIBPK6GfB4x83O', 'Software Engineering & Web Development', 6),
+('0015088202', 'Rudy Ariyanto, S.T., M.Cs.', 'rudy.ariyanto@polinema.ac.id', '$2y$12$jPlC939k0JVM.NEmWOo6UebSn0UPlSXF.xnpco1aIBPK6GfB4x83O', 'Information Systems & Project Management', 5),
+('0020048603', 'Usman Nurhasan, S.Kom., M.T.', 'usman.nurhasan@polinema.ac.id', '$2y$12$jPlC939k0JVM.NEmWOo6UebSn0UPlSXF.xnpco1aIBPK6GfB4x83O', 'Cyber Security & Software Quality Assurance', 5),
+('0024098904', 'Dr. Eng. Rosa Andrie Asmara, S.T., M.T.', 'rosa.andrie@polinema.ac.id', '$2y$12$jPlC939k0JVM.NEmWOo6UebSn0UPlSXF.xnpco1aIBPK6GfB4x83O', 'Artificial Intelligence & Computer Vision', 4),
+('0019038705', 'Mimi Nur Hajizah, S.Kom., M.Sc.', 'mimi.nur@polinema.ac.id', '$2y$12$jPlC939k0JVM.NEmWOo6UebSn0UPlSXF.xnpco1aIBPK6GfB4x83O', 'UI/UX Design & Human-Computer Interaction', 5)
 ON CONFLICT (nidn) DO NOTHING;
 
 -- Mahasiswa
 INSERT INTO mahasiswa (nim, nama, email_kampus, password, prodi, angkatan) VALUES
-('244107060116', 'Sastra Maheva Zaky', 'sastra.maheva@student.polinema.ac.id', '$2y$12$tB6e4Uv6pI2K8xQyWb9sA.Z8uRzL1u7aJt6sQx5lQyFmJbQ3xP7qO', 'D-IV Sistem Informasi Bisnis', 2024),
-('244107060147', 'Nadya Syantika Naraya', 'nadya.syantika@student.polinema.ac.id', '$2y$12$tB6e4Uv6pI2K8xQyWb9sA.Z8uRzL1u7aJt6sQx5lQyFmJbQ3xP7qO', 'D-IV Sistem Informasi Bisnis', 2024),
-('244107060083', 'Gempita Fitri Nurdini', 'gempita.fitri@student.polinema.ac.id', '$2y$12$tB6e4Uv6pI2K8xQyWb9sA.Z8uRzL1u7aJt6sQx5lQyFmJbQ3xP7qO', 'D-IV Sistem Informasi Bisnis', 2024),
-('244107060122', 'Rayhan Giri Putra', 'rayhan.giri@student.polinema.ac.id', '$2y$12$tB6e4Uv6pI2K8xQyWb9sA.Z8uRzL1u7aJt6sQx5lQyFmJbQ3xP7qO', 'D-IV Sistem Informasi Bisnis', 2024),
-('2341720055', 'Ahmad Fajar Pratama', 'ahmad.fajar@student.polinema.ac.id', '$2y$12$tB6e4Uv6pI2K8xQyWb9sA.Z8uRzL1u7aJt6sQx5lQyFmJbQ3xP7qO', 'D-IV Teknik Informatika', 2023),
-('2341720089', 'Citra Dewi Kusuma', 'citra.dewi@student.polinema.ac.id', '$2y$12$tB6e4Uv6pI2K8xQyWb9sA.Z8uRzL1u7aJt6sQx5lQyFmJbQ3xP7qO', 'D-IV Teknik Informatika', 2023),
-('254107060012', 'Bima Arya Nugraha', 'bima.arya@student.polinema.ac.id', '$2y$12$tB6e4Uv6pI2K8xQyWb9sA.Z8uRzL1u7aJt6sQx5lQyFmJbQ3xP7qO', 'D-IV Sistem Informasi Bisnis', 2025),
-('2541720034', 'Rania Putri Safitri', 'rania.putri@student.polinema.ac.id', '$2y$12$tB6e4Uv6pI2K8xQyWb9sA.Z8uRzL1u7aJt6sQx5lQyFmJbQ3xP7qO', 'D-IV Teknik Informatika', 2025),
-('264107060015', 'Daffa Raihan Alfarizi', 'daffa.raihan@student.polinema.ac.id', '$2y$12$tB6e4Uv6pI2K8xQyWb9sA.Z8uRzL1u7aJt6sQx5lQyFmJbQ3xP7qO', 'D-IV Sistem Informasi Bisnis', 2026),
-('2641720021', 'Nabila Syahrani Putri', 'nabila.syahrani@student.polinema.ac.id', '$2y$12$tB6e4Uv6pI2K8xQyWb9sA.Z8uRzL1u7aJt6sQx5lQyFmJbQ3xP7qO', 'D-IV Teknik Informatika', 2026)
+('244107060116', 'Sastra Maheva Zaky', 'sastra.maheva@student.polinema.ac.id', '$2y$12$jPlC939k0JVM.NEmWOo6UebSn0UPlSXF.xnpco1aIBPK6GfB4x83O', 'D-IV Sistem Informasi Bisnis', 2024),
+('244107060147', 'Nadya Syantika Naraya', 'nadya.syantika@student.polinema.ac.id', '$2y$12$jPlC939k0JVM.NEmWOo6UebSn0UPlSXF.xnpco1aIBPK6GfB4x83O', 'D-IV Sistem Informasi Bisnis', 2024),
+('244107060083', 'Gempita Fitri Nurdini', 'gempita.fitri@student.polinema.ac.id', '$2y$12$jPlC939k0JVM.NEmWOo6UebSn0UPlSXF.xnpco1aIBPK6GfB4x83O', 'D-IV Sistem Informasi Bisnis', 2024),
+('244107060122', 'Rayhan Giri Putra', 'rayhan.giri@student.polinema.ac.id', '$2y$12$jPlC939k0JVM.NEmWOo6UebSn0UPlSXF.xnpco1aIBPK6GfB4x83O', 'D-IV Sistem Informasi Bisnis', 2024),
+('2341720055', 'Ahmad Fajar Pratama', 'ahmad.fajar@student.polinema.ac.id', '$2y$12$jPlC939k0JVM.NEmWOo6UebSn0UPlSXF.xnpco1aIBPK6GfB4x83O', 'D-IV Teknik Informatika', 2023),
+('2341720089', 'Citra Dewi Kusuma', 'citra.dewi@student.polinema.ac.id', '$2y$12$jPlC939k0JVM.NEmWOo6UebSn0UPlSXF.xnpco1aIBPK6GfB4x83O', 'D-IV Teknik Informatika', 2023),
+('254107060012', 'Bima Arya Nugraha', 'bima.arya@student.polinema.ac.id', '$2y$12$jPlC939k0JVM.NEmWOo6UebSn0UPlSXF.xnpco1aIBPK6GfB4x83O', 'D-IV Sistem Informasi Bisnis', 2025),
+('2541720034', 'Rania Putri Safitri', 'rania.putri@student.polinema.ac.id', '$2y$12$jPlC939k0JVM.NEmWOo6UebSn0UPlSXF.xnpco1aIBPK6GfB4x83O', 'D-IV Teknik Informatika', 2025),
+('264107060015', 'Daffa Raihan Alfarizi', 'daffa.raihan@student.polinema.ac.id', '$2y$12$jPlC939k0JVM.NEmWOo6UebSn0UPlSXF.xnpco1aIBPK6GfB4x83O', 'D-IV Sistem Informasi Bisnis', 2026),
+('2641720021', 'Nabila Syahrani Putri', 'nabila.syahrani@student.polinema.ac.id', '$2y$12$jPlC939k0JVM.NEmWOo6UebSn0UPlSXF.xnpco1aIBPK6GfB4x83O', 'D-IV Teknik Informatika', 2026)
 ON CONFLICT (nim) DO NOTHING;
 
 -- Lomba

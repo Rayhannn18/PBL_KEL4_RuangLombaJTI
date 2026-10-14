@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Dosen;
 use App\Models\Mahasiswa;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -103,11 +104,17 @@ class AuthTest extends TestCase
     }
 
     /**
-     * Test Quick Login demo feature
+     * Test Dosen login with email and password
      */
-    public function test_quick_login_works(): void
+    public function test_dosen_can_login_with_email_and_password(): void
     {
-        $response = $this->get('/quick-login/dosen');
+        $dosen = Dosen::first();
+
+        $response = $this->post('/login', [
+            'role' => 'dosen',
+            'identifier' => $dosen->email_kampus,
+            'password' => 'password123',
+        ]);
 
         $response->assertRedirect(route('dashboard.analitik'));
         $this->assertTrue(session()->has('auth_user'));
@@ -115,11 +122,32 @@ class AuthTest extends TestCase
     }
 
     /**
+     * Test Auto-detection login works if user inputs email directly without switching role tab
+     */
+    public function test_auto_detection_login_works(): void
+    {
+        $response = $this->post('/login', [
+            'role' => 'mahasiswa',
+            'identifier' => 'admin.jti@polinema.ac.id',
+            'password' => 'password123',
+        ]);
+
+        $response->assertRedirect(route('admin.index'));
+        $this->assertTrue(session()->has('auth_user'));
+        $this->assertEquals('admin', session('auth_user')['role']);
+    }
+
+    /**
      * Test logout functionality
      */
     public function test_user_can_logout(): void
     {
-        $this->get('/quick-login/mahasiswa');
+        $mahasiswa = Mahasiswa::first();
+        $this->post('/login', [
+            'role' => 'mahasiswa',
+            'identifier' => $mahasiswa->nim,
+            'password' => 'password123',
+        ]);
         $this->assertTrue(session()->has('auth_user'));
 
         $response = $this->post('/logout');

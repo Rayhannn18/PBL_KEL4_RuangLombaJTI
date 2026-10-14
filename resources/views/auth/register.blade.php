@@ -310,7 +310,7 @@
                         <input type="email"
                                name="email_kampus"
                                class="form-control"
-                               placeholder="Contoh: sastrazaky23@gmail.com"
+                               placeholder="Contoh: sastra22@gmail.com"
                                value="{{ old('email_kampus') }}"
                                required>
                     </div>

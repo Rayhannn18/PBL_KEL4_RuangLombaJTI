@@ -445,6 +445,13 @@
                         <i class="bi bi-person-video3"></i> Modul Bimbingan
                     </a>
                 </li>
+                @if(session('auth_user.role') === 'admin')
+                <li>
+                    <a href="{{ route('admin.index') }}" class="nav-link {{ request()->routeIs('admin.*') ? 'active' : '' }}" style="{{ request()->routeIs('admin.*') ? '' : 'color: #DC2626;' }}">
+                        <i class="bi bi-shield-lock-fill"></i> Panel Admin
+                    </a>
+                </li>
+                @endif
                 @endif
             </ul>
 

@@ -10,6 +10,7 @@ class Logbook extends Model
     use HasFactory;
 
     protected $table = 'logbook';
+
     protected $primaryKey = 'id_logbook';
 
     protected $fillable = [
@@ -32,6 +33,7 @@ class Logbook extends Model
     public function validasi(string $status = 'disetujui')
     {
         $this->update(['status_validasi' => $status]);
+
         return $this;
     }
 }

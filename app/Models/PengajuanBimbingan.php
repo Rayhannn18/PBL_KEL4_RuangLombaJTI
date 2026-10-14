@@ -10,6 +10,7 @@ class PengajuanBimbingan extends Model
     use HasFactory;
 
     protected $table = 'pengajuan_bimbingan';
+
     protected $primaryKey = 'id_pengajuan';
 
     protected $fillable = [
@@ -47,6 +48,7 @@ class PengajuanBimbingan extends Model
     public function setujui()
     {
         $this->update(['status' => 'disetujui']);
+
         return $this;
     }
 
@@ -54,8 +56,9 @@ class PengajuanBimbingan extends Model
     {
         $this->update([
             'status' => 'ditolak',
-            'catatan' => $catatan
+            'catatan' => $catatan,
         ]);
+
         return $this;
     }
 }
