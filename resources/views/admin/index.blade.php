@@ -330,7 +330,7 @@
                 <i class="bi bi-gear-wide-connected"></i> Panel Administrator RuangLombaJTI
             </h1>
             <p class="admin-subtitle">
-                Pusat kendali operasional terpadu Jurusan Teknologi Informasi: verifikasi kurasi lomba eksternal/mitra, persetujuan ketua & tim, kelola data master dosen dan mahasiswa, serta pemantauan capaian prestasi mahasiswa.
+                Pusat kendali operasional terpadu Jurusan Teknologi Informasi: verifikasi kurasi lomba eksternal/mitra, persetujuan ketua, kelola data master dosen dan mahasiswa, serta pemantauan capaian prestasi mahasiswa.
             </p>
         </div>
     </div>
@@ -465,7 +465,7 @@
             @endif
         </a>
         <a href="{{ route('admin.index', ['tab' => 'tim']) }}" class="admin-tab-btn {{ $currentTab === 'tim' ? 'active' : '' }}">
-            <i class="bi bi-person-check"></i> Persetujuan Ketua & Tim
+            <i class="bi bi-person-check"></i> Persetujuan Ketua
             @if($stats['tim_menunggu'] > 0)
                 <span class="badge badge-danger" style="font-size: 0.7rem; padding: 2px 7px;">{{ $stats['tim_menunggu'] }}</span>
             @endif
@@ -935,7 +935,7 @@
     @endif
 
     {{-- ========================================================= --}}
-    {{-- TAB 3: PERSETUJUAN KETUA & TIM LOMBA                      --}}
+    {{-- TAB 3: PERSETUJUAN KETUA                                  --}}
     {{-- ========================================================= --}}
     @if($currentTab === 'tim')
         <!-- Filter Bar & Search Tim -->
