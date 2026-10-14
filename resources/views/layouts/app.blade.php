@@ -403,19 +403,26 @@
                 <span class="topbar-badge"><i class="bi bi-shield-check"></i> RuangLombaJTI v1.0</span>
             </div>
             <div style="display: flex; align-items: center; gap: 15px;">
-                @if(session('auth_user'))
+                @auth
                     <span style="display: flex; align-items: center; gap: 6px;">
                         <i class="bi bi-person-check-fill" style="color: #6EE7B7;"></i>
-                        <span>{{ session('auth_user.nama') }}</span>
-                        <span class="badge {{ session('auth_user.role') == 'admin' ? 'badge-danger' : (session('auth_user.role') == 'dosen' ? 'badge-warning' : 'badge-primary') }}" style="font-size: 0.72rem; padding: 2px 8px;">
-                            {{ ucfirst(session('auth_user.role')) }}
+                        <span>{{ auth()->user()->name }}</span>
+                        <span class="badge {{ auth()->user()->role->value == 'admin' ? 'badge-danger' : (auth()->user()->role->value == 'dosen' ? 'badge-warning' : 'badge-primary') }}" style="font-size: 0.72rem; padding: 2px 8px;">
+                            {{ auth()->user()->role->label() }}
                         </span>
                     </span>
+                    <form action="{{ route('logout') }}" method="POST" style="display: inline; margin: 0;">
+                        @csrf
+                        <button type="submit" style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #FCA5A5; padding: 2px 10px; border-radius: 999px; font-size: 0.75rem; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; font-family: inherit;">
+                            <i class="bi bi-box-arrow-right"></i> Keluar
+                        </button>
+                    </form>
                 @else
-                    <span style="opacity: 0.85; display: inline-flex; align-items: center; gap: 6px;">
-                        <i class="bi bi-mortarboard-fill"></i> Portal Mahasiswa & Dosen
-                    </span>
-                @endif
+                    <span style="opacity: 0.85;"><i class="bi bi-person"></i> Tamu / Pengunjung</span>
+                    <a href="{{ route('login') }}" style="color: #93C5FD; font-weight: 600; text-decoration: underline; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 4px;">
+                        <i class="bi bi-box-arrow-in-right"></i> Masuk Akun
+                    </a>
+                @endauth
             </div>
         </div>
     </div>
@@ -439,25 +446,18 @@
                         <i class="bi bi-graph-up-arrow"></i> Dashboard Analitik
                     </a>
                 </li>
-                @if(session('auth_user'))
+                @auth
                 <li>
                     <a href="{{ route('bimbingan.index') }}" class="nav-link {{ request()->routeIs('bimbingan.*') ? 'active' : '' }}">
                         <i class="bi bi-person-video3"></i> Modul Bimbingan
                     </a>
                 </li>
-                @if(session('auth_user.role') === 'admin')
-                <li>
-                    <a href="{{ route('admin.index') }}" class="nav-link {{ request()->routeIs('admin.*') ? 'active' : '' }}" style="{{ request()->routeIs('admin.*') ? '' : 'color: #DC2626;' }}">
-                        <i class="bi bi-shield-lock-fill"></i> Panel Admin
-                    </a>
-                </li>
-                @endif
-                @endif
+                @endauth
             </ul>
 
             <div class="nav-actions">
-                @if(session('auth_user'))
-                    <form action="{{ route('auth.logout') }}" method="POST" style="display: inline; margin: 0;">
+                @auth
+                    <form action="{{ route('logout') }}" method="POST" style="display: inline; margin: 0;">
                         @csrf
                         <button type="submit" class="btn btn-secondary btn-sm" title="Keluar dari sesi">
                             <i class="bi bi-box-arrow-right"></i> Keluar
@@ -468,9 +468,9 @@
                         <i class="bi bi-box-arrow-in-right"></i> Masuk
                     </a>
                     <a href="{{ route('register') }}" class="btn btn-primary btn-sm">
-                        <i class="bi bi-person-plus-fill"></i> Daftar Mahasiswa
+                        <i class="bi bi-person-plus-fill"></i> Daftar
                     </a>
-                @endif
+                @endauth
             </div>
         </div>
     </nav>
@@ -537,8 +537,10 @@
                     <h4 style="color: #fff; font-size: 0.95rem; margin-bottom: 14px; font-weight: 700;">Navigasi Sistem</h4>
                     <ul style="list-style: none; display: flex; flex-direction: column; gap: 8px;">
                         <li><a href="{{ route('dashboard.analitik') }}" style="color: #94A3B8;"><i class="bi bi-chevron-right"></i> Dashboard Analitik</a></li>
-                        <li><a href="{{ route('login') }}" style="color: #94A3B8;"><i class="bi bi-chevron-right"></i> Masuk Sistem</a></li>
-                        <li><a href="{{ route('register') }}" style="color: #94A3B8;"><i class="bi bi-chevron-right"></i> Pendaftaran Mahasiswa</a></li>
+                        @guest
+                            <li><a href="{{ route('login') }}" style="color: #94A3B8;"><i class="bi bi-chevron-right"></i> Masuk Sistem</a></li>
+                            <li><a href="{{ route('register') }}" style="color: #94A3B8;"><i class="bi bi-chevron-right"></i> Pendaftaran Akun</a></li>
+                        @endguest
                     </ul>
                 </div>
 

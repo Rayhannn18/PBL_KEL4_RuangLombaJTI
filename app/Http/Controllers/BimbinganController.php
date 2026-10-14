@@ -6,15 +6,38 @@ use App\Models\AnggotaTim;
 use App\Models\Dosen;
 use App\Models\Logbook;
 use App\Models\Lomba;
-use App\Models\Mahasiswa;
 use App\Models\PengajuanBimbingan;
 use App\Models\Tim;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 
 class BimbinganController extends Controller
 {
+    /**
+     * Ambil data pengguna yang sedang login (Laravel Auth) dalam bentuk array
+     * dengan format yang sama seperti sesi login lama: id, nama, email, role, extra.
+     */
+    private function authUser(): ?array
+    {
+        /** @var User|null $user */
+        $user = Auth::user();
+
+        if (! $user) {
+            return null;
+        }
+
+        return [
+            'id' => $user->nim_nip,
+            'nama' => $user->name,
+            'email' => $user->email,
+            'role' => $user->role->value,
+            'extra' => $user->prodi ? $user->prodi . ' (' . $user->angkatan . ')' : '',
+        ];
+    }
+
     /**
      * Halaman Utama Modul Bimbingan
      * Alur:
@@ -27,11 +50,11 @@ class BimbinganController extends Controller
      */
     public function index(Request $request)
     {
-        if (! session()->has('auth_user')) {
+        $authUser = $this->authUser();
+        if (! $authUser) {
             return redirect()->route('login')->with('error', 'Silakan masuk ke akun Anda terlebih dahulu untuk mengakses Modul Bimbingan.');
         }
 
-        $authUser = session('auth_user');
         $role = $authUser['role'];
 
         if ($role === 'mahasiswa') {
@@ -159,7 +182,7 @@ class BimbinganController extends Controller
             'catatan' => 'nullable|string|max:500',
         ]);
 
-        $authUser = session('auth_user');
+        $authUser = $this->authUser();
         if (! $authUser || $authUser['role'] !== 'mahasiswa') {
             return back()->with('error', 'Hanya mahasiswa ketua/anggota tim yang dapat mengajukan bimbingan.');
         }
@@ -283,7 +306,7 @@ class BimbinganController extends Controller
             'kuota_anggota' => 'nullable|integer|min:2|max:5',
         ]);
 
-        $authUser = session('auth_user');
+        $authUser = $this->authUser();
         if (! $authUser || $authUser['role'] !== 'mahasiswa') {
             return back()->with('error', 'Hanya mahasiswa yang dapat mendaftarkan tim kompetisi.');
         }
