@@ -1,6 +1,7 @@
 @extends('layouts.auth')
 
 @section('title', 'Daftar Akun')
+@section('card-width', 'max-w-[780px]')
 
 @php
     $role = old('role', 'mahasiswa');
@@ -10,10 +11,11 @@
     <h1 class="text-center text-[26px] font-extrabold tracking-tight">Buat Akun Baru</h1>
     <p class="mt-2 text-center text-sm text-muted">Pilih peranmu, lalu lengkapi data di bawah.</p>
 
-    <form method="POST" action="{{ route('register') }}" class="mt-7 space-y-5" novalidate>
+    <form method="POST" action="{{ route('register') }}" class="mt-7" novalidate>
         @csrf
 
-        <fieldset>
+        <div class="grid gap-x-5 gap-y-5 sm:grid-cols-2">
+        <fieldset class="sm:col-span-2">
             <legend class="mb-2 text-[13px] font-semibold text-muted">Pilih Peran Akun</legend>
             <div class="grid grid-cols-2 gap-3">
                 @foreach ([
@@ -46,19 +48,31 @@
             @enderror
         </fieldset>
 
-        <x-auth.field name="name" label="Nama Lengkap" placeholder="cth. Muhammad Farhan" autocomplete="name" />
         <x-auth.field name="nim_nip" label="NIM" aside="Nomor Induk Mahasiswa POLINEMA" placeholder="cth. 2241720088" autocomplete="off" />
-        <x-auth.field name="email" type="email" label="Email" placeholder="cth. 2241720088@student.polinema.ac.id"
-                      autocomplete="email" check="email" />
-        <x-auth.field name="password" type="password" label="Kata Sandi" placeholder="Minimal 8 karakter" autocomplete="new-password" />
-        <x-auth.field name="password_confirmation" type="password" label="Konfirmasi Kata Sandi" placeholder="Ulangi kata sandi" autocomplete="new-password" />
+        <x-auth.field name="name" label="Nama Lengkap" placeholder="cth. Muhammad Farhan" autocomplete="name" />
 
-        <div data-role-only="dosen" @class(['flex gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-[13px] leading-relaxed text-ink', 'hidden' => $role !== 'dosen'])>
+        <x-auth.field name="email" type="email" label="Email" placeholder="cth. nama@gmail.com"
+                      autocomplete="email" check="email" class="sm:col-span-2">
+            <p data-role-only="mahasiswa" @class(['mt-2 text-xs text-muted', 'hidden' => $role !== 'mahasiswa'])>Gunakan email biasa, bukan email kampus.</p>
+        </x-auth.field>
+
+        {{-- Khusus mahasiswa: program studi & tahun angkatan (berdampingan) --}}
+        <div data-role-only="mahasiswa" @class(['grid gap-x-5 gap-y-5 sm:col-span-2 sm:grid-cols-2', 'hidden' => $role !== 'mahasiswa'])>
+            <x-auth.select name="prodi" label="Program Studi" placeholder="Pilih program studi" :options="\App\Enums\Prodi::options()" />
+            <x-auth.select name="angkatan" label="Tahun Angkatan" placeholder="Pilih tahun angkatan"
+                           :options="range(\App\Http\Requests\Auth\RegisterRequest::ANGKATAN_MAX, \App\Http\Requests\Auth\RegisterRequest::ANGKATAN_MIN)" />
+        </div>
+
+        <x-auth.field name="password" type="password" label="Kata Sandi" placeholder="Minimal 6 karakter" autocomplete="new-password" />
+        <x-auth.field name="password_confirmation" type="password" label="Konfirmasi Kata Sandi" placeholder="Ulangi kata sandi" autocomplete="new-password" />
+        <p class="-mt-2 text-xs text-muted sm:col-span-2">Kata sandi minimal 6 karakter, mengandung huruf dan karakter khusus (contoh: ! @ # $ %).</p>
+
+        <div data-role-only="dosen" @class(['flex gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-[13px] leading-relaxed text-ink sm:col-span-2', 'hidden' => $role !== 'dosen'])>
             <svg class="mt-0.5 size-4 shrink-0 text-brand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
             <p><strong class="font-bold">Catatan Dosen:</strong> Bidang keahlian lomba &amp; kuota bimbingan mahasiswa dapat dikonfigurasi melalui menu Pengaturan Profil setelah akun aktif.</p>
         </div>
 
-        <div>
+        <div class="sm:col-span-2">
             <label class="flex cursor-pointer items-start gap-3 text-[13px] leading-relaxed text-muted">
                 <input type="checkbox" name="terms" value="1" @checked(old('terms')) class="mt-0.5 size-[18px] shrink-0 cursor-pointer rounded accent-brand">
                 <span>Saya menyetujui <a href="#" class="font-semibold text-brand hover:underline">Syarat &amp; Ketentuan</a> serta <a href="#" class="font-semibold text-brand hover:underline">Kebijakan Privasi</a> RuangLombaJTI.</span>
@@ -69,10 +83,11 @@
         </div>
 
         <button type="submit"
-                class="flex h-[52px] w-full items-center justify-center gap-2 rounded-full bg-brand text-[15px] font-bold text-white shadow-lg shadow-brand/25 transition hover:bg-brand-dark focus:outline-none focus:ring-4 focus:ring-brand/30">
+                class="flex h-[52px] w-full sm:col-span-2 items-center justify-center gap-2 rounded-full bg-brand text-[15px] font-bold text-white shadow-lg shadow-brand/25 transition hover:bg-brand-dark focus:outline-none focus:ring-4 focus:ring-brand/30">
             Buat Akun
             <svg class="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
         </button>
+        </div>
     </form>
 
     <div class="mt-7 border-t border-line pt-6 text-center text-sm text-muted">

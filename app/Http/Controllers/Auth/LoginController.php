@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\RedirectResponse;
@@ -19,14 +20,26 @@ class LoginController extends Controller
 
     public function store(LoginRequest $request): RedirectResponse
     {
+        $role = $request->role();
+        $field = $request->credentialField();
+
+        // Admin tidak punya NIM/NIP, jadi hanya boleh masuk dengan email.
+        if ($role === UserRole::Admin && $field !== 'email') {
+            throw ValidationException::withMessages([
+                'login' => 'Admin masuk menggunakan email.',
+            ]);
+        }
+
+        // 'role' ikut dicocokkan: akun dosen tidak bisa masuk lewat pilihan Mahasiswa, dan sebaliknya.
         $credentials = [
-            $request->credentialField() => $request->input('login'),
+            $field => $request->input('login'),
             'password' => $request->input('password'),
+            'role' => $role->value,
         ];
 
         if (! Auth::attempt($credentials)) {
             throw ValidationException::withMessages([
-                'login' => 'Email/NIM/NIP atau kata sandi salah.',
+                'login' => 'Akun tidak ditemukan untuk peran '.$role->label().', atau kata sandi salah.',
             ]);
         }
 

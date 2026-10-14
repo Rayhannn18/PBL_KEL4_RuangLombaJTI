@@ -22,7 +22,7 @@
             <x-auth.logo size="lg" />
             <p class="mt-3 text-[11px] font-bold uppercase tracking-[0.12em] text-muted">Portal Resmi TI POLINEMA</p>
 
-            <div class="mt-6 w-full max-w-[430px] rounded-[28px] bg-white px-8 pb-8 pt-9 shadow-[0_20px_50px_-20px_rgba(31,74,168,0.25)] ring-1 ring-line/60">
+            <div class="mt-6 w-full @yield('card-width', 'max-w-[430px]') rounded-[28px] bg-white px-8 pb-8 pt-9 shadow-[0_20px_50px_-20px_rgba(31,74,168,0.25)] ring-1 ring-line/60">
                 @yield('content')
             </div>
         </main>

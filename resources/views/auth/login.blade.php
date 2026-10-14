@@ -9,20 +9,54 @@
     </nav>
 @endsection
 
+@php
+    $role = old('role', 'mahasiswa');
+@endphp
+
 @section('content')
     <h1 class="text-center text-[26px] font-extrabold tracking-tight">Masuk ke Akun</h1>
-    <p class="mt-2 text-center text-sm text-muted">Gunakan akun kampus untuk melanjutkan.</p>
+    <p class="mt-2 text-center text-sm text-muted">Pilih peranmu, lalu masukkan akun untuk melanjutkan.</p>
 
     <form method="POST" action="{{ route('login') }}" class="mt-7 space-y-5" novalidate>
         @csrf
 
-        <x-auth.field name="login" label="Email / NIM / NIP" placeholder="cth. 2241720088@student.polinema.ac.id"
-                      autocomplete="username" check="login">
-            <p class="mt-2 flex items-center gap-2 text-xs text-muted">
-                <svg class="size-4 shrink-0 text-brand" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 15h-2v-6h2v6Zm0-8h-2V7h2v2Z" clip-rule="evenodd"/></svg>
-                Sistem otomatis mendeteksi role Mahasiswa atau Dosen.
-            </p>
-        </x-auth.field>
+        <fieldset>
+            <legend class="mb-2 text-[13px] font-semibold text-muted">Masuk Sebagai</legend>
+            <div class="grid grid-cols-3 gap-2.5">
+                @foreach ([
+                    'mahasiswa' => 'Mahasiswa',
+                    'dosen' => 'Dosen',
+                    'admin' => 'Admin',
+                ] as $value => $title)
+                    <label class="group relative flex cursor-pointer flex-col items-center gap-2 rounded-2xl border border-line bg-white px-2 py-3.5 text-center transition has-checked:border-2 has-checked:border-brand has-checked:bg-brand-soft has-focus-visible:ring-4 has-focus-visible:ring-brand/20">
+                        <input type="radio" name="role" value="{{ $value }}" class="sr-only" @checked($role === $value)>
+
+                        <span class="absolute right-2 top-2 hidden size-4 items-center justify-center rounded-full bg-brand text-white group-has-checked:flex">
+                            <svg class="size-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+                        </span>
+
+                        <span class="flex size-8 items-center justify-center rounded-full bg-brand-soft text-brand group-has-checked:bg-white">
+                            <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                @if ($value === 'mahasiswa')
+                                    <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/>
+                                @elseif ($value === 'dosen')
+                                    <path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/>
+                                @else
+                                    <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>
+                                @endif
+                            </svg>
+                        </span>
+                        <span class="text-[13px] font-bold text-ink">{{ $title }}</span>
+                    </label>
+                @endforeach
+            </div>
+            @error('role')
+                <p class="mt-1.5 text-xs font-medium text-red-600">{{ $message }}</p>
+            @enderror
+        </fieldset>
+
+        <x-auth.field name="login" label="Email / NIM" placeholder="cth. 2241720088 atau nama@gmail.com"
+                      autocomplete="username" check="login" />
 
         <div>
             <x-auth.field name="password" type="password" label="Kata Sandi" placeholder="Masukkan kata sandi" autocomplete="current-password" />
@@ -38,7 +72,8 @@
         </button>
     </form>
 
-    <div class="mt-7 border-t border-line pt-6 text-center text-sm text-muted">
+    {{-- Admin tidak mendaftar lewat form, jadi tautan daftar disembunyikan saat Admin dipilih. --}}
+    <div data-role-only="mahasiswa,dosen" @class(['mt-7 border-t border-line pt-6 text-center text-sm text-muted', 'hidden' => $role === 'admin'])>
         Belum punya akun?
         <a href="{{ route('register') }}" class="ml-1 font-bold text-brand hover:underline">Daftar di sini</a>
     </div>

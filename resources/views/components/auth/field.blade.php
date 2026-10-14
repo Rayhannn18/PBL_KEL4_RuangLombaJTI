@@ -11,7 +11,7 @@
     $isPassword = $type === 'password';
     $hasError = $errors->has($name);
 @endphp
-<div>
+<div {{ $attributes->only('class') }}>
     <div class="mb-1.5 flex items-baseline justify-between gap-3">
         <label for="{{ $name }}" class="text-[13px] font-semibold text-muted"><span data-text>{{ $label }}</span></label>
         @if ($aside !== null)

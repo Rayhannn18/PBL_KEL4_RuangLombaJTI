@@ -6,23 +6,24 @@ enum UserRole: string
 {
     case Mahasiswa = 'mahasiswa';
     case Dosen = 'dosen';
+    case Admin = 'admin';
 
     public function label(): string
     {
         return match ($this) {
             self::Mahasiswa => 'Mahasiswa',
             self::Dosen => 'Dosen',
+            self::Admin => 'Admin',
         };
     }
 
     /**
-     * Domain email yang wajib dipakai peran ini; null berarti email apa saja boleh.
+     * Peran yang boleh mendaftar sendiri. Admin dibuat lewat seeder/admin, tidak lewat form.
+     *
+     * @return list<string>
      */
-    public function requiredEmailDomain(): ?string
+    public static function registrable(): array
     {
-        return match ($this) {
-            self::Mahasiswa => null,
-            self::Dosen => 'polinema.ac.id',
-        };
+        return [self::Mahasiswa->value, self::Dosen->value];
     }
 }

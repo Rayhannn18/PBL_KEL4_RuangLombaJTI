@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Enums\UserRole;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class LoginRequest extends FormRequest
 {
@@ -14,6 +16,7 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'role' => ['required', Rule::enum(UserRole::class)],
             'login' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string'],
         ];
@@ -22,13 +25,23 @@ class LoginRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'login.required' => 'Email, NIM, atau NIP wajib diisi.',
+            'role.required' => 'Pilih peran terlebih dahulu.',
+            'role.enum' => 'Peran akun tidak valid.',
+            'login.required' => $this->input('role') === UserRole::Admin->value
+                ? 'Email wajib diisi.'
+                : 'Email, NIM, atau NIP wajib diisi.',
             'password.required' => 'Kata sandi wajib diisi.',
         ];
     }
 
+    public function role(): UserRole
+    {
+        return UserRole::from($this->validated('role'));
+    }
+
     /**
-     * Kolom yang dipakai untuk mencari akun: email jika berformat email, selain itu NIM/NIP.
+     * Kolom pencarian akun: email jika berformat email, selain itu NIM (mahasiswa) / NIP (dosen).
+     * Admin hanya boleh masuk dengan email.
      */
     public function credentialField(): string
     {

@@ -8,18 +8,26 @@ const ROLE_CONFIG = {
         idPlaceholder: 'cth. 2241720088',
         emailLabel: 'Email',
         emailPlaceholder: 'cth. nama@gmail.com',
-        emailPattern: ANY_EMAIL,
+        // Email biasa; domain kampus (polinema.ac.id & subdomain) tidak dihitung valid.
+        emailPattern: /^[^\s@]+@(?!(?:[\w-]+\.)*polinema\.ac\.id$)[^\s@]+\.[^\s@]{2,}$/i,
         namePlaceholder: 'cth. Muhammad Farhan',
     },
     dosen: {
-        idLabel: 'NIP / NIDN',
-        idAside: 'Nomor Induk Pegawai / NIDN Dosen POLINEMA',
+        idLabel: 'NIP',
+        idAside: 'Nomor Induk Pegawai POLINEMA (18 digit)',
         idPlaceholder: 'cth. 198010102005012001',
-        emailLabel: 'Email Kampus',
-        emailPlaceholder: 'cth. rosa.andrie@polinema.ac.id',
-        emailPattern: /^[^\s@]+@polinema\.ac\.id$/i,
+        emailLabel: 'Email',
+        emailPlaceholder: 'cth. rosa.andrie@gmail.com',
+        emailPattern: ANY_EMAIL,
         namePlaceholder: 'cth. Dr. Eng. Rosa Andrie Asmara, S.T., M.T.',
     },
+};
+
+// Teks kolom login per peran (halaman masuk). Admin tidak punya NIM/NIP, jadi hanya email.
+const LOGIN_CONFIG = {
+    mahasiswa: { label: 'Email / NIM', placeholder: 'cth. 2241720088 atau nama@gmail.com', numeric: true },
+    dosen: { label: 'Email / NIP', placeholder: 'cth. 198010102005012001 atau nama@gmail.com', numeric: true },
+    admin: { label: 'Email', placeholder: 'cth. admin@ruanglombajti.test', numeric: false },
 };
 
 // Tombol lihat/sembunyikan kata sandi.
@@ -39,7 +47,7 @@ const roleInputs = document.querySelectorAll('input[name="role"]');
 const selectedRole = () => document.querySelector('input[name="role"]:checked')?.value ?? 'mahasiswa';
 
 const validators = {
-    login: (v) => ANY_EMAIL.test(v) || /^\d{8,18}$/.test(v),
+    login: (v) => ANY_EMAIL.test(v) || (LOGIN_CONFIG[selectedRole()]?.numeric && /^\d{8,18}$/.test(v)),
     email: (v) => (ROLE_CONFIG[selectedRole()] ?? ROLE_CONFIG.mahasiswa).emailPattern.test(v),
 };
 
@@ -55,7 +63,7 @@ document.querySelectorAll('[data-check-for]').forEach((icon) => {
     document.getElementById(icon.dataset.checkFor)?.addEventListener('input', refreshChecks);
 });
 
-// Pergantian peran pada form registrasi.
+// Pergantian peran pada form registrasi dan login.
 function applyRole() {
     const cfg = ROLE_CONFIG[selectedRole()] ?? ROLE_CONFIG.mahasiswa;
     const set = (selector, text) => {
@@ -70,8 +78,15 @@ function applyRole() {
     document.getElementById('email')?.setAttribute('placeholder', cfg.emailPlaceholder);
     document.getElementById('name')?.setAttribute('placeholder', cfg.namePlaceholder);
     document.querySelectorAll('[data-role-only]').forEach((el) => {
-        el.classList.toggle('hidden', el.dataset.roleOnly !== selectedRole());
+        el.classList.toggle('hidden', !el.dataset.roleOnly.split(',').includes(selectedRole()));
     });
+
+    // Halaman masuk: ganti label dan contoh isian sesuai peran.
+    const login = LOGIN_CONFIG[selectedRole()];
+    if (login && document.getElementById('login')) {
+        set('label[for="login"] [data-text]', login.label);
+        document.getElementById('login').setAttribute('placeholder', login.placeholder);
+    }
     refreshChecks();
 }
 
