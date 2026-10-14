@@ -2,13 +2,6 @@
 
 @section('title', 'Masuk')
 
-@section('header-action')
-    <nav class="flex items-center rounded-full bg-white p-1 text-sm font-semibold shadow-sm ring-1 ring-line/70">
-        <a href="{{ route('login') }}" class="rounded-full bg-brand px-4 py-2 text-white">Masuk</a>
-        <a href="{{ route('register') }}" class="rounded-full px-4 py-2 text-muted transition hover:text-ink">Daftar Akun</a>
-    </nav>
-@endsection
-
 @php
     $role = old('role', 'mahasiswa');
 @endphp
