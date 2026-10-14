@@ -1,388 +1,97 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pendaftaran Akun Mahasiswa - RuangLombaJTI Polinema</title>
-    <!-- Google Fonts: Plus Jakarta Sans -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+@extends('layouts.auth')
 
-    <style>
-        :root {
-            --primary: #1E40AF;
-            --primary-dark: #0F2744;
-            --primary-light: #3B82F6;
-            --primary-soft: #EFF6FF;
-            --secondary: #0D9488;
-            --accent: #F59E0B;
-            --success: #10B981;
-            --danger: #EF4444;
-            --bg-body: #F8FAFC;
-            --surface: #FFFFFF;
-            --border: #E2E8F0;
-            --text-main: #0F172A;
-            --text-muted: #64748B;
-            --shadow-lg: 0 20px 35px -10px rgba(15, 39, 68, 0.15);
-            --radius-md: 12px;
-            --radius-lg: 18px;
-        }
+@section('title', 'Daftar Akun')
+@section('card-width', 'max-w-[780px]')
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+@php
+    $role = old('role', 'mahasiswa');
+@endphp
 
-        body {
-            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, #F0F4F8 0%, #E2E8F0 100%);
-            color: var(--text-main);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 40px 20px;
-        }
+@section('content')
+    <h1 class="text-center text-[26px] font-extrabold tracking-tight">Buat Akun Baru</h1>
+    <p class="mt-2 text-center text-sm text-muted">Pilih peranmu, lalu lengkapi data di bawah.</p>
 
-        .auth-wrapper {
-            width: 100%;
-            max-width: 600px;
-        }
+    <form method="POST" action="{{ route('register') }}" class="mt-7" novalidate>
+        @csrf
 
-        .auth-top-nav {
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .back-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            color: var(--primary);
-            font-weight: 600;
-            font-size: 0.88rem;
-            text-decoration: none;
-            transition: transform 0.2s;
-        }
-        .back-link:hover {
-            transform: translateX(-3px);
-            color: #1D4ED8;
-        }
+        <div class="grid gap-x-5 gap-y-5 sm:grid-cols-2">
+        <fieldset class="sm:col-span-2">
+            <legend class="mb-2 text-[13px] font-semibold text-muted">Pilih Peran Akun</legend>
+            <div class="grid grid-cols-2 gap-3">
+                @foreach ([
+                    'mahasiswa' => ['Mahasiswa', 'Cari lomba, bentuk tim, ajukan bimbingan.'],
+                    'dosen' => ['Dosen', 'Bimbing tim & kelola ketersediaan.'],
+                ] as $value => [$title, $desc])
+                    <label class="group relative cursor-pointer rounded-2xl border border-line bg-white p-4 transition has-checked:border-2 has-checked:border-brand has-checked:bg-brand-soft has-focus-visible:ring-4 has-focus-visible:ring-brand/20">
+                        <input type="radio" name="role" value="{{ $value }}" class="sr-only" @checked($role === $value)>
 
-        .auth-card {
-            background: var(--surface);
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow-lg);
-            padding: 36px 36px;
-            position: relative;
-            overflow: hidden;
-        }
+                        <span class="absolute right-3 top-3 hidden size-5 items-center justify-center rounded-full bg-brand text-white group-has-checked:flex">
+                            <svg class="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+                        </span>
 
-        .auth-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 6px;
-            background: linear-gradient(90deg, #10B981 0%, #3B82F6 50%, #1E40AF 100%);
-        }
+                        <span class="flex size-8 items-center justify-center rounded-full bg-brand-soft text-brand group-has-checked:bg-white">
+                            <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                @if ($value === 'mahasiswa')
+                                    <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/>
+                                @else
+                                    <path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/>
+                                @endif
+                            </svg>
+                        </span>
+                        <span class="mt-3 block text-[15px] font-bold text-ink">{{ $title }}</span>
+                        <span class="mt-1 block text-xs leading-snug text-muted">{{ $desc }}</span>
+                    </label>
+                @endforeach
+            </div>
+            @error('role')
+                <p class="mt-1.5 text-xs font-medium text-red-600">{{ $message }}</p>
+            @enderror
+        </fieldset>
 
-        .brand-header {
-            text-align: center;
-            margin-bottom: 26px;
-        }
-        .brand-logo-wrap {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 58px;
-            height: 58px;
-            border-radius: var(--radius-md);
-            background: linear-gradient(135deg, #10B981 0%, #3B82F6 100%);
-            color: #fff;
-            font-size: 1.7rem;
-            margin-bottom: 12px;
-            box-shadow: 0 8px 16px rgba(16, 185, 129, 0.25);
-        }
-        .brand-title {
-            font-size: 1.45rem;
-            font-weight: 800;
-            color: var(--primary-dark);
-            letter-spacing: -0.5px;
-        }
-        .brand-title span {
-            color: #2563EB;
-        }
-        .brand-subtitle {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            margin-top: 4px;
-        }
+        <x-auth.field name="nim_nip" label="NIM" aside="Nomor Induk Mahasiswa POLINEMA" placeholder="cth. 2241720088" autocomplete="off" />
+        <x-auth.field name="name" label="Nama Lengkap" placeholder="cth. Muhammad Farhan" autocomplete="name" />
 
-        /* Forms */
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
-        @media (max-width: 600px) {
-            .form-row {
-                grid-template-columns: 1fr;
-                gap: 0;
-            }
-            .auth-card {
-                padding: 26px 20px;
-            }
-        }
+        <x-auth.field name="email" type="email" label="Email" placeholder="cth. nama@gmail.com"
+                      autocomplete="email" check="email" class="sm:col-span-2">
+            <p data-role-only="mahasiswa" @class(['mt-2 text-xs text-muted', 'hidden' => $role !== 'mahasiswa'])>Gunakan email biasa, bukan email kampus.</p>
+        </x-auth.field>
 
-        .form-group {
-            margin-bottom: 16px;
-        }
-        .form-label {
-            display: block;
-            margin-bottom: 6px;
-            font-weight: 600;
-            font-size: 0.85rem;
-            color: var(--text-main);
-        }
-        .input-group {
-            position: relative;
-        }
-        .input-group i.input-icon {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #94A3B8;
-            font-size: 1.05rem;
-        }
-        .form-control, .form-select {
-            width: 100%;
-            padding: 10px 14px 10px 38px;
-            font-size: 0.88rem;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            background-color: #fff;
-            color: var(--text-main);
-            font-family: inherit;
-            transition: all 0.2s;
-        }
-        .form-control:focus, .form-select:focus {
-            outline: none;
-            border-color: var(--primary-light);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-        }
-
-        .btn-submit {
-            width: 100%;
-            padding: 12px;
-            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 0.95rem;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-            transition: all 0.2s;
-            font-family: inherit;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            margin-top: 10px;
-        }
-        .btn-submit:hover {
-            background: linear-gradient(135deg, #059669 0%, #047857 100%);
-            transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
-        }
-
-        /* Alert */
-        .alert {
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 0.85rem;
-            font-weight: 500;
-        }
-        .alert-danger {
-            background-color: #FEF2F2;
-            color: #991B1B;
-            border: 1px solid #FECACA;
-        }
-
-        /* Card footer */
-        .auth-footer {
-            margin-top: 22px;
-            text-align: center;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-        }
-        .auth-footer a {
-            color: var(--primary);
-            font-weight: 700;
-            text-decoration: none;
-        }
-        .auth-footer a:hover {
-            text-decoration: underline;
-        }
-    </style>
-</head>
-<body>
-
-    <div class="auth-wrapper">
-        <div class="auth-top-nav">
-            <a href="{{ route('dashboard.analitik') }}" class="back-link">
-                <i class="bi bi-arrow-left"></i> Kembali ke Dashboard
-            </a>
-            <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">JTI Polinema</span>
+        {{-- Khusus mahasiswa: program studi & tahun angkatan (berdampingan) --}}
+        <div data-role-only="mahasiswa" @class(['grid gap-x-5 gap-y-5 sm:col-span-2 sm:grid-cols-2', 'hidden' => $role !== 'mahasiswa'])>
+            <x-auth.select name="prodi" label="Program Studi" placeholder="Pilih program studi" :options="\App\Enums\Prodi::options()" />
+            <x-auth.select name="angkatan" label="Tahun Angkatan" placeholder="Pilih tahun angkatan"
+                           :options="range(\App\Http\Requests\Auth\RegisterRequest::ANGKATAN_MAX, \App\Http\Requests\Auth\RegisterRequest::ANGKATAN_MIN)" />
         </div>
 
-        <div class="auth-card">
-            <!-- Header Brand -->
-            <div class="brand-header">
-                <div class="brand-logo-wrap">
-                    <i class="bi bi-person-plus-fill"></i>
-                </div>
-                <div class="brand-title">Pendaftaran Akun <span>Mahasiswa</span></div>
-                <div class="brand-subtitle">Daftarkan akun mahasiswa Anda untuk berkolaborasi dan berkompetisi</div>
-            </div>
+        <x-auth.field name="password" type="password" label="Kata Sandi" placeholder="Minimal 6 karakter" autocomplete="new-password" />
+        <x-auth.field name="password_confirmation" type="password" label="Konfirmasi Kata Sandi" placeholder="Ulangi kata sandi" autocomplete="new-password" />
+        <p class="-mt-2 text-xs text-muted sm:col-span-2">Kata sandi minimal 6 karakter, mengandung huruf dan karakter khusus (contoh: ! @ # $ %).</p>
 
-            <!-- Flash Error Alerts -->
-            @if($errors->any())
-                <div class="alert alert-danger">
-                    <div style="font-weight: 700; margin-bottom: 4px;">
-                        <i class="bi bi-x-circle-fill"></i> Periksa kembali data formulir:
-                    </div>
-                    <ul style="padding-left: 20px; font-size: 0.82rem;">
-                        @foreach($errors->all() as $err)
-                            <li>{{ $err }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
-
-            <!-- Form Registrasi -->
-            <form action="{{ route('auth.register') }}" method="POST">
-                @csrf
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">NIM (Nomor Induk Mahasiswa) *</label>
-                        <div class="input-group">
-                            <i class="bi bi-hash input-icon"></i>
-                            <input type="text"
-                                   name="nim"
-                                   class="form-control"
-                                   placeholder="Contoh: 244107060116"
-                                   value="{{ old('nim') }}"
-                                   required
-                                   autofocus>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Nama Lengkap Mahasiswa *</label>
-                        <div class="input-group">
-                            <i class="bi bi-person input-icon"></i>
-                            <input type="text"
-                                   name="nama"
-                                   class="form-control"
-                                   placeholder="Contoh: Sastra Maheva Zaky"
-                                   value="{{ old('nama') }}"
-                                   required>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Email Kampus Polinema *</label>
-                    <div class="input-group">
-                        <i class="bi bi-envelope input-icon"></i>
-                        <input type="email"
-                               name="email_kampus"
-                               class="form-control"
-                               placeholder="Contoh: sastra@student.polinema.ac.id"
-                               value="{{ old('email_kampus') }}"
-                               required>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Program Studi *</label>
-                        <div class="input-group">
-                            <i class="bi bi-mortarboard input-icon"></i>
-                            <select name="prodi" class="form-select" required>
-                                <option value="" disabled {{ old('prodi') ? '' : 'selected' }}>Pilih Program Studi</option>
-                                <option value="D-IV Sistem Informasi Bisnis" {{ old('prodi') == 'D-IV Sistem Informasi Bisnis' ? 'selected' : '' }}>D-IV Sistem Informasi Bisnis</option>
-                                <option value="D-IV Teknik Informatika" {{ old('prodi') == 'D-IV Teknik Informatika' ? 'selected' : '' }}>D-IV Teknik Informatika</option>
-                                <option value="D-III Manajemen Informatika" {{ old('prodi') == 'D-III Manajemen Informatika' ? 'selected' : '' }}>D-III Manajemen Informatika</option>
-                                <option value="D-III Teknik Informatika" {{ old('prodi') == 'D-III Teknik Informatika' ? 'selected' : '' }}>D-III Teknik Informatika</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Tahun Angkatan *</label>
-                        <div class="input-group">
-                            <i class="bi bi-calendar-event input-icon"></i>
-                            <select name="angkatan" class="form-select" required>
-                                <option value="2026" {{ old('angkatan') == 2026 ? 'selected' : '' }}>2026</option>
-                                <option value="2025" {{ old('angkatan') == 2025 ? 'selected' : '' }}>2025</option>
-                                <option value="2024" {{ old('angkatan', 2024) == 2024 ? 'selected' : '' }}>2024</option>
-                                <option value="2023" {{ old('angkatan') == 2023 ? 'selected' : '' }}>2023</option>
-                                <option value="2022" {{ old('angkatan') == 2022 ? 'selected' : '' }}>2022</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Kata Sandi (Min. 6 Karakter) *</label>
-                        <div class="input-group">
-                            <i class="bi bi-key input-icon"></i>
-                            <input type="password"
-                                   name="password"
-                                   class="form-control"
-                                   placeholder="Minimal 6 karakter"
-                                   required>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Konfirmasi Kata Sandi *</label>
-                        <div class="input-group">
-                            <i class="bi bi-shield-check input-icon"></i>
-                            <input type="password"
-                                   name="password_confirmation"
-                                   class="form-control"
-                                   placeholder="Ulangi kata sandi"
-                                   required>
-                        </div>
-                    </div>
-                </div>
-
-                <button type="submit" class="btn-submit">
-                    <i class="bi bi-person-check-fill"></i> Daftarkan Akun Mahasiswa
-                </button>
-            </form>
-
-            <!-- Footer Pendaftaran -->
-            <div class="auth-footer">
-                Sudah memiliki akun? <a href="{{ route('login') }}">Masuk ke Sistem</a>
-            </div>
+        <div data-role-only="dosen" @class(['flex gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-[13px] leading-relaxed text-ink sm:col-span-2', 'hidden' => $role !== 'dosen'])>
+            <svg class="mt-0.5 size-4 shrink-0 text-brand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+            <p><strong class="font-bold">Catatan Dosen:</strong> Bidang keahlian lomba &amp; kuota bimbingan mahasiswa dapat dikonfigurasi melalui menu Pengaturan Profil setelah akun aktif.</p>
         </div>
+
+        <div class="sm:col-span-2">
+            <label class="flex cursor-pointer items-start gap-3 text-[13px] leading-relaxed text-muted">
+                <input type="checkbox" name="terms" value="1" @checked(old('terms')) class="mt-0.5 size-[18px] shrink-0 cursor-pointer rounded accent-brand">
+                <span>Saya menyetujui <a href="#" class="font-semibold text-brand hover:underline">Syarat &amp; Ketentuan</a> serta <a href="#" class="font-semibold text-brand hover:underline">Kebijakan Privasi</a> RuangLombaJTI.</span>
+            </label>
+            @error('terms')
+                <p class="mt-1.5 text-xs font-medium text-red-600">{{ $message }}</p>
+            @enderror
+        </div>
+
+        <button type="submit"
+                class="flex h-[52px] w-full sm:col-span-2 items-center justify-center gap-2 rounded-full bg-brand text-[15px] font-bold text-white shadow-lg shadow-brand/25 transition hover:bg-brand-dark focus:outline-none focus:ring-4 focus:ring-brand/30">
+            Buat Akun
+            <svg class="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </button>
+        </div>
+    </form>
+
+    <div class="mt-7 border-t border-line pt-6 text-center text-sm text-muted">
+        Sudah punya akun?
+        <a href="{{ route('login') }}" class="ml-1 font-bold text-brand hover:underline">Masuk di sini</a>
     </div>
-
-</body>
-</html>
+@endsection

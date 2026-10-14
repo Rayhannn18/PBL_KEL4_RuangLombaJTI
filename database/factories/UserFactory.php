@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Enums\Prodi;
+use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -28,14 +30,35 @@ class UserFactory extends Factory
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
+            'role' => UserRole::Mahasiswa,
+            'nim_nip' => fake()->unique()->numerify('##########'),
+            'prodi' => Prodi::D4TeknikInformatika->value,
+            'angkatan' => 2022,
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
         ];
     }
 
-    /**
-     * Indicate that the model's email address should be unverified.
-     */
+    public function dosen(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => UserRole::Dosen,
+            'prodi' => null,
+            'angkatan' => null,
+            'nim_nip' => fake()->unique()->numerify('##################'),
+        ]);
+    }
+
+    public function admin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => UserRole::Admin,
+            'prodi' => null,
+            'angkatan' => null,
+            'nim_nip' => null,
+        ]);
+    }
+
     public function unverified(): static
     {
         return $this->state(fn (array $attributes) => [
