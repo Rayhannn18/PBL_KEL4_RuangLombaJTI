@@ -21,6 +21,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
 });
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BimbinganController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
@@ -35,6 +36,14 @@ Route::get('/', [DashboardController::class, 'index'])->name('dashboard.analitik
 Route::get('/analitik', [DashboardController::class, 'index'])->name('dashboard.analitik.alias');
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 Route::get('/home', [DashboardController::class, 'index'])->name('home');
+
+// Modul Bimbingan Tim Lomba & Dosen Pembimbing
+Route::get('/bimbingan', [BimbinganController::class, 'index'])->name('bimbingan.index');
+Route::post('/bimbingan/ajukan', [BimbinganController::class, 'ajukan'])->name('bimbingan.ajukan');
+Route::post('/bimbingan/logbook', [BimbinganController::class, 'storeLogbook'])->name('bimbingan.logbook.store');
+Route::post('/bimbingan/logbook/{id}/validasi', [BimbinganController::class, 'validasiLogbook'])->name('bimbingan.logbook.validasi');
+Route::post('/bimbingan/pengajuan/{id}/respon', [BimbinganController::class, 'responPengajuan'])->name('bimbingan.pengajuan.respon');
+Route::post('/bimbingan/daftar-tim-cepat', [BimbinganController::class, 'gabungLombaCepat'])->name('bimbingan.daftar_tim');
 
 // Redirect rute fitur yang dihapus ke Dashboard Analitik agar tidak 404
 Route::redirect('/lomba', '/');
@@ -51,4 +60,3 @@ Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('regi
 Route::post('/register', [AuthController::class, 'register'])->name('auth.register');
 Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout');
 Route::get('/quick-login/{role}', [AuthController::class, 'quickLogin'])->name('auth.quick');
-
