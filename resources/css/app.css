@@ -7,3 +7,13 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+@theme {
+    --font-inter: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --color-page: #ebf2fe;
+    --color-brand: #2f6fed;
+    --color-brand-dark: #1f4aa8;
+    --color-brand-soft: #dbe7fc;
+    --color-ink: #0f1b3d;
+    --color-muted: #6b7a99;
+    --color-line: #dfe6f3;
+}
