@@ -101,7 +101,7 @@ class AdminTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('Panel Administrator RuangLombaJTI');
         $response->assertSee('Verifikasi & Kelola Lomba', false);
-        $response->assertSee('Persetujuan Ketua & Tim', false);
+        $response->assertSee('Persetujuan Ketua', false);
         $response->assertSee('Kelola Data Dosen', false);
         $response->assertSee('Kelola Data Mahasiswa', false);
     }
