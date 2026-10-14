@@ -10,6 +10,7 @@ class ProgresBabak extends Model
     use HasFactory;
 
     protected $table = 'progres_babak';
+
     protected $primaryKey = 'id_progres';
 
     protected $fillable = [
@@ -32,13 +33,17 @@ class ProgresBabak extends Model
     public function setujuiProgres()
     {
         $this->update(['status_setuju' => 'disetujui']);
+
         return $this;
     }
 
     public function isJuara(): bool
     {
-        if (!$this->hasil_akhir) return false;
+        if (! $this->hasil_akhir) {
+            return false;
+        }
         $lower = strtolower($this->hasil_akhir);
+
         return str_contains($lower, 'juara') || str_contains($lower, 'gold') || str_contains($lower, 'silver') || str_contains($lower, 'bronze') || str_contains($lower, 'best');
     }
 }

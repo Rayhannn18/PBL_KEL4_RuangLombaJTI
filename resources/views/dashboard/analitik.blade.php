@@ -195,24 +195,6 @@
                 </p>
             </div>
 
-            <!-- Quick Filter Bar -->
-            <div style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); padding: 12px 16px; border-radius: var(--radius-md); border: 1px solid rgba(255,255,255,0.2);">
-                <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; margin-bottom: 8px; letter-spacing: 0.5px;">
-                    <i class="bi bi-funnel-fill"></i> Filter Laporan SIM
-                </div>
-                <form method="GET" action="{{ route('dashboard.analitik') }}" style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <select name="tahun" class="form-select form-select-sm" style="width: auto; background: rgba(255,255,255,0.9); font-size: 0.8rem; padding: 6px 12px;" onchange="this.form.submit()">
-                        <option value="semua" {{ $tahunFilter == 'semua' ? 'selected' : '' }}>Semua Tahun</option>
-                        <option value="2026" {{ $tahunFilter == '2026' ? 'selected' : '' }}>Tahun 2026</option>
-                        <option value="2025" {{ $tahunFilter == '2025' ? 'selected' : '' }}>Tahun 2025</option>
-                        <option value="2024" {{ $tahunFilter == '2024' ? 'selected' : '' }}>Tahun 2024</option>
-                    </select>
-
-                    <button type="submit" class="btn btn-primary btn-sm" style="background: #fff; color: var(--primary); font-weight: 700;">
-                        <i class="bi bi-funnel"></i> Terapkan
-                    </button>
-                </form>
-            </div>
         </div>
     </div>
 

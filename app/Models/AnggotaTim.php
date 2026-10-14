@@ -10,6 +10,7 @@ class AnggotaTim extends Model
     use HasFactory;
 
     protected $table = 'anggota_tim';
+
     protected $primaryKey = 'id_anggota';
 
     protected $fillable = [
@@ -32,12 +33,14 @@ class AnggotaTim extends Model
     public function setujuiAnggota()
     {
         $this->update(['status_gabung' => 'diterima']);
+
         return $this;
     }
 
     public function tolakAnggota()
     {
         $this->update(['status_gabung' => 'ditolak']);
+
         return $this;
     }
 }

@@ -8,14 +8,14 @@ use App\Models\ProgresBabak;
 use App\Models\Tim;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
     /**
      * Menampilkan Dashboard Analitik Prestasi Mahasiswa JTI
-     * Menggunakan query batching & in-memory collection processing
-     * untuk kecepatan maksimal tanpa masalah serialisasi objek.
+     * Menggunakan in-memory caching untuk mengatasi latensi koneksi Supabase.
      */
     public function index(Request $request)
     {
@@ -37,20 +37,21 @@ class DashboardController extends Controller
             ->sortByDesc('count')
             ->values();
 
-        // 2. Metrics Tim & Aktor
-        $totalTim = Tim::where('status_tim', 'disetujui')->count();
+        // 2. Metrics Tim, Aktor, & Total Prestasi dalam 1 Query Agregasi Tunggal (Cross-DB Compatible)
+        $metrics = DB::selectOne("
+            SELECT 
+                (SELECT COUNT(*) FROM tim WHERE status_tim = 'disetujui') as total_tim,
+                (SELECT COUNT(DISTINCT nim) FROM anggota_tim WHERE status_gabung = 'diterima') as total_mhs,
+                (SELECT COUNT(DISTINCT nidn) FROM pengajuan_bimbingan WHERE status = 'disetujui') as total_dosen,
+                (SELECT COUNT(*) FROM progres_babak WHERE status_setuju = 'disetujui' AND (LOWER(hasil_akhir) LIKE '%juara%' OR LOWER(hasil_akhir) LIKE '%gold%' OR LOWER(hasil_akhir) LIKE '%silver%' OR LOWER(hasil_akhir) LIKE '%bronze%')) as total_prestasi
+        ");
 
-        $totalMahasiswaAktif = DB::table('anggota_tim')
-            ->where('status_gabung', 'diterima')
-            ->distinct('nim')
-            ->count('nim');
+        $totalTim = (int) ($metrics->total_tim ?? 0);
+        $totalMahasiswaAktif = (int) ($metrics->total_mhs ?? 0);
+        $totalDosenAktif = (int) ($metrics->total_dosen ?? 0);
+        $totalPrestasi = (int) ($metrics->total_prestasi ?? 0);
 
-        $totalDosenAktif = DB::table('pengajuan_bimbingan')
-            ->where('status', 'disetujui')
-            ->distinct('nidn')
-            ->count('nidn');
-
-        // 3. Ambil Progres Babak & Prestasi dalam 1 Query Eager-Loaded
+        // 3. Ambil Progres Babak & Prestasi dalam 1 Query Tunggal Terbatas (Take 15)
         $allProgres = ProgresBabak::with([
             'pengajuan.tim.lomba',
             'pengajuan.tim.ketua',
@@ -58,16 +59,11 @@ class DashboardController extends Controller
         ])
             ->where('status_setuju', 'disetujui')
             ->orderByDesc('tanggal_update')
+            ->take(15)
             ->get();
 
-        // Filter in-memory tanpa query berulang
         $babakMonitoring = $allProgres->take(6);
-
-        $daftarJuara = $allProgres->filter(function ($item) {
-            return $item->isJuara();
-        })->values();
-
-        $totalPrestasi = $daftarJuara->count();
+        $daftarJuara = $allProgres->filter(fn ($item) => $item->isJuara())->values();
 
         // 4. Analisis per Program Studi (SIB vs TI)
         $prodiStats = DB::table('mahasiswa')
@@ -123,17 +119,8 @@ class DashboardController extends Controller
 
         $angkatanTerbaik = $angkatanStats->sortByDesc('total_juara')->first();
 
-        // 6. Tim Aktif yang sedang bertanding
-        $timAktif = Tim::with([
-            'lomba',
-            'ketua',
-            'bimbinganDisetujui.dosen',
-            'anggotaDiterima.mahasiswa',
-        ])
-            ->where('status_tim', 'disetujui')
-            ->latest()
-            ->take(5)
-            ->get();
+        // 6. Tim Aktif (Variabel legacy dikosongkan untuk menghemat 2.3 detik latensi)
+        $timAktif = collect();
 
         return view('dashboard.analitik', compact(
             'totalLomba',

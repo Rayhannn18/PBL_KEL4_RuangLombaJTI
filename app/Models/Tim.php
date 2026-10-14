@@ -10,6 +10,7 @@ class Tim extends Model
     use HasFactory;
 
     protected $table = 'tim';
+
     protected $primaryKey = 'id_tim';
 
     protected $fillable = [
@@ -39,7 +40,7 @@ class Tim extends Model
     public function anggotaDiterima()
     {
         return $this->hasMany(AnggotaTim::class, 'id_tim', 'id_tim')
-                    ->where('status_gabung', 'diterima');
+            ->where('status_gabung', 'diterima');
     }
 
     public function pengajuanBimbingan()
@@ -50,7 +51,7 @@ class Tim extends Model
     public function bimbinganDisetujui()
     {
         return $this->hasOne(PengajuanBimbingan::class, 'id_tim', 'id_tim')
-                    ->where('status', 'disetujui');
+            ->where('status', 'disetujui');
     }
 
     public function admin()

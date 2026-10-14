@@ -10,8 +10,11 @@ class Dosen extends Model
     use HasFactory;
 
     protected $table = 'dosen';
+
     protected $primaryKey = 'nidn';
+
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected $fillable = [
@@ -35,7 +38,7 @@ class Dosen extends Model
     public function bimbinganAktif()
     {
         return $this->hasMany(PengajuanBimbingan::class, 'nidn', 'nidn')
-                    ->where('status', 'disetujui');
+            ->where('status', 'disetujui');
     }
 
     public function getSisaKuotaAttribute()
