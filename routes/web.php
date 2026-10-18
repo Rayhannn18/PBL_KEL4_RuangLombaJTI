@@ -32,3 +32,5 @@ Route::post('/register', [AuthController::class, 'register'])->name('auth.regist
 Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout');
 Route::get('/quick-login/{role}', [AuthController::class, 'quickLogin'])->name('auth.quick');
 
+// Modul Lomba - Ketua Tim
+Route::get('/ketua-tim/modul-lomba', [\App\Http\Controllers\KetuaTim\ModulLombaController::class, 'index'])->name('ketua-tim.modul-lomba');
