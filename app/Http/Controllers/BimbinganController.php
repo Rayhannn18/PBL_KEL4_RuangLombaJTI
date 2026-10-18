@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\UserRole;
 use App\Models\AnggotaTim;
 use App\Models\Dosen;
 use App\Models\Logbook;
@@ -22,6 +23,10 @@ class BimbinganController extends Controller
      */
     private function authUser(): ?array
     {
+        if (session()->has('auth_user')) {
+            return session('auth_user');
+        }
+
         /** @var User|null $user */
         $user = Auth::user();
 
@@ -29,12 +34,14 @@ class BimbinganController extends Controller
             return null;
         }
 
+        $roleValue = $user->role instanceof UserRole ? $user->role->value : (string) $user->role;
+
         return [
-            'id' => $user->nim_nip,
+            'id' => $user->nim_nip ?? (string) $user->id,
             'nama' => $user->name,
             'email' => $user->email,
-            'role' => $user->role->value,
-            'extra' => $user->prodi ? $user->prodi . ' (' . $user->angkatan . ')' : '',
+            'role' => $roleValue,
+            'extra' => $user->prodi ? $user->prodi.' ('.$user->angkatan.')' : '',
         ];
     }
 
@@ -67,7 +74,7 @@ class BimbinganController extends Controller
                         $sub->where('nim', $nim);
                     });
             })
-                ->with(['lomba', 'ketua', 'bimbinganDisetujui.dosen', 'pengajuanBimbingan.dosen', 'anggotaDiterima.mahasiswa'])
+                ->with(['lomba', 'ketua', 'bimbinganDisetujui.dosen', 'pengajuanBimbingan.dosen', 'anggotaDiterima.mahasiswa', 'anggota.mahasiswa'])
                 ->get();
 
             $hasLomba = $timList->isNotEmpty();
@@ -235,10 +242,22 @@ class BimbinganController extends Controller
             'tindak_lanjut' => 'nullable|string|max:1000',
         ]);
 
-        $pengajuan = PengajuanBimbingan::with('tim')->findOrFail($validated['id_pengajuan']);
+        $authUser = $this->authUser();
+        if (! $authUser || $authUser['role'] !== 'mahasiswa') {
+            return back()->with('error', 'Hanya anggota tim mahasiswa yang dapat menambahkan logbook bimbingan.');
+        }
+
+        $pengajuan = PengajuanBimbingan::with(['tim.anggotaDiterima'])->findOrFail($validated['id_pengajuan']);
 
         if ($pengajuan->status !== 'disetujui') {
             return back()->with('error', 'Logbook hanya dapat ditambahkan setelah bimbingan resmi disetujui oleh Dosen Pembimbing.');
+        }
+
+        $isMember = ($pengajuan->tim->nim === $authUser['id']) ||
+            $pengajuan->tim->anggotaDiterima->contains('nim', $authUser['id']);
+
+        if (! $isMember) {
+            return back()->with('error', 'Anda bukan anggota resmi dari tim ini.');
         }
 
         Logbook::create([
@@ -261,7 +280,17 @@ class BimbinganController extends Controller
             'status_validasi' => 'required|in:disetujui,revisi',
         ]);
 
-        $logbook = Logbook::findOrFail($id);
+        $authUser = $this->authUser();
+        if (! $authUser || ! in_array($authUser['role'], ['dosen', 'admin'])) {
+            return back()->with('error', 'Hanya Dosen Pembimbing atau Administrator yang berhak memvalidasi logbook.');
+        }
+
+        $logbook = Logbook::with('pengajuan')->findOrFail($id);
+
+        if ($authUser['role'] === 'dosen' && $logbook->pengajuan->nidn !== $authUser['id']) {
+            return back()->with('error', 'Anda hanya dapat memvalidasi logbook untuk tim bimbingan Anda.');
+        }
+
         $logbook->update([
             'status_validasi' => $validated['status_validasi'],
         ]);
@@ -283,7 +312,17 @@ class BimbinganController extends Controller
             'catatan' => 'nullable|string|max:500',
         ]);
 
-        $pengajuan = PengajuanBimbingan::findOrFail($id);
+        $authUser = $this->authUser();
+        if (! $authUser || ! in_array($authUser['role'], ['dosen', 'admin'])) {
+            return back()->with('error', 'Hanya Dosen Pembimbing atau Administrator yang berhak merespons pengajuan bimbingan.');
+        }
+
+        $pengajuan = PengajuanBimbingan::with('tim')->findOrFail($id);
+
+        if ($authUser['role'] === 'dosen' && $pengajuan->nidn !== $authUser['id']) {
+            return back()->with('error', 'Anda hanya dapat merespons pengajuan bimbingan yang ditujukan kepada Anda.');
+        }
+
         $pengajuan->update([
             'status' => $validated['status'],
             'catatan' => $validated['catatan'] ?? $pengajuan->catatan,

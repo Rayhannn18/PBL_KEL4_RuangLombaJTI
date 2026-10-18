@@ -30,12 +30,16 @@ class RegisterRequest extends FormRequest
                 'required',
                 // Mahasiswa: NIM 8–15 digit. Dosen: NIP tepat 18 digit.
                 $isMahasiswa ? 'digits_between:8,15' : 'digits:18',
+                $isMahasiswa ? 'unique:mahasiswa,nim' : 'unique:dosen,nidn',
                 'unique:users,nim_nip',
             ],
             'email' => [
                 'required',
                 'email:rfc',
                 'max:255',
+                'unique:mahasiswa,email_kampus',
+                'unique:dosen,email_kampus',
+                'unique:admin,email',
                 'unique:users,email',
                 // Mahasiswa wajib email biasa (bukan email kampus). Dosen bebas memakai email apa saja.
                 function (string $attribute, mixed $value, \Closure $fail) use ($isMahasiswa) {

@@ -5,6 +5,7 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
 
 class Lomba extends Model
 {
@@ -65,30 +66,31 @@ class Lomba extends Model
 
     public function scopeFilter($query, array $filters)
     {
-        // Keyword Search
-        $query->when($filters['search'] ?? null, function ($q, $search) {
-            $q->where(function ($sub) use ($search) {
-                $sub->where('nama_lomba', 'like', '%'.$search.'%')
-                    ->orWhere('penyelenggara', 'like', '%'.$search.'%')
-                    ->orWhere('deskripsi', 'like', '%'.$search.'%');
+        // Keyword Search (Case-Insensitive untuk PostgreSQL & SQLite)
+        $query->when($filters['search'] ?? ($filters['q'] ?? null), function ($q, $search) {
+            $lower = '%'.strtolower($search).'%';
+            $q->where(function ($sub) use ($lower) {
+                $sub->whereRaw('LOWER(nama_lomba) LIKE ?', [$lower])
+                    ->orWhereRaw('LOWER(penyelenggara) LIKE ?', [$lower])
+                    ->orWhereRaw('LOWER(deskripsi) LIKE ?', [$lower]);
             });
         });
 
         // Kategori Filter
         $query->when($filters['kategori'] ?? null, function ($q, $kategori) {
-            if ($kategori !== 'Semua' && ! empty($kategori)) {
+            if (strtolower($kategori) !== 'semua' && ! empty($kategori)) {
                 $q->where('kategori', $kategori);
             }
         });
 
-        // Tingkat Filter
+        // Tingkat Filter (Case-Insensitive: Internasional, Nasional, Kampus, Regional)
         $query->when($filters['tingkat'] ?? null, function ($q, $tingkat) {
-            if ($tingkat !== 'Semua' && ! empty($tingkat)) {
-                $q->where('tingkat', $tingkat);
+            if (strtolower($tingkat) !== 'semua' && ! empty($tingkat)) {
+                $q->whereRaw('LOWER(tingkat) = ?', [strtolower($tingkat)]);
             }
         });
 
-        // Biaya Filter
+        // Biaya Filter (Gratis vs Berbayar)
         $query->when($filters['biaya'] ?? null, function ($q, $biaya) {
             if ($biaya === 'gratis') {
                 $q->where('biaya', 0);
@@ -97,11 +99,25 @@ class Lomba extends Model
             }
         });
 
+        // Tipe Filter (Individu vs Tim) — Periksa ketersediaan kolom skema
+        $query->when($filters['tipe'] ?? null, function ($q, $tipe) {
+            if (strtolower($tipe) !== 'semua' && ! empty($tipe) && Schema::hasColumn('lomba', 'tipe')) {
+                $q->whereRaw('LOWER(tipe) = ?', [strtolower($tipe)]);
+            }
+        });
+
+        // Mode Filter (Online, Offline, Hybrid) — Periksa ketersediaan kolom skema
+        $query->when($filters['mode'] ?? null, function ($q, $mode) {
+            if (strtolower($mode) !== 'semua' && ! empty($mode) && Schema::hasColumn('lomba', 'mode')) {
+                $q->whereRaw('LOWER(mode) = ?', [strtolower($mode)]);
+            }
+        });
+
         // Tenggat Filter
-        $query->when($filters['status_tenggat'] ?? null, function ($q, $status) {
+        $query->when($filters['status_tenggat'] ?? ($filters['tenggat'] ?? null), function ($q, $status) {
             if ($status === 'buka') {
                 $q->where('tenggat', '>=', Carbon::today());
-            } elseif ($status === 'segera_berakhir') {
+            } elseif ($status === 'segera' || $status === 'segera_berakhir') {
                 $q->whereBetween('tenggat', [Carbon::today(), Carbon::today()->addDays(7)]);
             } elseif ($status === 'tutup') {
                 $q->where('tenggat', '<', Carbon::today());

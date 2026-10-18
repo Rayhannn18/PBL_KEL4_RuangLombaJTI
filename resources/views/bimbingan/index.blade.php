@@ -74,38 +74,83 @@
         font-size: 2.8rem;
         box-shadow: 0 10px 20px rgba(30, 64, 175, 0.1);
     }
-    .step-grid {
+    .guide-cards-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-        gap: 20px;
-        margin: 32px 0 24px;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 22px;
+        margin: 32px 0 20px;
         text-align: left;
     }
-    .step-card {
+    @media (max-width: 900px) {
+        .guide-cards-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    .guide-card {
         background: #F8FAFC;
         border: 1px solid var(--border);
         border-radius: var(--radius-md);
-        padding: 20px;
-        position: relative;
-        transition: transform 0.2s, box-shadow 0.2s;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        transition: all 0.25s ease;
     }
-    .step-card:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-sm);
-        border-color: #BFDBFE;
+    .guide-card:hover {
+        background: #FFFFFF;
+        border-color: #93C5FD;
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-md);
     }
-    .step-number {
-        width: 32px;
-        height: 32px;
-        border-radius: 8px;
-        background: var(--primary);
-        color: #fff;
-        font-weight: 800;
-        font-size: 0.9rem;
+    .guide-icon-box {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-bottom: 12px;
+        font-size: 1.25rem;
+        margin-bottom: 16px;
+    }
+    .icon-box-blue {
+        background: #EFF6FF;
+        color: #2563EB;
+        border: 1px solid #DBEAFE;
+    }
+    .icon-box-amber {
+        background: #FEF3C7;
+        color: #D97706;
+        border: 1px solid #FDE68A;
+    }
+    .icon-box-green {
+        background: #ECFDF5;
+        color: #059669;
+        border: 1px solid #A7F3D0;
+    }
+    .guide-card-title {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: var(--primary-dark);
+        margin-bottom: 8px;
+        line-height: 1.3;
+    }
+    .guide-card-desc {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        line-height: 1.6;
+        margin-bottom: 22px;
+        flex: 1;
+    }
+    .guide-card-btn {
+        width: 100%;
+        font-weight: 700;
+        font-size: 0.85rem;
+        padding: 9px 16px;
+        border-radius: var(--radius-sm);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
     }
 
     /* Grid Lomba Rekomendasi */
@@ -263,53 +308,61 @@
                 Untuk dapat <strong>mengajukan Dosen Pembimbing</strong> dan <strong>mengisi logbook konsultasi</strong>, Anda harus terlebih dahulu mendaftarkan tim pada lomba yang tersedia.
             </p>
 
-            <!-- 3 Langkah Alur Bimbingan -->
-            <div class="step-grid">
-                <div class="step-card">
-                    <div class="step-number">1</div>
-                    <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 6px; color: var(--primary-dark);">
-                        Pilih Lomba & Bentuk Tim
-                    </h4>
-                    <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; margin: 0;">
-                        Tentukan lomba yang ingin diikuti dan bentuk tim bersama rekan mahasiswa JTI Polinema.
-                    </p>
+            <!-- Tiga Kartu Panduan Modul Bimbingan Mahasiswa (Sesuai Referensi Desain) -->
+            <div class="guide-cards-grid">
+                <!-- Kartu 1 — 01. Cari & Telusuri Lomba -->
+                <div class="guide-card">
+                    <div>
+                        <div class="guide-icon-box icon-box-blue">
+                            <i class="bi bi-search"></i>
+                        </div>
+                        <h3 class="guide-card-title">01. Cari & Telusuri Lomba</h3>
+                        <p class="guide-card-desc">
+                            Jelajahi kompetisi yang sedang membuka pendaftaran dan temukan lomba sesuai minat serta bidang keahlianmu.
+                        </p>
+                    </div>
+                    <a href="{{ route('lomba.index') }}" class="btn btn-primary guide-card-btn">
+                        Lihat Katalog Lomba <i class="bi bi-arrow-right"></i>
+                    </a>
                 </div>
 
-                <div class="step-card">
-                    <div class="step-number" style="background: #2563EB;">2</div>
-                    <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 6px; color: var(--primary-dark);">
-                        Ajukan Dosen Pembimbing
-                    </h4>
-                    <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; margin: 0;">
-                        Pilih dosen pembimbing sesuai bidang keahlian (Software, AI, UI/UX, Jaringan/IoT) untuk memvalidasi proposal.
-                    </p>
+                <!-- Kartu 2 — 02. Gabung Lowongan Tim -->
+                <div class="guide-card">
+                    <div>
+                        <div class="guide-icon-box icon-box-amber">
+                            <i class="bi bi-people-fill"></i>
+                        </div>
+                        <h3 class="guide-card-title">02. Gabung Lowongan Tim</h3>
+                        <p class="guide-card-desc">
+                            Temukan tim mahasiswa JTI Polinema yang sedang membuka lowongan anggota, lalu ajukan diri untuk bergabung sesuai kebutuhan tim.
+                        </p>
+                    </div>
+                    <a href="{{ route('tim.lowongan') }}" class="btn btn-outline-primary guide-card-btn" style="background: #fff;">
+                        Papan Lowongan Tim <i class="bi bi-box-arrow-up-right"></i>
+                    </a>
                 </div>
 
-                <div class="step-card">
-                    <div class="step-number" style="background: #10B981;">3</div>
-                    <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 6px; color: var(--primary-dark);">
-                        Konsultasi & Catat Logbook
-                    </h4>
-                    <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; margin: 0;">
-                        Lakukan bimbingan rutin, catat catatan evaluasi di logbook, dan pantau progres babak hingga meraih juara.
-                    </p>
+                <!-- Kartu 3 — 03. Bentuk Tim Sendiri -->
+                <div class="guide-card">
+                    <div>
+                        <div class="guide-icon-box icon-box-green">
+                            <i class="bi bi-flag-fill"></i>
+                        </div>
+                        <h3 class="guide-card-title">03. Bentuk Tim Sendiri</h3>
+                        <p class="guide-card-desc">
+                            Inisiasi tim delegasi baru, tentukan lomba yang ingin diikuti, dan ajukan diri sebagai Ketua Tim.
+                        </p>
+                    </div>
+                    <a href="{{ route('tim.create') }}" class="btn btn-primary guide-card-btn" style="background: #EFF6FF; color: var(--primary); border: 1px solid #BFDBFE;">
+                        <i class="bi bi-plus-circle-fill"></i> Bentuk Tim Baru
+                    </a>
                 </div>
-            </div>
-
-            <!-- Tombol Aksi Cepat -->
-            <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 20px;">
-                <button type="button" class="btn btn-primary" onclick="openModalDaftarTim()">
-                    <i class="bi bi-plus-circle-fill"></i> Daftarkan Tim Lomba Sekarang
-                </button>
-                <a href="{{ route('dashboard.analitik') }}" class="btn btn-outline-primary">
-                    <i class="bi bi-graph-up-arrow"></i> Lihat Info Prestasi di Dashboard
-                </a>
             </div>
         </div>
 
         <!-- Daftar Lomba Aktif Terbuka -->
         <div style="margin-bottom: 40px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
                 <div>
                     <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--primary-dark); margin: 0;">
                         <i class="bi bi-award" style="color: var(--primary);"></i> Lomba Terbuka yang Siap Diikuti
@@ -318,6 +371,9 @@
                         Pilih kompetisi di bawah ini untuk langsung membentuk tim dan mengaktifkan modul bimbingan Anda.
                     </p>
                 </div>
+                <a href="{{ route('lomba.index') }}" style="font-size: 0.88rem; font-weight: 700; color: var(--primary); display: inline-flex; align-items: center; gap: 6px; text-decoration: none;">
+                    Jelajahi Semua Lomba <i class="bi bi-arrow-right"></i>
+                </a>
             </div>
 
             <div class="lomba-grid">
@@ -348,12 +404,19 @@
                                 <span><i class="bi bi-cash"></i> {{ $lomba->biaya > 0 ? 'Rp ' . number_format($lomba->biaya, 0, ',', '.') : 'Gratis' }}</span>
                             </div>
 
-                            <button type="button"
-                                    class="btn btn-outline-primary btn-sm"
-                                    style="width: 100%; font-weight: 700;"
-                                    onclick="openModalDaftarTim('{{ $lomba->id_lomba }}', '{{ addslashes($lomba->nama_lomba) }}')">
-                                <i class="bi bi-people-fill"></i> Ikuti Lomba (Bentuk Tim)
-                            </button>
+                            <div style="display: flex; gap: 8px;">
+                                <a href="{{ route('lomba.show', $lomba->id_lomba) }}"
+                                   class="btn btn-secondary btn-sm"
+                                   style="font-weight: 600;"
+                                   title="Lihat Detail Lomba">
+                                    <i class="bi bi-info-circle"></i> Lihat Detail Lomba
+                                </a>
+                                <a href="{{ route('tim.create', ['lomba_id' => $lomba->id_lomba]) }}"
+                                   class="btn btn-outline-primary btn-sm"
+                                   style="flex: 1; font-weight: 700;">
+                                    <i class="bi bi-flag-fill"></i> Bentuk Tim
+                                </a>
+                            </div>
                         </div>
                     </div>
                 @empty
@@ -418,14 +481,27 @@
                             <div style="font-weight: 700; color: var(--text-main); font-size: 0.95rem; margin-bottom: 4px;">
                                 {{ $selectedTim->lomba->nama_lomba ?? 'Kompetisi JTI' }}
                             </div>
-                            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                            <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px;">
                                 <span class="badge badge-primary" style="font-size: 0.72rem;">{{ $selectedTim->lomba->kategori ?? 'Umum' }}</span>
                                 <span class="badge badge-purple" style="font-size: 0.72rem;">{{ $selectedTim->lomba->tingkat ?? 'Nasional' }}</span>
                             </div>
+                            @if($selectedTim->lomba)
+                                <div>
+                                    <a href="{{ route('lomba.show', $selectedTim->lomba->id_lomba) }}" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; padding: 3px 10px;" title="Lihat Detail Lomba">
+                                        <i class="bi bi-info-circle"></i> Lihat Detail Lomba
+                                    </a>
+                                </div>
+                            @endif
                         </div>
 
                         <div>
-                            <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 8px;">SUSUNAN ANGGOTA TIM:</div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted);">SUSUNAN ANGGOTA TIM:</span>
+                                <span style="font-size: 0.75rem; font-weight: 700; color: var(--primary);">
+                                    {{ $selectedTim->anggotaDiterima->count() }} / {{ $selectedTim->kuota_anggota }} Kuota Terisi
+                                </span>
+                            </div>
+
                             <div style="display: flex; flex-direction: column; gap: 8px;">
                                 <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; padding: 6px 10px; background: #fff; border: 1px solid var(--border); border-radius: 6px;">
                                     <div>
@@ -440,13 +516,69 @@
                                         <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; padding: 6px 10px; background: #fff; border: 1px solid var(--border); border-radius: 6px;">
                                             <div>
                                                 <strong>{{ $ang->mahasiswa->nama ?? '-' }}</strong>
-                                                <div style="font-size: 0.72rem; color: var(--text-muted);">NIM: {{ $ang->nim }}</div>
+                                                <div style="font-size: 0.72rem; color: var(--text-muted);">NIM: {{ $ang->nim }} ({{ $ang->mahasiswa->prodi ?? '' }})</div>
                                             </div>
                                             <span class="badge badge-gray" style="font-size: 0.7rem;">{{ $ang->peran ?? 'Anggota' }}</span>
                                         </div>
                                     @endif
                                 @endforeach
                             </div>
+
+                            @if($selectedTim->nim === $authUser['id'])
+                                <!-- Khusus Ketua Tim: Manajemen Permohonan Calon Anggota -->
+                                @php
+                                    $pendingAnggota = $selectedTim->anggota->where('status_gabung', 'menunggu');
+                                @endphp
+                                @if($pendingAnggota->isNotEmpty())
+                                    <div style="margin-top: 18px; background: #FFFBEB; border: 1px solid #FDE68A; border-radius: var(--radius-sm); padding: 12px;">
+                                        <div style="font-size: 0.8rem; font-weight: 700; color: #92400E; margin-bottom: 8px;">
+                                            <i class="bi bi-clock-history"></i> Permohonan Anggota Masuk ({{ $pendingAnggota->count() }}):
+                                        </div>
+                                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                                            @foreach($pendingAnggota as $pend)
+                                                <div style="background: #fff; border: 1px solid #FDE68A; border-radius: 6px; padding: 10px; font-size: 0.82rem;">
+                                                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+                                                        <div>
+                                                            <strong>{{ $pend->mahasiswa->nama ?? "NIM {$pend->nim}" }}</strong>
+                                                            <div style="font-size: 0.72rem; color: var(--text-muted);">
+                                                                NIM: {{ $pend->nim }} ({{ $pend->mahasiswa->prodi ?? '-' }})
+                                                            </div>
+                                                            <div style="margin-top: 4px;">
+                                                                <span class="badge badge-purple" style="font-size: 0.7rem;">Posisi: {{ $pend->peran }}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div style="display: flex; gap: 6px; justify-content: flex-end; margin-top: 8px; border-top: 1px dashed var(--border); padding-top: 6px;">
+                                                        <form action="{{ route('tim.anggota.respon', $pend->id_anggota) }}" method="POST" style="margin: 0;">
+                                                            @csrf
+                                                            <input type="hidden" name="status" value="diterima">
+                                                            <button type="submit" class="btn btn-success btn-sm" style="font-size: 0.72rem; padding: 3px 8px;">
+                                                                <i class="bi bi-check-lg"></i> Setujui
+                                                            </button>
+                                                        </form>
+                                                        <form action="{{ route('tim.anggota.respon', $pend->id_anggota) }}" method="POST" style="margin: 0;">
+                                                            @csrf
+                                                            <input type="hidden" name="status" value="ditolak">
+                                                            <button type="submit" class="btn btn-danger btn-sm" style="font-size: 0.72rem; padding: 3px 8px;">
+                                                                <i class="bi bi-x-lg"></i> Tolak
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+
+                                <div style="margin-top: 14px; display: flex; gap: 8px;">
+                                    <a href="{{ route('tim.lowongan') }}" class="btn btn-secondary btn-sm" style="flex: 1; font-size: 0.75rem; text-align: center;">
+                                        <i class="bi bi-door-open"></i> Papan Lowongan Tim
+                                    </a>
+                                    <a href="{{ route('tim.create') }}" class="btn btn-outline-primary btn-sm" style="flex: 1; font-size: 0.75rem; text-align: center;">
+                                        <i class="bi bi-plus-circle"></i> Bentuk Tim Lain
+                                    </a>
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </div>
