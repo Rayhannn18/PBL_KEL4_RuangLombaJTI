@@ -328,7 +328,7 @@
             </div>
 
             <!-- Form Login -->
-            <form action="{{ route('auth.login') }}" method="POST">
+            <form action="{{ route('login') }}" method="POST">
                 @csrf
                 <input type="hidden" name="role" id="roleInput" value="mahasiswa">
 
