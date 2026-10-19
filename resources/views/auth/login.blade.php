@@ -1,73 +1,418 @@
-@extends('layouts.auth')
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Masuk Sistem - RuangLombaJTI Polinema</title>
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-@section('title', 'Masuk')
+    <style>
+        :root {
+            --primary: #1E40AF;
+            --primary-dark: #0F2744;
+            --primary-light: #3B82F6;
+            --primary-soft: #EFF6FF;
+            --secondary: #0D9488;
+            --accent: #F59E0B;
+            --success: #10B981;
+            --danger: #EF4444;
+            --bg-body: #F8FAFC;
+            --surface: #FFFFFF;
+            --border: #E2E8F0;
+            --text-main: #0F172A;
+            --text-muted: #64748B;
+            --shadow-md: 0 10px 25px -5px rgba(15, 39, 68, 0.08), 0 8px 10px -6px rgba(15, 39, 68, 0.04);
+            --shadow-lg: 0 20px 35px -10px rgba(15, 39, 68, 0.15);
+            --radius-md: 12px;
+            --radius-lg: 18px;
+        }
 
-@php
-    $role = old('role', 'mahasiswa');
-@endphp
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-@section('content')
-    <h1 class="text-center text-[26px] font-extrabold tracking-tight">Masuk ke Akun</h1>
-    <p class="mt-2 text-center text-sm text-muted">Pilih peranmu, lalu masukkan akun untuk melanjutkan.</p>
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #F0F4F8 0%, #E2E8F0 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 20px;
+        }
 
-    <form method="POST" action="{{ route('login') }}" class="mt-7 space-y-5" novalidate>
-        @csrf
+        .auth-wrapper {
+            width: 100%;
+            max-width: 480px;
+        }
 
-        <fieldset>
-            <legend class="mb-2 text-[13px] font-semibold text-muted">Masuk Sebagai</legend>
-            <div class="grid grid-cols-3 gap-2.5">
-                @foreach ([
-                    'mahasiswa' => 'Mahasiswa',
-                    'dosen' => 'Dosen',
-                    'admin' => 'Admin',
-                ] as $value => $title)
-                    <label class="group relative flex cursor-pointer flex-col items-center gap-2 rounded-2xl border border-line bg-white px-2 py-3.5 text-center transition has-checked:border-2 has-checked:border-brand has-checked:bg-brand-soft has-focus-visible:ring-4 has-focus-visible:ring-brand/20">
-                        <input type="radio" name="role" value="{{ $value }}" class="sr-only" @checked($role === $value)>
+        .auth-top-nav {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 0.88rem;
+            text-decoration: none;
+            transition: transform 0.2s;
+        }
+        .back-link:hover {
+            transform: translateX(-3px);
+            color: #1D4ED8;
+        }
 
-                        <span class="absolute right-2 top-2 hidden size-4 items-center justify-center rounded-full bg-brand text-white group-has-checked:flex">
-                            <svg class="size-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
-                        </span>
+        .auth-card {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-lg);
+            padding: 36px 32px;
+            position: relative;
+            overflow: hidden;
+        }
 
-                        <span class="flex size-8 items-center justify-center rounded-full bg-brand-soft text-brand group-has-checked:bg-white">
-                            <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                @if ($value === 'mahasiswa')
-                                    <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/>
-                                @elseif ($value === 'dosen')
-                                    <path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/>
-                                @else
-                                    <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>
-                                @endif
-                            </svg>
-                        </span>
-                        <span class="text-[13px] font-bold text-ink">{{ $title }}</span>
-                    </label>
-                @endforeach
-            </div>
-            @error('role')
-                <p class="mt-1.5 text-xs font-medium text-red-600">{{ $message }}</p>
-            @enderror
-        </fieldset>
+        .auth-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, #1E40AF 0%, #3B82F6 50%, #0D9488 100%);
+        }
 
-        <x-auth.field name="login" label="Email / NIM" placeholder="cth. 2241720088 atau nama@gmail.com"
-                      autocomplete="username" check="login" />
+        .brand-header {
+            text-align: center;
+            margin-bottom: 26px;
+        }
+        .brand-logo-wrap {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 58px;
+            height: 58px;
+            border-radius: var(--radius-md);
+            background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%);
+            color: #fff;
+            font-size: 1.7rem;
+            margin-bottom: 12px;
+            box-shadow: 0 8px 16px rgba(30, 64, 175, 0.25);
+        }
+        .brand-title {
+            font-size: 1.45rem;
+            font-weight: 800;
+            color: var(--primary-dark);
+            letter-spacing: -0.5px;
+        }
+        .brand-title span {
+            color: #2563EB;
+        }
+        .brand-subtitle {
+            font-size: 0.84rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
 
-        <div>
-            <x-auth.field name="password" type="password" label="Kata Sandi" placeholder="Masukkan kata sandi" autocomplete="current-password" />
-            <div class="mt-3 text-right">
-                <a href="#" class="text-[13px] font-semibold text-brand hover:underline">Lupa password?</a>
-            </div>
+        /* Role Selector Tabs */
+        .role-tabs {
+            display: flex;
+            background: #F1F5F9;
+            padding: 4px;
+            border-radius: var(--radius-md);
+            gap: 4px;
+            margin-bottom: 22px;
+        }
+        .role-tab-btn {
+            flex: 1;
+            padding: 8px 10px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-family: inherit;
+        }
+        .role-tab-btn.active {
+            background: #fff;
+            color: var(--primary);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 18px;
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text-main);
+        }
+        .input-group {
+            position: relative;
+        }
+        .input-group i.input-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94A3B8;
+            font-size: 1.05rem;
+        }
+        .form-control {
+            width: 100%;
+            padding: 11px 14px 11px 40px;
+            font-size: 0.9rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background-color: #fff;
+            color: var(--text-main);
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #94A3B8;
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 4px;
+        }
+        .password-toggle:hover {
+            color: var(--primary);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #1E40AF 0%, #2563EB 100%);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+            transition: all 0.2s;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .btn-submit:hover {
+            background: linear-gradient(135deg, #1D4ED8 0%, #1E40AF 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
+        }
+
+        /* Alert */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+        }
+        .alert-danger {
+            background-color: #FEF2F2;
+            color: #991B1B;
+            border: 1px solid #FECACA;
+        }
+        .alert-success {
+            background-color: #ECFDF5;
+            color: #065F46;
+            border: 1px solid #A7F3D0;
+        }
+
+        /* Card footer */
+        .auth-footer {
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            font-size: 0.86rem;
+            color: var(--text-muted);
+        }
+        .auth-footer a {
+            color: var(--primary);
+            font-weight: 700;
+            text-decoration: none;
+        }
+        .auth-footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="auth-wrapper">
+        <div class="auth-top-nav">
+            <a href="{{ route('dashboard.analitik') }}" class="back-link">
+                <i class="bi bi-arrow-left"></i> Kembali ke Dashboard
+            </a>
+            <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">JTI Polinema</span>
         </div>
 
-        <button type="submit"
-                class="flex h-[52px] w-full items-center justify-center gap-2 rounded-full bg-brand text-[15px] font-bold text-white shadow-lg shadow-brand/25 transition hover:bg-brand-dark focus:outline-none focus:ring-4 focus:ring-brand/30">
-            Masuk
-            <svg class="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-        </button>
-    </form>
+        <div class="auth-card">
+            <!-- Header Brand -->
+            <div class="brand-header">
+                <div class="brand-logo-wrap">
+                    <i class="bi bi-trophy-fill"></i>
+                </div>
+                <div class="brand-title">RuangLomba<span>JTI</span></div>
+                <div class="brand-subtitle">Portal Masuk Sistem Monitoring & Analitik Lomba</div>
+            </div>
 
-    {{-- Admin tidak mendaftar lewat form, jadi tautan daftar disembunyikan saat Admin dipilih. --}}
-    <div data-role-only="mahasiswa,dosen" @class(['mt-7 border-t border-line pt-6 text-center text-sm text-muted', 'hidden' => $role === 'admin'])>
-        Belum punya akun?
-        <a href="{{ route('register') }}" class="ml-1 font-bold text-brand hover:underline">Daftar di sini</a>
+            <!-- Flash Error / Success Alerts -->
+            @if(session('error'))
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <span>{{ session('error') }}</span>
+                </div>
+            @endif
+
+            @if(session('success'))
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>{{ session('success') }}</span>
+                </div>
+            @endif
+
+            <!-- Role Selector Tabs -->
+            <div class="role-tabs">
+                <button type="button" class="role-tab-btn active" onclick="selectRole('mahasiswa', this)">
+                    <i class="bi bi-mortarboard"></i> Mahasiswa
+                </button>
+                <button type="button" class="role-tab-btn" onclick="selectRole('dosen', this)">
+                    <i class="bi bi-person-video3"></i> Dosen
+                </button>
+                <button type="button" class="role-tab-btn" onclick="selectRole('admin', this)">
+                    <i class="bi bi-shield-lock"></i> Admin JTI
+                </button>
+            </div>
+
+            <!-- Form Login -->
+            <form action="{{ route('auth.login') }}" method="POST">
+                @csrf
+                <input type="hidden" name="role" id="roleInput" value="mahasiswa">
+
+                <div class="form-group">
+                    <label class="form-label" id="identifierLabel">Email Mahasiswa atau NIM</label>
+                    <div class="input-group">
+                        <i class="bi bi-person input-icon" id="identifierIcon"></i>
+                        <input type="text"
+                               name="identifier"
+                               id="identifierInput"
+                               class="form-control"
+                               placeholder="Contoh: sastra22@gmail.com atau 244107060116"
+                               value="{{ old('identifier') }}"
+                               required
+                               autofocus>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <label class="form-label" style="margin-bottom: 0;">Kata Sandi</label>
+                    </div>
+                    <div class="input-group">
+                        <i class="bi bi-key input-icon"></i>
+                        <input type="password"
+                               name="password"
+                               id="passwordInput"
+                               class="form-control"
+                               placeholder="Masukkan kata sandi akun Anda"
+                               required>
+                        <button type="button" class="password-toggle" onclick="togglePassword()" title="Tampilkan/sembunyikan sandi">
+                            <i class="bi bi-eye" id="toggleIcon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit">
+                    <i class="bi bi-box-arrow-in-right"></i> Masuk ke Sistem
+                </button>
+            </form>
+
+            <!-- Footer Pendaftaran -->
+            <div class="auth-footer">
+                Belum memiliki akun mahasiswa? <a href="{{ route('register') }}">Daftar di sini</a>
+            </div>
+        </div>
     </div>
-@endsection
+
+    <script>
+        function selectRole(role, btn) {
+            document.querySelectorAll('.role-tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('roleInput').value = role;
+
+            const label = document.getElementById('identifierLabel');
+            const input = document.getElementById('identifierInput');
+            const icon = document.getElementById('identifierIcon');
+
+            if (role === 'mahasiswa') {
+                label.innerText = 'Email Mahasiswa atau NIM';
+                input.placeholder = 'Contoh: sastra22@gmail.com atau 244107060116';
+                icon.className = 'bi bi-mortarboard input-icon';
+            } else if (role === 'dosen') {
+                label.innerText = 'Email Dosen atau NIP';
+                input.placeholder = 'Contoh: vivin22@gmail.com atau 0012058501';
+                icon.className = 'bi bi-person-video3 input-icon';
+            } else if (role === 'admin') {
+                label.innerText = 'Email Resmi Admin Kemahasiswaan';
+                input.placeholder = 'Contoh: admin.jti@polinema.ac.id';
+                icon.className = 'bi bi-shield-lock input-icon';
+            }
+        }
+
+        function togglePassword() {
+            const pwd = document.getElementById('passwordInput');
+            const icon = document.getElementById('toggleIcon');
+            if (pwd.type === 'password') {
+                pwd.type = 'text';
+                icon.className = 'bi bi-eye-slash';
+            } else {
+                pwd.type = 'password';
+                icon.className = 'bi bi-eye';
+            }
+        }
+    </script>
+</body>
+</html>
