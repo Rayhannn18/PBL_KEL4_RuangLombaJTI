@@ -5,7 +5,7 @@
 @section('content')
     <h1 class="text-center text-[26px] font-extrabold tracking-tight">Halo, {{ auth()->user()->name }}</h1>
     <p class="mt-2 text-center text-sm text-muted">
-        Anda masuk sebagai <strong class="text-ink">{{ auth()->user()->role->label() }}</strong>
+        Anda masuk sebagai <strong class="text-ink">{{ auth()->user()->role instanceof \App\Enums\UserRole ? auth()->user()->role->label() : ucfirst(auth()->user()->role) }}</strong>
         @if (auth()->user()->nim_nip)
             ({{ auth()->user()->nim_nip }})
         @endif

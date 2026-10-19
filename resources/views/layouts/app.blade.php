@@ -404,11 +404,15 @@
             </div>
             <div style="display: flex; align-items: center; gap: 15px;">
                 @auth
+                    @php
+                        $userRoleVal = auth()->user()->role instanceof \App\Enums\UserRole ? auth()->user()->role->value : (string) auth()->user()->role;
+                        $userRoleLabel = auth()->user()->role instanceof \App\Enums\UserRole ? auth()->user()->role->label() : ucfirst($userRoleVal);
+                    @endphp
                     <span style="display: flex; align-items: center; gap: 6px;">
                         <i class="bi bi-person-check-fill" style="color: #6EE7B7;"></i>
                         <span>{{ auth()->user()->name }}</span>
-                        <span class="badge {{ auth()->user()->role->value == 'admin' ? 'badge-danger' : (auth()->user()->role->value == 'dosen' ? 'badge-warning' : 'badge-primary') }}" style="font-size: 0.72rem; padding: 2px 8px;">
-                            {{ auth()->user()->role->label() }}
+                        <span class="badge {{ $userRoleVal === 'admin' ? 'badge-danger' : ($userRoleVal === 'dosen' ? 'badge-warning' : 'badge-primary') }}" style="font-size: 0.72rem; padding: 2px 8px;">
+                            {{ $userRoleLabel }}
                         </span>
                     </span>
                     <form action="{{ route('logout') }}" method="POST" style="display: inline; margin: 0;">
@@ -442,16 +446,51 @@
 
             <ul class="nav-links">
                 <li>
-                    <a href="{{ route('dashboard.analitik') }}" class="nav-link {{ request()->routeIs('dashboard.*') ? 'active' : '' }}">
+                    <a href="{{ route('dashboard.analitik') }}" class="nav-link {{ (request()->routeIs('dashboard*') || request()->is('/') || request()->is('dashboard') || request()->is('analitik')) ? 'active' : '' }}">
                         <i class="bi bi-graph-up-arrow"></i> Dashboard Analitik
                     </a>
                 </li>
                 @auth
-                <li>
-                    <a href="{{ route('bimbingan.index') }}" class="nav-link {{ request()->routeIs('bimbingan.*') ? 'active' : '' }}">
-                        <i class="bi bi-person-video3"></i> Modul Bimbingan
-                    </a>
-                </li>
+                    @php
+                        $userRole = null;
+                        if (auth()->check()) {
+                            $r = auth()->user()->role ?? null;
+                            $userRole = $r instanceof \App\Enums\UserRole ? $r->value : (string) $r;
+                            if (! $userRole && session()->has('auth_user')) {
+                                $userRole = session('auth_user')['role'] ?? null;
+                            }
+                        }
+                    @endphp
+
+                    @if($userRole === 'mahasiswa')
+                        <li>
+                            <a href="{{ route('lomba.index') }}" class="nav-link {{ request()->routeIs('lomba.*') ? 'active' : '' }}">
+                                <i class="bi bi-award"></i> Modul Lomba
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('bimbingan.index') }}" class="nav-link {{ (request()->routeIs('bimbingan.*') || request()->routeIs('tim.*')) ? 'active' : '' }}">
+                                <i class="bi bi-person-video3"></i> Modul Bimbingan
+                            </a>
+                        </li>
+                    @elseif($userRole === 'dosen')
+                        <li>
+                            <a href="{{ route('bimbingan.index') }}" class="nav-link {{ request()->routeIs('bimbingan.*') ? 'active' : '' }}">
+                                <i class="bi bi-person-video3"></i> Modul Bimbingan
+                            </a>
+                        </li>
+                    @elseif($userRole === 'admin')
+                        <li>
+                            <a href="{{ route('bimbingan.index') }}" class="nav-link {{ request()->routeIs('bimbingan.*') ? 'active' : '' }}">
+                                <i class="bi bi-person-video3"></i> Modul Bimbingan
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('admin.index') }}" class="nav-link {{ request()->routeIs('admin.*') ? 'active' : '' }}">
+                                <i class="bi bi-speedometer2"></i> Panel Admin
+                            </a>
+                        </li>
+                    @endif
                 @endauth
             </ul>
 

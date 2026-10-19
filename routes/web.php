@@ -1,11 +1,12 @@
 <?php
 
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\BimbinganController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\LombaController;
+use App\Http\Controllers\TimController;
 use Illuminate\Support\Facades\Route;
 
 // Dashboard Analitik Prestasi (publik)
@@ -13,14 +14,6 @@ Route::get('/', [DashboardController::class, 'index'])->name('dashboard.analitik
 Route::get('/analitik', [DashboardController::class, 'index'])->name('dashboard.analitik.alias');
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 Route::get('/home', [DashboardController::class, 'index'])->name('home');
-
-// Modul Bimbingan Tim Lomba & Dosen Pembimbing
-Route::get('/bimbingan', [BimbinganController::class, 'index'])->name('bimbingan.index');
-Route::post('/bimbingan/ajukan', [BimbinganController::class, 'ajukan'])->name('bimbingan.ajukan');
-Route::post('/bimbingan/logbook', [BimbinganController::class, 'storeLogbook'])->name('bimbingan.logbook.store');
-Route::post('/bimbingan/logbook/{id}/validasi', [BimbinganController::class, 'validasiLogbook'])->name('bimbingan.logbook.validasi');
-Route::post('/bimbingan/pengajuan/{id}/respon', [BimbinganController::class, 'responPengajuan'])->name('bimbingan.pengajuan.respon');
-Route::post('/bimbingan/daftar-tim-cepat', [BimbinganController::class, 'gabungLombaCepat'])->name('bimbingan.daftar_tim');
 
 // Panel Administrator RuangLombaJTI (Berdasarkan Activity Diagram PBL)
 Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function () {
@@ -47,11 +40,9 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
     Route::delete('/mahasiswa/{nim}', [AdminController::class, 'destroyMahasiswa'])->name('mahasiswa.destroy');
 });
 
-// Redirect rute legacy ke Dashboard Analitik agar tidak 404
-Route::redirect('/lomba', '/');
-Route::redirect('/lomba/{any}', '/')->where('any', '.*');
-Route::redirect('/tim', '/');
-Route::redirect('/tim/{any}', '/')->where('any', '.*');
+// Modul Katalog & Eksplorasi Lomba Mahasiswa
+Route::get('/lomba', [LombaController::class, 'index'])->name('lomba.index');
+Route::get('/lomba/{id}', [LombaController::class, 'show'])->name('lomba.show')->whereNumber('id');
 
 // Autentikasi
 Route::middleware('guest')->group(function () {
@@ -64,6 +55,16 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
+
+    // Modul Tim Mahasiswa (Papan Lowongan Tim, Form Ketua Tim, & Pengajuan Anggota Tim)
+    Route::prefix('tim')->name('tim.')->group(function () {
+        Route::get('/lowongan', [TimController::class, 'lowongan'])->name('lowongan');
+        Route::get('/', [TimController::class, 'lowongan'])->name('index');
+        Route::get('/buat', [TimController::class, 'create'])->name('create');
+        Route::post('/buat', [TimController::class, 'store'])->name('store');
+        Route::post('/{id}/gabung', [TimController::class, 'gabung'])->name('gabung');
+        Route::post('/anggota/{id}/respon', [TimController::class, 'responAnggota'])->name('anggota.respon');
+    });
 
     // Modul Bimbingan Tim Lomba & Dosen Pembimbing
     Route::get('/bimbingan', [BimbinganController::class, 'index'])->name('bimbingan.index');
