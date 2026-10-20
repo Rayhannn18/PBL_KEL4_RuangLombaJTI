@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="icon" href="data:,">
 
     <style>
         :root {
@@ -255,6 +256,26 @@
         .badge-danger { background: #FEE2E2; color: #991B1B; }
         .badge-purple { background: #EDE9FE; color: #5B21B6; }
         .badge-gray { background: #F1F5F9; color: #475569; }
+        .badge-mhs { background: #fff !important; color: #1E40AF !important; font-weight: 700; }
+        /* Badge role di topbar: tetap sejajar tengah di semua halaman */
+        .topbar .badge {
+            display: inline-flex !important;
+            align-items: center !important;
+            line-height: 1 !important;
+            height: 20px;
+            padding: 0 10px !important;
+            margin: 0 !important;
+            vertical-align: middle;
+            position: relative;
+            top: 0 !important;
+        }
+        .topbar .badge-mhs {
+            background: #fff !important;
+            color: #1E40AF !important;
+            font-weight: 700 !important;
+        }
+        .topbar-content > div { align-items: center !important; }
+        .topbar form button { line-height: 1 !important; height: 22px; }
 
         /* Alerts */
         .alert {
@@ -407,9 +428,27 @@
                     <span style="display: flex; align-items: center; gap: 6px;">
                         <i class="bi bi-person-check-fill" style="color: #6EE7B7;"></i>
                         <span>{{ session('auth_user.nama') }}</span>
-                        <span class="badge {{ session('auth_user.role') == 'admin' ? 'badge-danger' : (session('auth_user.role') == 'dosen' ? 'badge-warning' : 'badge-primary') }}" style="font-size: 0.72rem; padding: 2px 8px;">
-                            {{ ucfirst(session('auth_user.role')) }}
-                        </span>
+
+                        @php
+                            $roleSession = session('auth_user.role');
+                            $roleLabel   = ucfirst($roleSession);
+                            $roleClass   = 'badge-mhs';
+
+                            if ($roleSession === 'admin') {
+                                $roleClass = 'badge-danger';
+                            } elseif ($roleSession === 'dosen') {
+                                $roleClass = 'badge-warning';
+                            } elseif ($roleSession === 'mahasiswa') {
+                                $isKetua = request()->routeIs('ketua-tim.*')
+                                || \App\Models\Mahasiswa::where('nim', session('auth_user.id'))->whereHas('timKetua')->exists();
+                                if ($isKetua) {
+                                    $roleLabel = 'Ketua Tim';
+                            }
+                        }
+@endphp
+<span class="badge {{ $roleClass }}" style="font-size: 0.72rem; padding: 2px 8px;">
+    {{ $roleLabel }}
+</span>
                     </span>
                     <form action="{{ route('auth.logout') }}" method="POST" style="display: inline; margin: 0;">
                         @csrf
@@ -446,7 +485,19 @@
                         <i class="bi bi-graph-up-arrow"></i> Dashboard Analitik
                     </a>
                 </li>
-            </ul>
+                @if(session('auth_user.role') === 'mahasiswa')
+                    <li>
+                        <a href="{{ route('ketua-tim.modul-lomba') }}" class="nav-link {{ request()->routeIs('ketua-tim.*') ? 'active' : '' }}">
+                            <i class="bi bi-award"></i> Modul Lomba
+                        </a>
+                    </li>
+                    <li>
+            <a href="#" class="nav-link">
+                <i class="bi bi-people"></i> Modul Bimbingan
+            </a>
+        </li>
+    @endif
+</ul>
 
             <div class="nav-actions">
                 @if(session('auth_user'))

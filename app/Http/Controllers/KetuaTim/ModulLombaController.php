@@ -20,13 +20,6 @@ class ModulLombaController extends Controller
 
         $nim = session('auth_user.id');
 
-        if (! $nim && app()->environment('local')) {
-            $ketuaDemo = Mahasiswa::where('nama', 'like', '%Nadya%')->whereHas('timKetua')->first()
-                ?? Mahasiswa::whereIn('nim', ['244107060147', '2241720088'])->whereHas('timKetua')->first()
-                ?? Mahasiswa::whereHas('timKetua')->first();
-            $nim = $ketuaDemo ? $ketuaDemo->nim : null;
-        }
-
         if (! $nim) {
             return redirect()->route('login')->with('error', 'Silakan masuk terlebih dahulu untuk mengakses Modul Lomba.');
         }
@@ -97,18 +90,24 @@ class ModulLombaController extends Controller
             }
         }
 
+        $splitLines = fn ($text) => array_values(array_filter(array_map(
+            fn ($l) => trim(preg_replace('/^\d+[\.\)]\s*/', '', $l)),
+            preg_split('/\\\\n|\r\n|\r|\n/', trim((string) $text))
+        )));
+
         if ($persyaratanList->isNotEmpty()) {
-            $persyaratanData = $persyaratanList->pluck('persyaratan')->toArray();
+            $persyaratanData = $persyaratanList
+                ->flatMap(fn ($p) => $splitLines($p->persyaratan))
+                ->values()->all();
         } elseif (! empty($lombaModel->persyaratan)) {
-            $lines = preg_split('/\r\n|\r|\n/', trim($lombaModel->persyaratan));
-            $persyaratanData = array_values(array_filter(array_map('trim', $lines)));
+            $persyaratanData = $splitLines($lombaModel->persyaratan);
         } else {
             $persyaratanData = [
-                'Mahasiswa aktif jenjang D3/D4/S1 terdaftar di PDDikti.',
-                'Anggota tim berasal dari satu perguruan tinggi sesuai ketentuan divisi.',
-                'Didampingi satu dosen pembimbing.',
-                'Karya orisinal dan belum pernah dipublikasikan di lomba lain.',
-                'Melampirkan surat keterangan mahasiswa aktif dan kartu identitas.',
+                'Mahasiswa aktif terdaftar di PDDikti dan memiliki akun SIAKAD aktif.',
+                'Peserta mendaftar sebagai tim sesuai ketentuan jumlah anggota pada buku pedoman.',
+                'Karya orisinal dan belum pernah dipublikasikan atau dilombakan.',
+                'Melampirkan identitas dan surat keterangan mahasiswa aktif.',
+                'Peserta menyiapkan perangkat dan koneksi untuk pelaksanaan daring.',
             ];
         }
 
@@ -209,6 +208,22 @@ class ModulLombaController extends Controller
 
         $pathPedoman = $lombaModel->path_pedoman ?? 'pedoman/gemastik-2026.pdf';
 
+        $biayaRaw  = $lombaModel->biaya_pendaftaran ?? 0;
+        $biayaText = ((int) $biayaRaw) > 0 ? 'Rp ' . number_format($biayaRaw, 0, ',', '.') : 'Gratis';
+
+        $batas = ! empty($lombaModel->batas_pendaftaran)
+            ? Carbon::parse($lombaModel->batas_pendaftaran)->startOfDay()
+            : null;
+
+        $statusWaktu = ['label' => '-', 'theme' => 'gray'];
+        if ($batas) {
+            $sisa = (int) Carbon::today()->diffInDays($batas, false);
+            if ($sisa < 0)       { $statusWaktu = ['label' => 'Tutup', 'theme' => 'gray']; }
+            elseif ($sisa === 0) { $statusWaktu = ['label' => 'Berakhir Hari Ini', 'theme' => 'red']; }
+            elseif ($sisa <= 7)  { $statusWaktu = ['label' => "Sisa {$sisa} Hari", 'theme' => 'red']; }
+            else                 { $statusWaktu = ['label' => 'Buka', 'theme' => 'green']; }
+        }
+
         $lomba = [
             'nama'                => $lombaModel->nama_lomba,
             'badge_role'          => 'Modul Lomba • Ketua Tim',
@@ -217,6 +232,11 @@ class ModulLombaController extends Controller
             'status_verifikasi'   => $statusVerifikasi,
             'penyelenggara'       => $lombaModel->penyelenggara,
             'kategori'            => $lombaModel->kategori,
+            'biaya'               => $biayaText,
+            'tipe_peserta'        => $lombaModel->tipe_peserta ?? ($tim->kuota_anggota > 1 ? 'Kelompok' : 'Individu'),
+            'mode'                => $lombaModel->mode_pelaksanaan ?? 'Online',
+            'batas_tenggat'       => $batas ? $batas->format('d M Y') : '-',
+            'status_waktu'        => $statusWaktu,
             'ukuran_tim'          => $tim->kuota_anggota . ' Anggota (termasuk ketua)',
             'pengusul'            => $pengusul,
             'deskripsi_lengkap'   => $lombaModel->deskripsi ?: 'Pagelaran Mahasiswa Nasional Bidang Teknologi Informasi dan Komunikasi (GEMASTIK) adalah ajang kompetisi tahunan tingkat nasional bagi mahasiswa perguruan tinggi di Indonesia pada berbagai divisi bidang TIK.',
