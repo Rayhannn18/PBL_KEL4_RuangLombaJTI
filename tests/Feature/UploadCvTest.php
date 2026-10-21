@@ -412,4 +412,61 @@ class UploadCvTest extends TestCase
         $pengajuan->refresh();
         $this->assertSame('diterima', $pengajuan->status_gabung);
     }
+
+    /**
+     * 11. Mahasiswa dapat mengakses halaman formulir pengajuan anggota tersendiri.
+     */
+    public function test_mahasiswa_dapat_mengakses_halaman_formulir_pengajuan_anggota_tersendiri(): void
+    {
+        $ketua = $this->createMahasiswaUser('2241720020', 'Ketua Laman Gabung', 'laman_ketua@student.polinema.ac.id');
+        $anggota = $this->createMahasiswaUser('2241720021', 'Anggota Laman Gabung', 'laman_anggota@student.polinema.ac.id');
+        $lomba = $this->createLomba();
+
+        $tim = Tim::create([
+            'nama_tim' => 'Tim Laman Gabung Solo',
+            'id_lomba' => $lomba->id_lomba,
+            'nim' => $ketua->nim_nip,
+            'kuota_anggota' => 3,
+            'status_tim' => 'disetujui',
+        ]);
+
+        AnggotaTim::create([
+            'id_tim' => $tim->id_tim,
+            'nim' => $ketua->nim_nip,
+            'status_gabung' => 'diterima',
+            'peran' => 'Ketua Tim',
+        ]);
+
+        $response = $this->actingAs($anggota)->get(route('tim.gabung.form', $tim->id_tim));
+        $response->assertOk();
+        $response->assertViewIs('tim.gabung');
+        $response->assertSee('Ajukan Diri Bergabung ke Tim');
+        $response->assertSee('Tim Laman Gabung Solo');
+        $response->assertSee($lomba->nama_lomba);
+        $response->assertSee('Frontend Developer');
+        $response->assertSee('Backend & Database Engineer', false);
+        $response->assertSee('Format wajib: <strong>.PDF</strong>', false);
+        $response->assertSee('2 MB');
+    }
+
+    /**
+     * 12. Ketua tidak dapat membuka formulir pengajuan anggota untuk timnya sendiri.
+     */
+    public function test_ketua_tidak_dapat_membuka_form_gabung_timnya_sendiri(): void
+    {
+        $ketua = $this->createMahasiswaUser('2241720022', 'Ketua Sendiri', 'sendiri@student.polinema.ac.id');
+        $lomba = $this->createLomba();
+
+        $tim = Tim::create([
+            'nama_tim' => 'Tim Ketua Sendiri',
+            'id_lomba' => $lomba->id_lomba,
+            'nim' => $ketua->nim_nip,
+            'kuota_anggota' => 3,
+            'status_tim' => 'disetujui',
+        ]);
+
+        $response = $this->actingAs($ketua)->get(route('tim.gabung.form', $tim->id_tim));
+        $response->assertRedirect(route('tim.lowongan'));
+        $response->assertSessionHas('error', 'Anda adalah Ketua Tim dari tim ini.');
+    }
 }

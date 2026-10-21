@@ -234,6 +234,50 @@ class TimController extends Controller
     }
 
     /**
+     * Formulir Pengajuan Diri Bergabung ke Tim (Halaman Tersendiri)
+     */
+    public function formGabung($id)
+    {
+        $authUser = $this->authUser();
+        if (! $authUser) {
+            return redirect()->route('login')->with('error', 'Silakan masuk ke akun Anda terlebih dahulu.');
+        }
+
+        if ($authUser['role'] !== 'mahasiswa') {
+            return redirect()->route('tim.lowongan')->with('error', 'Hanya mahasiswa yang dapat mengajukan diri bergabung ke dalam tim.');
+        }
+
+        $tim = Tim::with(['lomba', 'ketua', 'anggotaDiterima.mahasiswa', 'anggota'])->findOrFail($id);
+        $nim = $authUser['id'];
+
+        // Cek 1: Mahasiswa tidak boleh mendaftar ke tim yang diketuainya sendiri
+        if ($tim->nim === $nim) {
+            return redirect()->route('tim.lowongan')->with('error', 'Anda adalah Ketua Tim dari tim ini.');
+        }
+
+        // Cek 2: Mahasiswa sudah menjadi anggota resmi yang diterima
+        if ($tim->anggotaDiterima->contains('nim', $nim)) {
+            return redirect()->route('tim.lowongan')->with('error', 'Anda sudah terdaftar sebagai anggota resmi tim ini.');
+        }
+
+        // Cek 3: Periksa riwayat pengajuan sebelumnya jika masih menunggu
+        $existing = $tim->anggota()->where('nim', $nim)->first();
+        if ($existing && $existing->status_gabung === 'menunggu') {
+            return redirect()->route('tim.lowongan')->with('error', 'Pengajuan bergabung Anda sebelumnya sedang menunggu persetujuan Ketua Tim.');
+        }
+
+        // Cek 4: Kuota tim masih tersedia
+        if ($tim->sisa_kuota_anggota <= 0) {
+            return redirect()->route('tim.lowongan')->with('error', 'Maaf, kuota anggota untuk tim ini sudah penuh.');
+        }
+
+        return view('tim.gabung', [
+            'authUser' => $authUser,
+            'tim' => $tim,
+        ]);
+    }
+
+    /**
      * Alur Anggota Tim: Mengajukan Diri Bergabung ke Tim yang Membuka Lowongan
      * Form Anggota Tim HANYA meminta peran / keahlian dan CV (PDF max 2MB).
      */
@@ -336,7 +380,7 @@ class TimController extends Controller
                 }
             });
 
-            return back()->with('success', "Pengajuan diri bergabung ke tim '{$tim->nama_tim}' sebagai {$validated['peran']} berhasil dikirim! Menunggu persetujuan Ketua Tim.");
+            return redirect()->route('tim.lowongan')->with('success', "Pengajuan diri bergabung ke tim '{$tim->nama_tim}' sebagai {$validated['peran']} berhasil dikirim! Menunggu persetujuan Ketua Tim.");
         } catch (\Throwable $e) {
             if ($cvPath && Storage::disk('public')->exists($cvPath)) {
                 Storage::disk('public')->delete($cvPath);

@@ -62,6 +62,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [TimController::class, 'lowongan'])->name('index');
         Route::get('/buat', [TimController::class, 'create'])->name('create');
         Route::post('/buat', [TimController::class, 'store'])->name('store');
+        Route::get('/{id}/gabung', [TimController::class, 'formGabung'])->name('gabung.form');
         Route::post('/{id}/gabung', [TimController::class, 'gabung'])->name('gabung');
         Route::post('/anggota/{id}/respon', [TimController::class, 'responAnggota'])->name('anggota.respon');
         Route::get('/cv/{type}/{id}', [TimController::class, 'downloadCv'])->name('cv');
