@@ -508,7 +508,14 @@
                                         <strong>{{ $selectedTim->ketua->nama ?? '-' }}</strong>
                                         <div style="font-size: 0.72rem; color: var(--text-muted);">NIM: {{ $selectedTim->nim }} ({{ $selectedTim->ketua->prodi ?? '' }})</div>
                                     </div>
-                                    <span class="badge badge-primary" style="font-size: 0.7rem;">Ketua Tim</span>
+                                    <div style="display: flex; align-items: center; gap: 6px;">
+                                        @if($selectedTim->file_cv)
+                                            <a href="{{ route('tim.cv', ['type' => 'ketua', 'id' => $selectedTim->id_tim]) }}" target="_blank" class="btn btn-outline-primary btn-sm" style="font-size: 0.7rem; padding: 2px 7px;" title="Unduh / Lihat CV Ketua">
+                                                <i class="bi bi-file-earmark-pdf"></i> CV
+                                            </a>
+                                        @endif
+                                        <span class="badge badge-primary" style="font-size: 0.7rem;">Ketua Tim</span>
+                                    </div>
                                 </div>
 
                                 @foreach($selectedTim->anggotaDiterima as $ang)
@@ -518,7 +525,14 @@
                                                 <strong>{{ $ang->mahasiswa->nama ?? '-' }}</strong>
                                                 <div style="font-size: 0.72rem; color: var(--text-muted);">NIM: {{ $ang->nim }} ({{ $ang->mahasiswa->prodi ?? '' }})</div>
                                             </div>
-                                            <span class="badge badge-gray" style="font-size: 0.7rem;">{{ $ang->peran ?? 'Anggota' }}</span>
+                                            <div style="display: flex; align-items: center; gap: 6px;">
+                                                @if($ang->file_cv)
+                                                    <a href="{{ route('tim.cv', ['type' => 'anggota', 'id' => $ang->id_anggota]) }}" target="_blank" class="btn btn-outline-primary btn-sm" style="font-size: 0.7rem; padding: 2px 7px;" title="Unduh / Lihat CV Anggota">
+                                                        <i class="bi bi-file-earmark-pdf"></i> CV
+                                                    </a>
+                                                @endif
+                                                <span class="badge badge-gray" style="font-size: 0.7rem;">{{ $ang->peran ?? 'Anggota' }}</span>
+                                            </div>
                                         </div>
                                     @endif
                                 @endforeach
@@ -543,8 +557,13 @@
                                                             <div style="font-size: 0.72rem; color: var(--text-muted);">
                                                                 NIM: {{ $pend->nim }} ({{ $pend->mahasiswa->prodi ?? '-' }})
                                                             </div>
-                                                            <div style="margin-top: 4px;">
+                                                            <div style="margin-top: 4px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                                                                 <span class="badge badge-purple" style="font-size: 0.7rem;">Posisi: {{ $pend->peran }}</span>
+                                                                @if($pend->file_cv)
+                                                                    <a href="{{ route('tim.cv', ['type' => 'anggota', 'id' => $pend->id_anggota]) }}" target="_blank" class="btn btn-outline-primary btn-sm" style="font-size: 0.7rem; padding: 1px 6px;" title="Unduh / Lihat CV Pelamar">
+                                                                        <i class="bi bi-file-earmark-pdf"></i> Lihat CV
+                                                                    </a>
+                                                                @endif
                                                             </div>
                                                         </div>
                                                     </div>

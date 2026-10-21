@@ -64,6 +64,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/buat', [TimController::class, 'store'])->name('store');
         Route::post('/{id}/gabung', [TimController::class, 'gabung'])->name('gabung');
         Route::post('/anggota/{id}/respon', [TimController::class, 'responAnggota'])->name('anggota.respon');
+        Route::get('/cv/{type}/{id}', [TimController::class, 'downloadCv'])->name('cv');
     });
 
     // Modul Bimbingan Tim Lomba & Dosen Pembimbing

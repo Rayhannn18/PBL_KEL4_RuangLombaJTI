@@ -20,6 +20,7 @@ class Tim extends Model
         'kuota_anggota',
         'status_tim',
         'id_admin',
+        'file_cv',
     ];
 
     public function lomba()

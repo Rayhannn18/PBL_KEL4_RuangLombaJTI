@@ -379,7 +379,7 @@
                 </div>
                 <button type="button" onclick="closeModalGabungTim()" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--text-muted);">&times;</button>
             </div>
-            <form id="formGabungTim" method="POST" action="">
+            <form id="formGabungTim" method="POST" action="" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-body-custom">
                     <!-- Ringkasan Tim Sasaran -->
@@ -402,34 +402,75 @@
 
                     <!-- Peran / Bidang Keahlian yang Ditawarkan (Khusus Anggota) -->
                     <div class="form-group" style="margin-bottom: 16px;">
-                        <label class="form-label">Peran / Bidang Keahlian yang Anda Tawarkan *</label>
-                        <select name="peran" class="form-select" required>
-                            <option value="" disabled selected>-- Pilih Peran Anda dalam Tim --</option>
-                            <option value="Frontend Developer">Frontend Developer (Web/Mobile UI)</option>
-                            <option value="Backend Developer">Backend & Database Engineer</option>
-                            <option value="UI/UX Designer">UI/UX Designer (Figma / Prototyping)</option>
-                            <option value="Machine Learning / AI Engineer">Machine Learning / AI Engineer</option>
-                            <option value="Mobile App Developer">Mobile App Developer (Flutter/React Native)</option>
-                            <option value="Cyber Security / Pentester">Cyber Security / Pentester</option>
-                            <option value="IoT / Embedded Hardware">IoT / Embedded Hardware</option>
-                            <option value="Pitch Deck & Business Analyst">Pitch Deck & Business Analyst</option>
-                            <option value="Anggota Tim">Anggota Tim Umum</option>
+                        <label class="form-label">Peran / Bidang Keahlian yang Anda Tawarkan <span style="color: var(--danger);">*</span></label>
+                        <select name="peran" class="form-select @error('peran') is-invalid @enderror" required>
+                            <option value="" disabled {{ old('peran') ? '' : 'selected' }}>-- Pilih Peran Anda dalam Tim --</option>
+                            <option value="Frontend Developer" {{ old('peran') === 'Frontend Developer' ? 'selected' : '' }}>Frontend Developer (Web/Mobile UI)</option>
+                            <option value="Backend Developer" {{ old('peran') === 'Backend Developer' ? 'selected' : '' }}>Backend & Database Engineer</option>
+                            <option value="UI/UX Designer" {{ old('peran') === 'UI/UX Designer' ? 'selected' : '' }}>UI/UX Designer (Figma / Prototyping)</option>
+                            <option value="Machine Learning / AI Engineer" {{ old('peran') === 'Machine Learning / AI Engineer' ? 'selected' : '' }}>Machine Learning / AI Engineer</option>
+                            <option value="Mobile App Developer" {{ old('peran') === 'Mobile App Developer' ? 'selected' : '' }}>Mobile App Developer (Flutter/React Native)</option>
+                            <option value="Cyber Security / Pentester" {{ old('peran') === 'Cyber Security / Pentester' ? 'selected' : '' }}>Cyber Security / Pentester</option>
+                            <option value="IoT / Embedded Hardware" {{ old('peran') === 'IoT / Embedded Hardware' ? 'selected' : '' }}>IoT / Embedded Hardware</option>
+                            <option value="Pitch Deck & Business Analyst" {{ old('peran') === 'Pitch Deck & Business Analyst' ? 'selected' : '' }}>Pitch Deck & Business Analyst</option>
+                            <option value="Anggota Tim" {{ old('peran') === 'Anggota Tim' ? 'selected' : '' }}>Anggota Tim Umum</option>
                         </select>
+                        @error('peran')
+                            <div style="font-size: 0.8rem; color: var(--danger); margin-top: 5px; font-weight: 600;">
+                                <i class="bi bi-exclamation-circle-fill"></i> {{ $message }}
+                            </div>
+                        @enderror
                         <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">
                             Pilihlah peran sesuai kebutuhan kompetisi dan keahlian spesifik Anda.
+                        </div>
+                    </div>
+
+                    <!-- Upload CV Pelamar Anggota (Wajib, PDF, Max 2MB) -->
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label class="form-label">
+                            Unggah CV / Portofolio Singkat (Format PDF, Maks. 2 MB) <span style="color: var(--danger);">*</span>
+                        </label>
+                        <div style="background: #F8FAFC; border: 1.5px dashed var(--border); border-radius: var(--radius-sm); padding: 14px; text-align: center;" id="cvDropzoneAnggota">
+                            <i class="bi bi-file-earmark-pdf" style="font-size: 1.8rem; color: var(--primary); display: block; margin-bottom: 4px;"></i>
+                            <div style="font-size: 0.82rem; font-weight: 600; color: var(--text-main); margin-bottom: 2px;">
+                                Pilih file CV dalam format PDF
+                            </div>
+                            <div style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 8px;">
+                                Format: <strong>.PDF</strong> &bull; Ukuran maksimal: <strong>2 MB</strong>
+                            </div>
+                            <input type="file"
+                                   name="cv"
+                                   id="cvAnggotaInput"
+                                   class="form-control @error('cv') is-invalid @enderror"
+                                   accept="application/pdf,.pdf"
+                                   required
+                                   style="font-size: 0.82rem;"
+                                   onchange="handleCvFileChange(this, 'cvAnggotaPreview', 'cvAnggotaError', 'cvAnggotaFileName')">
+                            <div id="cvAnggotaPreview" style="display: none; margin-top: 8px; font-size: 0.78rem; color: var(--success); font-weight: 600;">
+                                <i class="bi bi-check-circle-fill"></i> <span id="cvAnggotaFileName"></span>
+                            </div>
+                            <div id="cvAnggotaError" style="display: none; margin-top: 6px; font-size: 0.78rem; color: var(--danger); font-weight: 600;"></div>
+                        </div>
+                        @error('cv')
+                            <div style="font-size: 0.8rem; color: var(--danger); margin-top: 5px; font-weight: 600;">
+                                <i class="bi bi-exclamation-circle-fill"></i> {{ $message }}
+                            </div>
+                        @enderror
+                        <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">
+                            CV Anda akan ditinjau langsung oleh Ketua Tim untuk mempertimbangkan penerimaan.
                         </div>
                     </div>
 
                     <!-- Catatan / Pesan untuk Ketua Tim -->
                     <div class="form-group" style="margin-bottom: 0;">
                         <label class="form-label">Catatan Singkat untuk Ketua Tim (Opsional)</label>
-                        <textarea name="catatan" rows="3" class="form-control" placeholder="Tuliskan pengalaman relevan, portofolio singkat, atau motivasi Anda bergabung..."></textarea>
+                        <textarea name="catatan" rows="3" class="form-control" placeholder="Tuliskan pengalaman relevan, portofolio singkat, atau motivasi Anda bergabung...">{{ old('catatan') }}</textarea>
                     </div>
                 </div>
 
                 <div class="modal-footer-custom">
                     <button type="button" class="btn btn-secondary btn-sm" onclick="closeModalGabungTim()">Batal</button>
-                    <button type="submit" class="btn btn-primary btn-sm">
+                    <button type="submit" class="btn btn-primary btn-sm" id="btnSubmitGabungTim">
                         <i class="bi bi-send-fill"></i> Kirim Pengajuan Gabung
                     </button>
                 </div>
@@ -449,7 +490,7 @@
         const sisaKuotaBadge = document.getElementById('modalSisaKuotaBadge');
 
         if (modal && form) {
-            form.action = "{{ url('/tim') }}/" + idTim + "/gabung";
+            form.action = '/tim/' + idTim + '/gabung';
             if (namaTimText) namaTimText.textContent = namaTim;
             if (namaLombaText) namaLombaText.textContent = "Kompetisi: " + namaLomba;
             if (sisaKuotaBadge) sisaKuotaBadge.textContent = "Tersedia " + sisaKuota + " slot anggota";
@@ -466,5 +507,66 @@
         const modal = document.getElementById('modalGabungTim');
         if (e.target === modal) closeModalGabungTim();
     });
+
+    function handleCvFileChange(input, previewId, errorId, fileNameId) {
+        const preview = document.getElementById(previewId);
+        const error = document.getElementById(errorId);
+        const fileNameSpan = document.getElementById(fileNameId);
+
+        if (!input.files || input.files.length === 0) {
+            if (preview) preview.style.display = 'none';
+            if (error) error.style.display = 'none';
+            return;
+        }
+
+        const file = input.files[0];
+        const maxSizeBytes = 2 * 1024 * 1024; // 2MB
+
+        // Validasi format PDF
+        const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+        if (!isPdf) {
+            if (preview) preview.style.display = 'none';
+            if (error) {
+                error.textContent = 'Format file tidak sesuai! Wajib mengunggah file berekstensi .PDF.';
+                error.style.display = 'block';
+            }
+            input.value = '';
+            return;
+        }
+
+        // Validasi ukuran maksimal 2MB
+        if (file.size > maxSizeBytes) {
+            if (preview) preview.style.display = 'none';
+            if (error) {
+                const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
+                error.textContent = `Ukuran file terlalu besar (${sizeMb} MB)! Batas maksimal adalah 2 MB.`;
+                error.style.display = 'block';
+            }
+            input.value = '';
+            return;
+        }
+
+        // File valid
+        if (error) error.style.display = 'none';
+        if (preview && fileNameSpan) {
+            const sizeKb = (file.size / 1024).toFixed(1);
+            fileNameSpan.textContent = `${file.name} (${sizeKb} KB) - File PDF valid`;
+            preview.style.display = 'block';
+        }
+    }
+
+    @if($errors->any() && session('modal_tim_id'))
+        document.addEventListener('DOMContentLoaded', function() {
+            const timId = '{{ session('modal_tim_id') }}';
+            const form = document.getElementById('formGabungTim');
+            const modal = document.getElementById('modalGabungTim');
+            if (form && timId) {
+                form.action = '/tim/' + timId + '/gabung';
+            }
+            if (modal) {
+                modal.style.display = 'flex';
+            }
+        });
+    @endif
 </script>
 @endpush

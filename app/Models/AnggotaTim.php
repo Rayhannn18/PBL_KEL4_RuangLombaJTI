@@ -18,6 +18,7 @@ class AnggotaTim extends Model
         'nim',
         'status_gabung',
         'peran',
+        'file_cv',
     ];
 
     public function tim()

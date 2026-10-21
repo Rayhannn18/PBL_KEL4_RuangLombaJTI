@@ -54,7 +54,7 @@
             Sebagai inisiator dan <strong>Ketua Tim</strong>, Anda menentukan nama delegasi tim, ajang kompetisi yang dituju, serta kuota maksimal anggota. Setelah tim dibentuk, Anda dapat mengajukan Dosen Pembimbing dan mengelola anggota delegasi.
         </p>
 
-        <form action="{{ route('tim.store') }}" method="POST">
+        <form action="{{ route('tim.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
 
             <!-- 1. Lomba yang Ingin Diikuti -->
@@ -62,14 +62,19 @@
                 <label class="form-label">
                     Pilih Kompetisi / Lomba yang Ingin Diikuti <span style="color: var(--danger);">*</span>
                 </label>
-                <select name="id_lomba" class="form-select" required>
+                <select name="id_lomba" class="form-select @error('id_lomba') is-invalid @enderror" required>
                     <option value="" disabled {{ empty($selectedLombaId) ? 'selected' : '' }}>-- Pilih Kompetisi Terverifikasi Jurusan TI --</option>
                     @foreach($lombaTersedia as $lomba)
-                        <option value="{{ $lomba->id_lomba }}" {{ (string) $selectedLombaId === (string) $lomba->id_lomba ? 'selected' : '' }}>
+                        <option value="{{ $lomba->id_lomba }}" {{ (string) old('id_lomba', $selectedLombaId) === (string) $lomba->id_lomba ? 'selected' : '' }}>
                             {{ $lomba->nama_lomba }} — [Tingkat {{ $lomba->tingkat }} / {{ $lomba->kategori }}]
                         </option>
                     @endforeach
                 </select>
+                @error('id_lomba')
+                    <div style="font-size: 0.8rem; color: var(--danger); margin-top: 5px; font-weight: 600;">
+                        <i class="bi bi-exclamation-circle-fill"></i> {{ $message }}
+                    </div>
+                @enderror
                 <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 5px;">
                     Belum menemukan lomba yang cocok? <a href="{{ route('lomba.index') }}" target="_blank" style="color: var(--primary); font-weight: 600; text-decoration: underline;">Cari di Katalog Lomba &rarr;</a>
                 </div>
@@ -82,10 +87,15 @@
                 </label>
                 <input type="text"
                        name="nama_tim"
-                       class="form-control"
+                       class="form-control @error('nama_tim') is-invalid @enderror"
                        value="{{ old('nama_tim') }}"
                        placeholder="Contoh: Garuda Tech SIB / Polinema Data Vanguard"
                        required>
+                @error('nama_tim')
+                    <div style="font-size: 0.8rem; color: var(--danger); margin-top: 5px; font-weight: 600;">
+                        <i class="bi bi-exclamation-circle-fill"></i> {{ $message }}
+                    </div>
+                @enderror
                 <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 5px;">
                     Tentukan nama identitas resmi tim Anda yang akan dicatat pada sertifikat dan pendaftaran kompetisi.
                 </div>
@@ -96,18 +106,59 @@
                 <label class="form-label">
                     Kuota Anggota Tim <span style="color: var(--danger);">*</span>
                 </label>
-                <select name="kuota_anggota" class="form-select" required>
+                <select name="kuota_anggota" class="form-select @error('kuota_anggota') is-invalid @enderror" required>
                     <option value="2" {{ old('kuota_anggota') == 2 ? 'selected' : '' }}>2 Orang (Ketua + 1 Anggota)</option>
                     <option value="3" {{ old('kuota_anggota', 3) == 3 ? 'selected' : '' }}>3 Orang (Ketua + 2 Anggota - Standar Nasional)</option>
                     <option value="4" {{ old('kuota_anggota') == 4 ? 'selected' : '' }}>4 Orang (Ketua + 3 Anggota)</option>
                     <option value="5" {{ old('kuota_anggota') == 5 ? 'selected' : '' }}>5 Orang (Ketua + 4 Anggota - Maksimal)</option>
                 </select>
+                @error('kuota_anggota')
+                    <div style="font-size: 0.8rem; color: var(--danger); margin-top: 5px; font-weight: 600;">
+                        <i class="bi bi-exclamation-circle-fill"></i> {{ $message }}
+                    </div>
+                @enderror
                 <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 5px;">
                     Jumlah total mahasiswa dalam tim delegasi, termasuk Anda sendiri sebagai Ketua Tim.
                 </div>
             </div>
 
-            <!-- 4. Informasi atau Deskripsi Tambahan Tim -->
+            <!-- 4. Upload File CV Ketua Tim (Wajib, Format PDF, Max 2 MB) -->
+            <div class="form-group" style="margin-bottom: 24px;">
+                <label class="form-label">
+                    Unggah Curiculum Vitae (CV) Ketua Tim <span style="color: var(--danger);">*</span>
+                </label>
+                <div style="background: #F8FAFC; border: 1.5px dashed var(--border); border-radius: var(--radius-sm); padding: 18px; text-align: center;" id="cvDropzoneKetua">
+                    <i class="bi bi-file-earmark-pdf" style="font-size: 2rem; color: var(--primary); display: block; margin-bottom: 8px;"></i>
+                    <div style="font-size: 0.88rem; font-weight: 600; color: var(--text-main); margin-bottom: 4px;">
+                        Pilih file CV Anda dalam format PDF
+                    </div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 12px;">
+                        Format wajib: <strong>.PDF</strong> &bull; Ukuran maksimal: <strong>2 MB</strong>
+                    </div>
+                    <input type="file"
+                           name="cv"
+                           id="cvKetuaInput"
+                           class="form-control @error('cv') is-invalid @enderror"
+                           accept="application/pdf,.pdf"
+                           required
+                           style="max-width: 380px; margin: 0 auto; font-size: 0.85rem;"
+                           onchange="handleCvFileChange(this, 'cvKetuaPreview', 'cvKetuaError', 'cvKetuaFileName')">
+                    <div id="cvKetuaPreview" style="display: none; margin-top: 10px; font-size: 0.82rem; color: var(--success); font-weight: 600;">
+                        <i class="bi bi-check-circle-fill"></i> <span id="cvKetuaFileName"></span>
+                    </div>
+                    <div id="cvKetuaError" style="display: none; margin-top: 8px; font-size: 0.8rem; color: var(--danger); font-weight: 600;"></div>
+                </div>
+                @error('cv')
+                    <div style="font-size: 0.82rem; color: var(--danger); margin-top: 6px; font-weight: 600;">
+                        <i class="bi bi-exclamation-circle-fill"></i> {{ $message }}
+                    </div>
+                @enderror
+                <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 6px;">
+                    File CV ini akan digunakan oleh pengelola dan calon Dosen Pembimbing untuk memverifikasi kesiapan Ketua Tim.
+                </div>
+            </div>
+
+            <!-- 5. Informasi atau Deskripsi Tambahan Tim -->
             <div class="form-group" style="margin-bottom: 28px;">
                 <label class="form-label">Deskripsi Singkat / Posisi Anggota yang Dicari (Opsional)</label>
                 <textarea name="catatan"
@@ -143,3 +194,54 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    function handleCvFileChange(input, previewId, errorId, fileNameId) {
+        const preview = document.getElementById(previewId);
+        const error = document.getElementById(errorId);
+        const fileNameSpan = document.getElementById(fileNameId);
+
+        if (!input.files || input.files.length === 0) {
+            if (preview) preview.style.display = 'none';
+            if (error) error.style.display = 'none';
+            return;
+        }
+
+        const file = input.files[0];
+        const maxSizeBytes = 2 * 1024 * 1024; // 2MB
+
+        // Validasi ekstensi / tipe mime PDF
+        const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+        if (!isPdf) {
+            if (preview) preview.style.display = 'none';
+            if (error) {
+                error.textContent = 'Format file tidak sesuai! Wajib mengunggah file berekstensi .PDF.';
+                error.style.display = 'block';
+            }
+            input.value = '';
+            return;
+        }
+
+        // Validasi ukuran maksimal 2MB
+        if (file.size > maxSizeBytes) {
+            if (preview) preview.style.display = 'none';
+            if (error) {
+                const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
+                error.textContent = `Ukuran file terlalu besar (${sizeMb} MB)! Batas maksimal adalah 2 MB.`;
+                error.style.display = 'block';
+            }
+            input.value = '';
+            return;
+        }
+
+        // File valid
+        if (error) error.style.display = 'none';
+        if (preview && fileNameSpan) {
+            const sizeKb = (file.size / 1024).toFixed(1);
+            fileNameSpan.textContent = `${file.name} (${sizeKb} KB) - File PDF valid`;
+            preview.style.display = 'block';
+        }
+    }
+</script>
+@endpush
