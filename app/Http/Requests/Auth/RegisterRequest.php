@@ -41,12 +41,12 @@ class RegisterRequest extends FormRequest
                 'unique:dosen,email_kampus',
                 'unique:admin,email',
                 'unique:users,email',
-                // Mahasiswa wajib email biasa (bukan email kampus). Dosen bebas memakai email apa saja.
-                function (string $attribute, mixed $value, \Closure $fail) use ($isMahasiswa) {
-                    $isCampus = (bool) preg_match('/@([a-z0-9-]+\.)*polinema\.ac\.id$/i', (string) $value);
+                // Mahasiswa dan dosen wajib menggunakan email Polinema.
+                function (string $attribute, mixed $value, \Closure $fail) {
+                    $isPolinema = (bool) preg_match('/@([a-z0-9-]+\.)*polinema\.ac\.id$/i', (string) $value);
 
-                    if ($isMahasiswa && $isCampus) {
-                        $fail('Mahasiswa wajib menggunakan email biasa (bukan email kampus).');
+                    if (! $isPolinema) {
+                        $fail('Email wajib menggunakan akun Polinema (@polinema.ac.id).');
                     }
                 },
             ],

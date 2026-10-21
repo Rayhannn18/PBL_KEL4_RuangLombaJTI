@@ -179,6 +179,21 @@
             border-color: var(--primary-light);
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
         }
+        .password-toggle {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            border: 0;
+            background: transparent;
+            color: #64748B;
+            cursor: pointer;
+            padding: 5px;
+            z-index: 2;
+        }
+        .password-toggle:hover { color: var(--primary); }
+        .password-input { padding-right: 42px; }
+        .hidden { display: none !important; }
 
         .btn-submit {
             width: 100%;
@@ -271,8 +286,9 @@
             @endif
 
             <!-- Form Registrasi -->
-            <form action="{{ route('auth.register') }}" method="POST">
+            <form action="{{ route('register') }}" method="POST">
                 @csrf
+                <input type="hidden" name="role" value="mahasiswa">
 
                 <div class="form-row">
                     <div class="form-group">
@@ -280,7 +296,7 @@
                         <div class="input-group">
                             <i class="bi bi-hash input-icon"></i>
                             <input type="text"
-                                   name="nim"
+                                   name="nim_nip"
                                    class="form-control"
                                    placeholder="Contoh: 244107060116"
                                    value="{{ old('nim') }}"
@@ -294,7 +310,7 @@
                         <div class="input-group">
                             <i class="bi bi-person input-icon"></i>
                             <input type="text"
-                                   name="nama"
+                                   name="name"
                                    class="form-control"
                                    placeholder="Contoh: Sastra Maheva Zaky"
                                    value="{{ old('nama') }}"
@@ -304,13 +320,13 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Email *</label>
+                    <label class="form-label">Email Kampus *</label>
                     <div class="input-group">
                         <i class="bi bi-envelope input-icon"></i>
                         <input type="email"
-                               name="email_kampus"
+                               name="email"
                                class="form-control"
-                               placeholder="Contoh: sastra22@gmail.com"
+                               placeholder="Contoh: sastra22@student.polinema.ac.id"
                                value="{{ old('email_kampus') }}"
                                required>
                     </div>
@@ -351,11 +367,14 @@
                         <label class="form-label">Kata Sandi (Min. 6 Karakter) *</label>
                         <div class="input-group">
                             <i class="bi bi-key input-icon"></i>
-                            <input type="password"
+                            <input id="password" type="password"
                                    name="password"
-                                   class="form-control"
+                                   class="form-control password-input"
                                    placeholder="Minimal 6 karakter"
                                    required>
+                            <button type="button" class="password-toggle" data-toggle-password="password" aria-label="Tampilkan atau sembunyikan kata sandi" aria-pressed="false">
+                                <i class="bi bi-eye" data-eye></i><i class="bi bi-eye-slash hidden" data-eye-off></i>
+                            </button>
                         </div>
                     </div>
 
@@ -363,13 +382,23 @@
                         <label class="form-label">Konfirmasi Kata Sandi *</label>
                         <div class="input-group">
                             <i class="bi bi-shield-check input-icon"></i>
-                            <input type="password"
+                            <input id="password_confirmation" type="password"
                                    name="password_confirmation"
-                                   class="form-control"
+                                   class="form-control password-input"
                                    placeholder="Ulangi kata sandi"
                                    required>
+                            <button type="button" class="password-toggle" data-toggle-password="password_confirmation" aria-label="Tampilkan atau sembunyikan konfirmasi kata sandi" aria-pressed="false">
+                                <i class="bi bi-eye" data-eye></i><i class="bi bi-eye-slash hidden" data-eye-off></i>
+                            </button>
                         </div>
                     </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 8px;">
+                    <label style="display: flex; align-items: flex-start; gap: 8px; font-size: 0.82rem; color: var(--text-muted);">
+                        <input type="checkbox" name="terms" value="1" {{ old('terms') ? 'checked' : '' }} required>
+                        <span>Saya menyetujui Syarat &amp; Ketentuan serta Kebijakan Privasi.</span>
+                    </label>
                 </div>
 
                 <button type="submit" class="btn-submit">
@@ -384,5 +413,25 @@
         </div>
     </div>
 
+    <script>
+        document.querySelectorAll('[data-toggle-password]').forEach((button) => {
+            button.addEventListener('click', () => {
+                const input = document.getElementById(button.dataset.togglePassword);
+                const eye = button.querySelector('[data-eye]');
+                const eyeOff = button.querySelector('[data-eye-off]');
+
+                if (!input) return;
+
+                const reveal = input.type === 'password';
+                input.type = reveal ? 'text' : 'password';
+                button.setAttribute('aria-pressed', String(reveal));
+                button.setAttribute('aria-label', reveal
+                    ? 'Sembunyikan kata sandi'
+                    : 'Tampilkan kata sandi');
+                eye?.classList.toggle('hidden', reveal);
+                eyeOff?.classList.toggle('hidden', !reveal);
+            });
+        });
+    </script>
 </body>
 </html>

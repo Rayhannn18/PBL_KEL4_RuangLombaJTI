@@ -7,9 +7,9 @@ const ROLE_CONFIG = {
         idAside: 'Nomor Induk Mahasiswa POLINEMA',
         idPlaceholder: 'cth. 2241720088',
         emailLabel: 'Email',
-        emailPlaceholder: 'cth. nama@gmail.com',
-        // Email biasa; domain kampus (polinema.ac.id & subdomain) tidak dihitung valid.
-        emailPattern: /^[^\s@]+@(?!(?:[\w-]+\.)*polinema\.ac\.id$)[^\s@]+\.[^\s@]{2,}$/i,
+        emailPlaceholder: 'cth. nama@student.polinema.ac.id',
+        // Mahasiswa wajib memakai email Polinema.
+        emailPattern: /^[^\s@]+@(?:[\w-]+\.)*polinema\.ac\.id$/i,
         namePlaceholder: 'cth. Muhammad Farhan',
     },
     dosen: {
@@ -17,16 +17,17 @@ const ROLE_CONFIG = {
         idAside: 'Nomor Induk Pegawai POLINEMA (18 digit)',
         idPlaceholder: 'cth. 198010102005012001',
         emailLabel: 'Email',
-        emailPlaceholder: 'cth. rosa.andrie@gmail.com',
-        emailPattern: ANY_EMAIL,
+        emailPlaceholder: 'cth. nama@polinema.ac.id',
+        // Dosen wajib memakai email Polinema.
+        emailPattern: /^[^\s@]+@(?:[\w-]+\.)*polinema\.ac\.id$/i,
         namePlaceholder: 'cth. Dr. Eng. Rosa Andrie Asmara, S.T., M.T.',
     },
 };
 
 // Teks kolom login per peran (halaman masuk). Admin tidak punya NIM/NIP, jadi hanya email.
 const LOGIN_CONFIG = {
-    mahasiswa: { label: 'Email / NIM', placeholder: 'cth. 2241720088 atau nama@gmail.com', numeric: true },
-    dosen: { label: 'Email / NIP', placeholder: 'cth. 198010102005012001 atau nama@gmail.com', numeric: true },
+    mahasiswa: { label: 'Email Kampus / NIM', placeholder: 'cth. nama@student.polinema.ac.id atau 2241720088', numeric: true },
+    dosen: { label: 'Email Kampus / NIP', placeholder: 'cth. nama@polinema.ac.id atau 198010102005012001', numeric: true },
     admin: { label: 'Email', placeholder: 'cth. admin@ruanglombajti.test', numeric: false },
 };
 

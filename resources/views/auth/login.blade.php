@@ -333,15 +333,15 @@
                 <input type="hidden" name="role" id="roleInput" value="mahasiswa">
 
                 <div class="form-group">
-                    <label class="form-label" id="identifierLabel">Email Mahasiswa atau NIM</label>
+                    <label class="form-label" id="loginLabel">Email Kampus Mahasiswa atau NIM</label>
                     <div class="input-group">
-                        <i class="bi bi-person input-icon" id="identifierIcon"></i>
+                        <i class="bi bi-person input-icon" id="loginIcon"></i>
                         <input type="text"
-                               name="identifier"
-                               id="identifierInput"
+                               name="login"
+                               id="loginInput"
                                class="form-control"
-                               placeholder="Contoh: sastra22@gmail.com atau 244107060116"
-                               value="{{ old('identifier') }}"
+                               placeholder="Contoh: sastra22@student.polinema.ac.id atau 244107060116"
+                               value="{{ old('login') }}"
                                required
                                autofocus>
                     </div>
@@ -383,17 +383,17 @@
             btn.classList.add('active');
             document.getElementById('roleInput').value = role;
 
-            const label = document.getElementById('identifierLabel');
-            const input = document.getElementById('identifierInput');
-            const icon = document.getElementById('identifierIcon');
+            const label = document.getElementById('loginLabel');
+            const input = document.getElementById('loginInput');
+            const icon = document.getElementById('loginIcon');
 
             if (role === 'mahasiswa') {
-                label.innerText = 'Email Mahasiswa atau NIM';
-                input.placeholder = 'Contoh: sastra22@gmail.com atau 244107060116';
+                label.innerText = 'Email Kampus Mahasiswa atau NIM';
+                input.placeholder = 'Contoh: sastra22@student.polinema.ac.id atau 244107060116';
                 icon.className = 'bi bi-mortarboard input-icon';
             } else if (role === 'dosen') {
-                label.innerText = 'Email Dosen atau NIP';
-                input.placeholder = 'Contoh: vivin22@gmail.com atau 0012058501';
+                label.innerText = 'Email Kampus Dosen atau NIP';
+                input.placeholder = 'Contoh: vivin@polinema.ac.id atau 0012058501';
                 icon.className = 'bi bi-person-video3 input-icon';
             } else if (role === 'admin') {
                 label.innerText = 'Email Resmi Admin Kemahasiswaan';
