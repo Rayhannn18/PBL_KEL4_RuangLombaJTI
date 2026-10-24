@@ -76,7 +76,7 @@ class ModulTimTest extends TestCase
         $response->assertSee('Modul Bimbingan');
     }
 
-    public function test_halaman_modul_tim_menampilkan_bagian_a_dan_bagian_b()
+    public function test_halaman_modul_tim_menampilkan_bagian_a_dan_daftar_tim()
     {
         $user = $this->createMahasiswaUser('244107060002', 'Siti Rahma', 'siti@polinema.ac.id');
         $lomba = $this->createSampleLomba('Hackathon IoT 2026', 'IoT', 'Nasional');
@@ -94,8 +94,9 @@ class ModulTimTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('Bagian A &bull; Inisiasi Tim Baru', false);
         $response->assertSee(route('tim.create'));
-        $response->assertSee('Bagian B &bull; Eksplorasi Tim', false);
-        $response->assertSee('Cari & Gabung Tim Kompetisi', false);
+        $response->assertDontSee('Bagian B &bull; Eksplorasi Tim', false);
+        $response->assertDontSee('Cari & Gabung Tim Kompetisi', false);
+        $response->assertSee('Daftar Tim Kompetisi Mahasiswa');
         $response->assertSee('Tim Nusantara IoT');
     }
 
@@ -191,13 +192,14 @@ class ModulTimTest extends TestCase
     public function test_halaman_modul_tim_filter_kategori_berfungsi_tanpa_error()
     {
         $user = $this->createMahasiswaUser('244107060007', 'Farhan Kategori', 'farhan@polinema.ac.id');
+        $otherUser = $this->createMahasiswaUser('244107060008', 'Other Mahasiswa', 'other@polinema.ac.id');
         $lomba1 = $this->createSampleLomba('Lomba Mobile App', 'Mobile Development', 'Nasional');
         $lomba2 = $this->createSampleLomba('Lomba UI/UX Design', 'UI/UX Design', 'Nasional');
 
         Tim::create([
             'nama_tim' => 'Tim Flutter Mobile',
             'id_lomba' => $lomba1->id_lomba,
-            'nim' => $user->nim_nip,
+            'nim' => $otherUser->nim_nip,
             'kuota_anggota' => 3,
             'status_tim' => 'disetujui',
         ]);
@@ -214,7 +216,6 @@ class ModulTimTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('Tim Figma Kreatif');
-        $response->assertSee('value="UI/UX Design"', false);
-        $response->assertSee('selected', false);
+        $response->assertDontSee('Tim Flutter Mobile');
     }
 }

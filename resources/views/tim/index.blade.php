@@ -81,31 +81,6 @@
         margin-bottom: 28px;
     }
 
-    /* Panel Filter */
-    .filter-panel {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-md);
-        padding: 20px 24px;
-        margin-bottom: 28px;
-        box-shadow: var(--shadow-sm);
-    }
-    .filter-grid {
-        display: grid;
-        grid-template-columns: 2fr 1fr 1fr 1fr auto;
-        gap: 16px;
-        align-items: flex-end;
-    }
-    @media (max-width: 992px) {
-        .filter-grid {
-            grid-template-columns: 1fr 1fr;
-        }
-    }
-    @media (max-width: 600px) {
-        .filter-grid {
-            grid-template-columns: 1fr;
-        }
-    }
 
     /* Grid Kartu Tim */
     .tim-grid {
@@ -282,106 +257,15 @@
         </div>
     @endif
 
-    {{-- ========================================================================= --}}
-    {{-- BAGIAN B: CARI DAN GABUNG TIM (JALUR ANGGOTA TIM)                         --}}
-    {{-- ========================================================================= --}}
-    <div style="margin-bottom: 16px;">
-        <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 12px; margin-bottom: 12px;">
-            <div>
-                <span class="badge badge-primary" style="font-size: 0.75rem; margin-bottom: 6px;">
-                    <i class="bi bi-people"></i> Bagian B &bull; Eksplorasi Tim
-                </span>
-                <h2 style="font-size: 1.45rem; font-weight: 800; color: var(--primary-dark); margin: 0;">
-                    Cari & Gabung Tim Kompetisi
-                </h2>
-                <p style="font-size: 0.88rem; color: var(--text-muted); margin: 4px 0 0 0;">
-                    Temukan tim mahasiswa JTI yang membuka lowongan anggota, pelajari rincian lomba, dan ajukan diri untuk berkolaborasi.
-                </p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Filter & Pencarian Tim -->
-    <div class="filter-panel">
-        <form action="{{ route('tim.index') }}" method="GET" class="filter-grid">
-            <div class="form-group" style="margin-bottom: 0;">
-                <label class="form-label" style="font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px;">
-                    Cari Nama Tim / Kompetisi
-                </label>
-                <div style="position: relative;">
-                    <i class="bi bi-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
-                    <input type="text"
-                           name="q"
-                           value="{{ $currentSearch }}"
-                           class="form-control"
-                           style="padding-left: 36px;"
-                           placeholder="Ketik kata kunci tim atau lomba...">
-                </div>
-            </div>
-
-            <div class="form-group" style="margin-bottom: 0;">
-                <label class="form-label" style="font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px;">
-                    Tingkat Lomba
-                </label>
-                <select name="tingkat" class="form-select">
-                    <option value="">Semua Tingkat</option>
-                    @foreach($tingkatList as $tingkat)
-                        <option value="{{ $tingkat }}" {{ $currentTingkat === $tingkat ? 'selected' : '' }}>
-                            {{ $tingkat }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div class="form-group" style="margin-bottom: 0;">
-                <label class="form-label" style="font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px;">
-                    Kategori Minat
-                </label>
-                <select name="kategori" class="form-select">
-                    <option value="">Semua Kategori</option>
-                    @foreach($kategoriList as $kat)
-                        @php
-                            $katValue = is_array($kat) ? ($kat['kategori'] ?? '') : (is_object($kat) ? ($kat->kategori ?? '') : (string) $kat);
-                        @endphp
-                        @if(!empty($katValue))
-                            <option value="{{ $katValue }}" {{ $currentKategori === $katValue ? 'selected' : '' }}>
-                                {{ $katValue }}
-                            </option>
-                        @endif
-                    @endforeach
-                </select>
-            </div>
-
-            <div class="form-group" style="margin-bottom: 0;">
-                <label class="form-label" style="font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px;">
-                    Status Lowongan
-                </label>
-                <select name="status_kuota" class="form-select">
-                    <option value="terbuka" {{ $currentStatusKuota === 'terbuka' ? 'selected' : '' }}>Buka Lowongan (Sisa Slot > 0)</option>
-                    <option value="semua" {{ $currentStatusKuota === 'semua' ? 'selected' : '' }}>Semua Tim (Termasuk Penuh)</option>
-                </select>
-            </div>
-
-            <div style="display: flex; gap: 8px;">
-                <button type="submit" class="btn btn-primary" style="white-space: nowrap; height: 42px;">
-                    <i class="bi bi-funnel-fill"></i> Filter
-                </button>
-                @if($currentSearch || $currentTingkat || $currentKategori || $currentStatusKuota !== 'terbuka')
-                    <a href="{{ route('tim.index') }}" class="btn btn-secondary" style="white-space: nowrap; height: 42px;" title="Reset Filter">
-                        <i class="bi bi-arrow-counterclockwise"></i>
-                    </a>
-                @endif
-            </div>
-        </form>
-    </div>
-
-    <!-- Ringkasan Info Jumlah Tim -->
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; font-size: 0.88rem; color: var(--text-muted);">
+    <!-- Daftar Tim Kompetisi Mahasiswa -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
         <div>
-            Menampilkan <strong>{{ $teams->count() }} tim</strong>
-            @if($currentStatusKuota === 'terbuka')
-                dengan lowongan aktif (dari total {{ $totalLowongan }} tim buka lowongan)
-            @endif
+            <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--primary-dark); margin: 0;">
+                <i class="bi bi-people-fill" style="color: var(--primary);"></i> Daftar Tim Kompetisi Mahasiswa
+            </h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin: 2px 0 0 0;">
+                Menampilkan <strong>{{ $teams->count() }} tim</strong> yang terdaftar dalam kompetisi.
+            </p>
         </div>
     </div>
 
