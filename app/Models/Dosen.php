@@ -43,6 +43,12 @@ class Dosen extends Model
 
     public function getSisaKuotaAttribute()
     {
-        return max(0, $this->kuota_bimbingan - $this->bimbinganAktif()->count());
+        $aktifCount = $this->relationLoaded('bimbinganAktif')
+            ? $this->bimbinganAktif->count()
+            : ($this->relationLoaded('pengajuanBimbingan')
+                ? $this->pengajuanBimbingan->where('status', 'disetujui')->count()
+                : $this->bimbinganAktif()->count());
+
+        return max(0, $this->kuota_bimbingan - $aktifCount);
     }
 }

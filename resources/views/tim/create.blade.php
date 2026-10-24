@@ -33,8 +33,8 @@
 @section('content')
 <div class="create-tim-wrapper">
     <div style="margin-bottom: 20px;">
-        <a href="{{ route('bimbingan.index') }}" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); text-decoration: none;">
-            <i class="bi bi-arrow-left"></i> Kembali ke Modul Bimbingan
+        <a href="{{ route('tim.index') }}" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); text-decoration: none;">
+            <i class="bi bi-arrow-left"></i> Kembali ke Modul Tim
         </a>
     </div>
 

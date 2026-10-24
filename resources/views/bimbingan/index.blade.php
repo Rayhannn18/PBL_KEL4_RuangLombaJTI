@@ -337,8 +337,8 @@
                             Temukan tim mahasiswa JTI Polinema yang sedang membuka lowongan anggota, lalu ajukan diri untuk bergabung sesuai kebutuhan tim.
                         </p>
                     </div>
-                    <a href="{{ route('tim.lowongan') }}" class="btn btn-outline-primary guide-card-btn" style="background: #fff;">
-                        Papan Lowongan Tim <i class="bi bi-box-arrow-up-right"></i>
+                    <a href="{{ route('tim.index') }}" class="btn btn-outline-primary guide-card-btn" style="background: #fff;">
+                        Modul Tim (Cari Tim) <i class="bi bi-arrow-right"></i>
                     </a>
                 </div>
 

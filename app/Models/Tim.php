@@ -62,6 +62,10 @@ class Tim extends Model
 
     public function getSisaKuotaAnggotaAttribute()
     {
-        return max(0, $this->kuota_anggota - $this->anggotaDiterima()->count());
+        $diterimaCount = $this->relationLoaded('anggotaDiterima')
+            ? $this->anggotaDiterima->count()
+            : $this->anggotaDiterima()->count();
+
+        return max(0, $this->kuota_anggota - $diterimaCount);
     }
 }

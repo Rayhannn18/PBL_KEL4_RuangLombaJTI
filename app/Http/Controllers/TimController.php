@@ -45,14 +45,14 @@ class TimController extends Controller
     }
 
     /**
-     * Papan Lowongan Tim (Eksplorasi Tim yang Membuka Lowongan Anggota)
-     * Alur Anggota Tim: Melihat lowongan, kuota terisi/sisa, dan mengajukan diri.
+     * Halaman Utama Modul Tim Mahasiswa
+     * Pusat pengelolaan pembentukan tim baru (Ketua Tim) dan eksplorasi cari/gabung tim (Anggota Tim).
      */
-    public function lowongan(Request $request)
+    public function index(Request $request)
     {
         $authUser = $this->authUser();
         if (! $authUser) {
-            return redirect()->route('login')->with('error', 'Silakan masuk ke akun Anda terlebih dahulu untuk melihat Papan Lowongan Tim.');
+            return redirect()->route('login')->with('error', 'Silakan masuk ke akun Anda terlebih dahulu untuk mengakses Modul Tim.');
         }
 
         $query = Tim::where('status_tim', 'disetujui')
@@ -88,29 +88,80 @@ class TimController extends Controller
 
         $allTeams = $query->get();
 
+        // Hitung total lowongan & filter tim yang terbuka tanpa query berulang
+        $openTeams = $allTeams->filter(fn ($t) => $t->sisa_kuota_anggota > 0);
+        $totalLowongan = $openTeams->count();
+
         // Hanya tampilkan tim yang masih membuka lowongan (sisa kuota anggota > 0) secara default
         $filterStatus = $request->query('status_kuota', 'terbuka');
-        if ($filterStatus === 'terbuka') {
-            $teams = $allTeams->filter(fn ($t) => $t->sisa_kuota_anggota > 0);
-        } else {
-            $teams = $allTeams;
-        }
+        $teams = ($filterStatus === 'terbuka') ? $openTeams : $allTeams;
 
-        // Kategori dan Tingkat untuk filter dropdown
-        $kategoriList = Lomba::distinct()->whereNotNull('kategori')->pluck('kategori');
+        // Kategori dan Tingkat untuk filter dropdown (cached 1 jam untuk efisiensi koneksi)
+        $kategoriList = Cache::remember('lomba_kategori_list', 3600, function () {
+            return Lomba::distinct()
+                ->whereNotNull('kategori')
+                ->orderBy('kategori')
+                ->pluck('kategori')
+                ->values()
+                ->all();
+        });
+
+        // Pastikan format $kategoriList selalu berupa array of string yang valid
+        if (! is_array($kategoriList) || (is_object($kategoriList) && get_class($kategoriList) === '__PHP_Incomplete_Class')) {
+            Cache::forget('lomba_kategori_list');
+            $kategoriList = Lomba::distinct()
+                ->whereNotNull('kategori')
+                ->orderBy('kategori')
+                ->pluck('kategori')
+                ->values()
+                ->all();
+        } elseif ($kategoriList instanceof \Illuminate\Support\Collection) {
+            $kategoriList = $kategoriList->values()->all();
+        }
         $tingkatList = ['Nasional', 'Internasional', 'Regional', 'Kampus'];
 
-        return view('tim.lowongan', [
+        // Ambil tim mahasiswa yang sedang login saat ini (jika ada) untuk ringkasan di Bagian A
+        $userTeams = collect();
+        if ($authUser['role'] === 'mahasiswa') {
+            $nim = $authUser['id'];
+            if (! $request->filled('q') && ! $request->filled('tingkat') && ! $request->filled('kategori')) {
+                // Gunakan koleksi $allTeams yang sudah di-eager-load jika tidak ada filter pencarian aktif
+                $userTeams = $allTeams->filter(function ($t) use ($nim) {
+                    return $t->nim === $nim || $t->anggotaDiterima->contains('nim', $nim);
+                })->values();
+            } else {
+                $userTeams = Tim::where('status_tim', 'disetujui')
+                    ->where(function ($q) use ($nim) {
+                        $q->where('nim', $nim)
+                            ->orWhereHas('anggotaDiterima', function ($sq) use ($nim) {
+                                $sq->where('nim', $nim);
+                            });
+                    })
+                    ->with(['lomba', 'ketua', 'anggotaDiterima.mahasiswa'])
+                    ->get();
+            }
+        }
+
+        return view('tim.index', [
             'authUser' => $authUser,
             'teams' => $teams,
-            'totalLowongan' => $allTeams->filter(fn ($t) => $t->sisa_kuota_anggota > 0)->count(),
+            'totalLowongan' => $totalLowongan,
             'kategoriList' => $kategoriList,
             'tingkatList' => $tingkatList,
             'currentSearch' => $request->query('q', ''),
             'currentTingkat' => $request->query('tingkat', ''),
             'currentKategori' => $request->query('kategori', ''),
             'currentStatusKuota' => $filterStatus,
+            'userTeams' => $userTeams,
         ]);
+    }
+
+    /**
+     * Papan Lowongan Tim (Eksplorasi Tim yang Membuka Lowongan Anggota - Alias ke Modul Tim)
+     */
+    public function lowongan(Request $request)
+    {
+        return $this->index($request);
     }
 
     /**

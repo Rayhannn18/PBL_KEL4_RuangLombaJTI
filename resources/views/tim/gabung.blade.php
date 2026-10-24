@@ -40,8 +40,8 @@
 @section('content')
 <div class="create-tim-wrapper">
     <div style="margin-bottom: 20px;">
-        <a href="{{ route('tim.lowongan') }}" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); text-decoration: none;">
-            <i class="bi bi-arrow-left"></i> Kembali ke Papan Lowongan Tim
+        <a href="{{ route('tim.index') }}" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); text-decoration: none;">
+            <i class="bi bi-arrow-left"></i> Kembali ke Modul Tim
         </a>
     </div>
 
@@ -185,7 +185,7 @@
 
             <!-- Tombol Aksi Form -->
             <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
-                <a href="{{ route('tim.lowongan') }}" class="btn btn-secondary">
+                <a href="{{ route('tim.index') }}" class="btn btn-secondary">
                     <i class="bi bi-x-circle"></i> Batal & Kembali
                 </a>
                 <button type="submit" class="btn btn-primary" style="padding: 10px 24px;">

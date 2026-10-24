@@ -201,9 +201,23 @@
                             </div>
                             <div style="font-size: 0.78rem; color: var(--text-muted);">
                                 Ketua: {{ $tim->ketua ? $tim->ketua->nama : 'N/A' }} &bull; Anggota: {{ $tim->anggotaDiterima->count() }} / {{ $tim->kuota_anggota }} Orang
+                                @if($tim->sisa_kuota_anggota > 0)
+                                    &bull; <span style="color: var(--success); font-weight: 600;">Sisa {{ $tim->sisa_kuota_anggota }} slot</span>
+                                @endif
                             </div>
                         </div>
-                        <div>
+                        <div style="display: flex; gap: 6px; align-items: center;">
+                            @if(auth()->check() && (auth()->user()->role === \App\Enums\UserRole::Mahasiswa || auth()->user()->role === 'mahasiswa'))
+                                @if($tim->nim === (auth()->user()->nim_nip ?? (string)auth()->user()->id))
+                                    <span class="badge badge-primary">Ketua Tim</span>
+                                @elseif($tim->anggotaDiterima->contains('nim', auth()->user()->nim_nip ?? (string)auth()->user()->id))
+                                    <span class="badge badge-success">Terdaftar</span>
+                                @elseif($tim->sisa_kuota_anggota > 0)
+                                    <a href="{{ route('tim.gabung.form', $tim->id_tim) }}" class="btn btn-outline-primary btn-sm" style="font-size: 0.72rem; padding: 2px 8px;">
+                                        <i class="bi bi-person-plus-fill"></i> Gabung Tim
+                                    </a>
+                                @endif
+                            @endif
                             <span class="badge badge-success">Disetujui Jurusan</span>
                         </div>
                     </div>
@@ -270,10 +284,10 @@
                         <i class="bi bi-flag-fill"></i> Bentuk Tim Baru (Ketua Tim)
                     </a>
 
-                    <a href="{{ route('tim.lowongan', ['q' => $lomba->nama_lomba]) }}"
+                    <a href="{{ route('tim.index', ['q' => $lomba->nama_lomba]) }}"
                        class="btn btn-outline-primary btn-sm"
                        style="width: 100%; font-weight: 600; text-align: center;">
-                        <i class="bi bi-people-fill"></i> Cari Lowongan Tim untuk Lomba Ini
+                        <i class="bi bi-people-fill"></i> Cari Tim di Modul Tim
                     </a>
 
                     <a href="{{ route('lomba.index') }}"

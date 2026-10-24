@@ -469,7 +469,12 @@
                             </a>
                         </li>
                         <li>
-                            <a href="{{ route('bimbingan.index') }}" class="nav-link {{ (request()->routeIs('bimbingan.*') || request()->routeIs('tim.*')) ? 'active' : '' }}">
+                            <a href="{{ route('tim.index') }}" class="nav-link {{ request()->routeIs('tim.*') ? 'active' : '' }}">
+                                <i class="bi bi-people-fill"></i> Modul Tim
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('bimbingan.index') }}" class="nav-link {{ request()->routeIs('bimbingan.*') ? 'active' : '' }}">
                                 <i class="bi bi-person-video3"></i> Modul Bimbingan
                             </a>
                         </li>

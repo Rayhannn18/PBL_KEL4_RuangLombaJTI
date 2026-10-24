@@ -58,8 +58,8 @@ Route::middleware('auth')->group(function () {
 
     // Modul Tim Mahasiswa (Papan Lowongan Tim, Form Ketua Tim, & Pengajuan Anggota Tim)
     Route::prefix('tim')->name('tim.')->group(function () {
+        Route::get('/', [TimController::class, 'index'])->name('index');
         Route::get('/lowongan', [TimController::class, 'lowongan'])->name('lowongan');
-        Route::get('/', [TimController::class, 'lowongan'])->name('index');
         Route::get('/buat', [TimController::class, 'create'])->name('create');
         Route::post('/buat', [TimController::class, 'store'])->name('store');
         Route::get('/{id}/gabung', [TimController::class, 'formGabung'])->name('gabung.form');
