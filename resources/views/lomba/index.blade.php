@@ -4,41 +4,6 @@
 
 @push('styles')
 <style>
-    /* Hero Banner Lomba */
-    .lomba-hero {
-        background: linear-gradient(135deg, #0F2744 0%, #1E3A8A 65%, #2563EB 100%);
-        border-radius: var(--radius-lg);
-        padding: 34px 36px;
-        color: #fff;
-        margin-bottom: 26px;
-        position: relative;
-        overflow: hidden;
-        box-shadow: 0 10px 25px -10px rgba(15, 39, 68, 0.4);
-    }
-    .lomba-hero::after {
-        content: "";
-        position: absolute;
-        right: -30px;
-        top: -50px;
-        width: 280px;
-        height: 280px;
-        background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0) 70%);
-        border-radius: 50%;
-        pointer-events: none;
-    }
-    .lomba-hero-tag {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        background: rgba(255, 255, 255, 0.16);
-        backdrop-filter: blur(8px);
-        padding: 5px 14px;
-        border-radius: var(--radius-full);
-        font-size: 0.8rem;
-        font-weight: 600;
-        margin-bottom: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-    }
 
     /* Filter Card & Controls */
     .filter-panel {
@@ -313,29 +278,44 @@
 @endpush
 
 @section('content')
-    <!-- Hero Banner -->
-    <div class="lomba-hero">
-        <div style="max-width: 780px; position: relative; z-index: 1;">
-            <div class="lomba-hero-tag">
-                <i class="bi bi-compass"></i> Eksplorasi Prestasi Mahasiswa
+    <!-- Hero Header Modul Lomba (Konsisten dengan Dashboard Analitik) -->
+    <div class="dashboard-header">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px;">
+            <div>
+                <div class="dashboard-header-badge">
+                    <i class="bi bi-award-fill"></i> Sistem Informasi Manajemen Prestasi JTI
+                </div>
+                <h1 style="font-size: 1.9rem; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 8px;">
+                    Direktori dan Informasi Lomba
+                </h1>
+                <p style="font-size: 0.95rem; opacity: 0.9; max-width: 650px; line-height: 1.6; margin-bottom: 14px;">
+                    Jelajahi berbagai kompetisi mahasiswa berdasarkan tingkat, kategori, dan informasi penyelenggaraan lomba.
+                </p>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <span class="badge" style="background: rgba(255,255,255,0.2); color: #fff; padding: 6px 14px; font-size: 0.82rem;">
+                        <i class="bi bi-shield-check" style="color: #93C5FD;"></i> Terverifikasi Jurusan TI
+                    </span>
+                </div>
             </div>
-            <h1 style="font-size: 1.85rem; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 10px; line-height: 1.25;">
-                Katalog Lomba & Kompetisi Mahasiswa JTI
-            </h1>
-            <p style="font-size: 0.95rem; opacity: 0.9; line-height: 1.6; margin-bottom: 18px;">
-                Temukan ajang kompetisi bidang Teknologi Informasi berskala kampus, nasional, hingga internasional. Bentuk tim terbaikmu dan ajukan bimbingan dosen untuk meraih prestasi gemilang.
-            </p>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                <span class="badge" style="background: rgba(255,255,255,0.2); color: #fff; padding: 6px 14px; font-size: 0.82rem;">
-                    <i class="bi bi-check-circle-fill" style="color: #6EE7B7;"></i> {{ $totalAktif }} Kompetisi Buka Pendaftaran
-                </span>
-                <span class="badge" style="background: rgba(255,255,255,0.2); color: #fff; padding: 6px 14px; font-size: 0.82rem;">
-                    <i class="bi bi-shield-check" style="color: #93C5FD;"></i> Terverifikasi Jurusan TI
-                </span>
-                <a href="{{ route('bimbingan.index') }}" class="btn btn-sm" style="background: #fff; color: var(--primary-dark); font-weight: 700; margin-left: 4px;">
-                    <i class="bi bi-people-fill"></i> Modul Bimbingan Tim
-                </a>
-            </div>
+            @php
+                $currentUser = auth()->user();
+                $sessionUser = session('auth_user');
+                $userName = $currentUser->name ?? ($sessionUser['nama'] ?? null);
+                $userRoleVal = $currentUser ? ($currentUser->role instanceof \App\Enums\UserRole ? $currentUser->role->value : (string) $currentUser->role) : ($sessionUser['role'] ?? null);
+                $userRoleLabel = $currentUser ? ($currentUser->role instanceof \App\Enums\UserRole ? $currentUser->role->label() : ucfirst($userRoleVal ?? '')) : ucfirst($sessionUser['role'] ?? '');
+                $userId = $currentUser->nim_nip ?? ($sessionUser['id'] ?? null);
+            @endphp
+            @if($userName)
+                <div class="dashboard-header-user">
+                    <div style="font-size: 0.8rem; opacity: 0.85;">Selamat datang kembali,</div>
+                    <div style="font-size: 1.1rem; font-weight: 800;">{{ $userName }}</div>
+                    <div style="margin-top: 6px; display: flex; gap: 8px; justify-content: flex-end;">
+                        <span class="badge {{ $userRoleVal === 'admin' ? 'badge-danger' : ($userRoleVal === 'dosen' ? 'badge-warning' : 'badge-primary') }}" style="font-size: 0.72rem; padding: 3px 10px;">
+                            {{ $userRoleLabel }} {{ $userId ? '('.$userId.')' : '' }}
+                        </span>
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
 

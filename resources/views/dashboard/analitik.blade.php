@@ -194,21 +194,25 @@
                     Pemantauan terpusat keikutsertaan kompetisi, progres pembimbingan babak, serta rekapitulasi capaian prestasi mahasiswa Jurusan Teknologi Informasi Polinema.
                 </p>
             </div>
-            @auth
-                @php
-                    $uRole = auth()->user()->role instanceof \App\Enums\UserRole ? auth()->user()->role->value : (string) auth()->user()->role;
-                    $uLabel = auth()->user()->role instanceof \App\Enums\UserRole ? auth()->user()->role->label() : ucfirst($uRole);
-                @endphp
-                <div style="background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(8px); padding: 14px 20px; border-radius: var(--radius-md); border: 1px solid rgba(255, 255, 255, 0.25); text-align: right;">
+            @php
+                $currentUser = auth()->user();
+                $sessionUser = session('auth_user');
+                $userName = $currentUser->name ?? ($sessionUser['nama'] ?? null);
+                $userRoleVal = $currentUser ? ($currentUser->role instanceof \App\Enums\UserRole ? $currentUser->role->value : (string) $currentUser->role) : ($sessionUser['role'] ?? null);
+                $userRoleLabel = $currentUser ? ($currentUser->role instanceof \App\Enums\UserRole ? $currentUser->role->label() : ucfirst($userRoleVal ?? '')) : ucfirst($sessionUser['role'] ?? '');
+                $userId = $currentUser->nim_nip ?? ($sessionUser['id'] ?? null);
+            @endphp
+            @if($userName)
+                <div class="dashboard-header-user">
                     <div style="font-size: 0.8rem; opacity: 0.85;">Selamat datang kembali,</div>
-                    <div style="font-size: 1.1rem; font-weight: 800;">{{ auth()->user()->name }}</div>
+                    <div style="font-size: 1.1rem; font-weight: 800;">{{ $userName }}</div>
                     <div style="margin-top: 6px; display: flex; gap: 8px; justify-content: flex-end;">
-                        <span class="badge {{ $uRole === 'admin' ? 'badge-danger' : ($uRole === 'dosen' ? 'badge-warning' : 'badge-primary') }}" style="font-size: 0.72rem; padding: 3px 10px;">
-                            {{ $uLabel }} {{ auth()->user()->nim_nip ? '('.auth()->user()->nim_nip.')' : '' }}
+                        <span class="badge {{ $userRoleVal === 'admin' ? 'badge-danger' : ($userRoleVal === 'dosen' ? 'badge-warning' : 'badge-primary') }}" style="font-size: 0.72rem; padding: 3px 10px;">
+                            {{ $userRoleLabel }} {{ $userId ? '('.$userId.')' : '' }}
                         </span>
                     </div>
                 </div>
-            @endauth
+            @endif
         </div>
     </div>
 

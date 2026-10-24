@@ -4,40 +4,6 @@
 
 @push('styles')
 <style>
-    .modul-tim-hero {
-        background: linear-gradient(135deg, #0F2744 0%, #1E3A8A 60%, #2563EB 100%);
-        border-radius: var(--radius-lg);
-        color: #fff;
-        padding: 34px 38px;
-        margin-bottom: 28px;
-        position: relative;
-        overflow: hidden;
-        box-shadow: 0 10px 25px -5px rgba(15, 39, 68, 0.2);
-    }
-    .modul-tim-hero::after {
-        content: '';
-        position: absolute;
-        top: -60px;
-        right: -60px;
-        width: 260px;
-        height: 260px;
-        background: radial-gradient(circle, rgba(59, 130, 246, 0.35) 0%, rgba(255,255,255,0) 70%);
-        border-radius: 50%;
-        pointer-events: none;
-    }
-    .hero-badge-tag {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        background: rgba(255, 255, 255, 0.15);
-        backdrop-filter: blur(8px);
-        padding: 4px 12px;
-        border-radius: 999px;
-        font-size: 0.78rem;
-        font-weight: 600;
-        margin-bottom: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-    }
 
     /* Bagian A: Banner Bentuk Tim */
     .section-create-team {
@@ -166,25 +132,39 @@
 
 @section('content')
 
-    <!-- Breadcrumb Nav -->
-    <div class="breadcrumb-nav">
-        <a href="{{ route('dashboard.analitik') }}"><i class="bi bi-house-door"></i> Beranda</a>
-        <span>/</span>
-        <span style="color: var(--text-main); font-weight: 700;">Modul Tim</span>
-    </div>
-
-    <!-- Hero Banner Modul Tim -->
-    <div class="modul-tim-hero">
-        <div style="position: relative; z-index: 1;">
-            <div class="hero-badge-tag">
-                <i class="bi bi-people-fill"></i> Modul Tim Mahasiswa
+    <!-- Hero Header Modul Tim (Konsisten dengan Dashboard Analitik) -->
+    <div class="dashboard-header">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px;">
+            <div>
+                <div class="dashboard-header-badge">
+                    <i class="bi bi-people-fill"></i> Sistem Informasi Manajemen Prestasi JTI
+                </div>
+                <h1 style="font-size: 1.9rem; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 8px;">
+                    Eksplorasi dan Manajemen Tim
+                </h1>
+                <p style="font-size: 0.95rem; opacity: 0.9; max-width: 650px; line-height: 1.6; margin-bottom: 0;">
+                    Temukan tim kompetisi, bentuk tim baru, dan ajukan diri untuk bergabung dengan tim mahasiswa JTI.
+                </p>
             </div>
-            <h1 style="font-size: 1.85rem; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.5px;">
-                Pusat Pengelolaan & Pembentukan Tim Kompetisi
-            </h1>
-            <p style="font-size: 0.95rem; opacity: 0.92; max-width: 760px; line-height: 1.6; margin-bottom: 0;">
-                Kelola pembentukan tim kompetisi mahasiswa JTI Polinema secara terpadu. Inisiasi delegasi baru sebagai <strong>Ketua Tim</strong> atau temukan tim yang membuka lowongan untuk mengajukan diri sebagai <strong>Anggota Tim</strong>.
-            </p>
+            @php
+                $currentUser = auth()->user();
+                $sessionUser = session('auth_user');
+                $userName = $currentUser->name ?? ($sessionUser['nama'] ?? ($authUser['nama'] ?? null));
+                $userRoleVal = $currentUser ? ($currentUser->role instanceof \App\Enums\UserRole ? $currentUser->role->value : (string) $currentUser->role) : ($sessionUser['role'] ?? ($authUser['role'] ?? null));
+                $userRoleLabel = $currentUser ? ($currentUser->role instanceof \App\Enums\UserRole ? $currentUser->role->label() : ucfirst($userRoleVal ?? '')) : ucfirst($sessionUser['role'] ?? ($authUser['role'] ?? ''));
+                $userId = $currentUser->nim_nip ?? ($sessionUser['id'] ?? ($authUser['id'] ?? null));
+            @endphp
+            @if($userName)
+                <div class="dashboard-header-user">
+                    <div style="font-size: 0.8rem; opacity: 0.85;">Selamat datang kembali,</div>
+                    <div style="font-size: 1.1rem; font-weight: 800;">{{ $userName }}</div>
+                    <div style="margin-top: 6px; display: flex; gap: 8px; justify-content: flex-end;">
+                        <span class="badge {{ $userRoleVal === 'admin' ? 'badge-danger' : ($userRoleVal === 'dosen' ? 'badge-warning' : 'badge-primary') }}" style="font-size: 0.72rem; padding: 3px 10px;">
+                            {{ $userRoleLabel }} {{ $userId ? '('.$userId.')' : '' }}
+                        </span>
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
 

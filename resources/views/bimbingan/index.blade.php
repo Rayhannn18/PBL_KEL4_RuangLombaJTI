@@ -4,41 +4,6 @@
 
 @push('styles')
 <style>
-    /* Bimbingan Header */
-    .bimbingan-hero {
-        background: linear-gradient(135deg, #0F2744 0%, #1E40AF 100%);
-        border-radius: var(--radius-lg);
-        color: #fff;
-        padding: 30px 35px;
-        margin-bottom: 28px;
-        position: relative;
-        overflow: hidden;
-        box-shadow: 0 10px 25px -5px rgba(15, 39, 68, 0.15);
-    }
-    .bimbingan-hero::after {
-        content: '';
-        position: absolute;
-        top: -60px;
-        right: -60px;
-        width: 240px;
-        height: 240px;
-        background: radial-gradient(circle, rgba(59, 130, 246, 0.3) 0%, rgba(255,255,255,0) 70%);
-        border-radius: 50%;
-        pointer-events: none;
-    }
-    .hero-tag {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        background: rgba(255, 255, 255, 0.15);
-        backdrop-filter: blur(8px);
-        padding: 4px 12px;
-        border-radius: 999px;
-        font-size: 0.78rem;
-        font-weight: 600;
-        margin-bottom: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-    }
 
     /* Empty State (Belum Ikut Lomba) */
     .empty-lomba-card {
@@ -263,32 +228,39 @@
 </style>
 @endpush
 
-    <!-- Hero Header Modul Bimbingan -->
-    <div class="bimbingan-hero">
+    <!-- Hero Header Modul Bimbingan (Konsisten dengan Dashboard Analitik) -->
+    <div class="dashboard-header">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px;">
             <div>
-                <div class="hero-tag">
-                    <i class="bi bi-mortarboard-fill"></i> Modul Bimbingan Akademik & Kompetisi
+                <div class="dashboard-header-badge">
+                    <i class="bi bi-mortarboard-fill"></i> Sistem Informasi Manajemen Prestasi JTI
                 </div>
-                <h1 style="font-size: 1.85rem; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 8px;">
-                    Portal Pendampingan Tim Lomba JTI Polinema
+                <h1 style="font-size: 1.9rem; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 8px;">
+                    Monitoring Bimbingan Tim
                 </h1>
                 <p style="font-size: 0.95rem; opacity: 0.9; max-width: 650px; line-height: 1.6; margin: 0;">
-                    Fasilitas konsultasi intensif karya inovasi, rekam jejak logbook bimbingan, serta pemantauan progres kompetisi mahasiswa bersama Dosen Pembimbing.
+                    Pantau proses pengajuan dosen pembimbing, konsultasi, logbook, dan progres keikutsertaan tim dalam kompetisi.
                 </p>
             </div>
-            <div>
-                <div style="background: rgba(255,255,255,0.12); padding: 10px 16px; border-radius: var(--radius-md); border: 1px solid rgba(255,255,255,0.2); font-size: 0.85rem;">
-                    <div style="opacity: 0.8; font-size: 0.75rem;">Status Akun Masuk:</div>
-                    <strong>{{ $authUser['nama'] }}</strong>
-                    <div style="font-size: 0.78rem; opacity: 0.9; margin-top: 2px;">
-                        Role: <span style="text-transform: capitalize; color: #93C5FD; font-weight: 700;">{{ $authUser['role'] }}</span>
-                        @if(!empty($authUser['extra']))
-                            &bull; {{ $authUser['extra'] }}
-                        @endif
+            @php
+                $currentUser = auth()->user();
+                $sessionUser = session('auth_user');
+                $userName = $currentUser->name ?? ($sessionUser['nama'] ?? ($authUser['nama'] ?? null));
+                $userRoleVal = $currentUser ? ($currentUser->role instanceof \App\Enums\UserRole ? $currentUser->role->value : (string) $currentUser->role) : ($sessionUser['role'] ?? ($authUser['role'] ?? null));
+                $userRoleLabel = $currentUser ? ($currentUser->role instanceof \App\Enums\UserRole ? $currentUser->role->label() : ucfirst($userRoleVal ?? '')) : ucfirst($sessionUser['role'] ?? ($authUser['role'] ?? ''));
+                $userId = $currentUser->nim_nip ?? ($sessionUser['id'] ?? ($authUser['id'] ?? null));
+            @endphp
+            @if($userName)
+                <div class="dashboard-header-user">
+                    <div style="font-size: 0.8rem; opacity: 0.85;">Selamat datang kembali,</div>
+                    <div style="font-size: 1.1rem; font-weight: 800;">{{ $userName }}</div>
+                    <div style="margin-top: 6px; display: flex; gap: 8px; justify-content: flex-end;">
+                        <span class="badge {{ $userRoleVal === 'admin' ? 'badge-danger' : ($userRoleVal === 'dosen' ? 'badge-warning' : 'badge-primary') }}" style="font-size: 0.72rem; padding: 3px 10px;">
+                            {{ $userRoleLabel }} {{ $userId ? '('.$userId.')' : '' }}
+                        </span>
                     </div>
                 </div>
-            </div>
+            @endif
         </div>
     </div>
 

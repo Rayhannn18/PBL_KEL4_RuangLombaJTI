@@ -346,6 +346,59 @@
             min-height: 90px;
         }
 
+        /* Hero Header / Dashboard Header Style (Consistent across Modules) */
+        .dashboard-header {
+            background: linear-gradient(135deg, #0F2744 0%, #1E3A8A 60%, #2563EB 100%);
+            border-radius: var(--radius-lg);
+            padding: 36px 36px;
+            color: #fff;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px -10px rgba(15, 39, 68, 0.4);
+        }
+        .dashboard-header::after {
+            content: "";
+            position: absolute;
+            right: -40px;
+            top: -60px;
+            width: 320px;
+            height: 320px;
+            background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0) 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .dashboard-header-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(8px);
+            padding: 6px 14px;
+            border-radius: var(--radius-full);
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 14px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .dashboard-header-user {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(8px);
+            padding: 14px 20px;
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            text-align: right;
+        }
+        @media (max-width: 992px) {
+            .dashboard-header {
+                padding: 24px 20px;
+            }
+            .dashboard-header-user {
+                text-align: left;
+                width: 100%;
+            }
+        }
+
         /* Main Content */
         main {
             flex: 1;
