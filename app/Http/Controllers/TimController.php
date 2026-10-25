@@ -8,6 +8,7 @@ use App\Models\Lomba;
 use App\Models\Tim;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -115,13 +116,14 @@ class TimController extends Controller
                 ->pluck('kategori')
                 ->values()
                 ->all();
-        } elseif ($kategoriList instanceof \Illuminate\Support\Collection) {
+        } elseif ($kategoriList instanceof Collection) {
             $kategoriList = $kategoriList->values()->all();
         }
         $tingkatList = ['Nasional', 'Internasional', 'Regional', 'Kampus'];
 
         // Ambil tim mahasiswa yang sedang login saat ini (jika ada) untuk ringkasan di Bagian A
         $userTeams = collect();
+        $pengajuanGabung = collect();
         if ($authUser['role'] === 'mahasiswa') {
             $nim = $authUser['id'];
             if (! $request->filled('q') && ! $request->filled('tingkat') && ! $request->filled('kategori')) {
@@ -140,6 +142,15 @@ class TimController extends Controller
                     ->with(['lomba', 'ketua', 'anggotaDiterima.mahasiswa'])
                     ->get();
             }
+
+            // Ambil riwayat pengajuan gabung ke tim lain oleh mahasiswa yang sedang login
+            $pengajuanGabung = AnggotaTim::where('nim', $nim)
+                ->whereHas('tim', function ($q) use ($nim) {
+                    $q->where('nim', '!=', $nim);
+                })
+                ->with(['tim.lomba', 'tim.ketua'])
+                ->latest()
+                ->get();
         }
 
         return view('tim.index', [
@@ -153,6 +164,7 @@ class TimController extends Controller
             'currentKategori' => $request->query('kategori', ''),
             'currentStatusKuota' => $filterStatus,
             'userTeams' => $userTeams,
+            'pengajuanGabung' => $pengajuanGabung,
         ]);
     }
 
@@ -415,6 +427,7 @@ class TimController extends Controller
                         'status_gabung' => 'menunggu',
                         'peran' => $validated['peran'],
                         'file_cv' => $cvPath,
+                        'created_at' => now(),
                     ]);
 
                     if ($oldCv && $oldCv !== $cvPath && Storage::disk('public')->exists($oldCv)) {

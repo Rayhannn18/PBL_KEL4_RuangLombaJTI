@@ -47,6 +47,89 @@
         margin-bottom: 28px;
     }
 
+    /* Bagian: Pengajuan Gabung Tim Saya */
+    .user-applications-card {
+        background: #FFFFFF;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 22px 24px;
+        margin-bottom: 30px;
+        box-shadow: var(--shadow-sm);
+    }
+    .user-applications-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 18px;
+        flex-wrap: wrap;
+        gap: 12px;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 14px;
+    }
+    .application-item {
+        background: #F8FAFC;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 16px 18px;
+        transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 12px;
+    }
+    .application-item:hover {
+        border-color: #93C5FD;
+        box-shadow: var(--shadow-sm);
+        transform: translateY(-2px);
+    }
+    .application-item.status-menunggu {
+        border-left: 4px solid #F59E0B;
+    }
+    .application-item.status-diterima {
+        border-left: 4px solid #10B981;
+    }
+    .application-item.status-ditolak {
+        border-left: 4px solid #EF4444;
+    }
+    .application-badge-menunggu {
+        background: #FEF3C7;
+        color: #92400E;
+        border: 1px solid #FDE68A;
+    }
+    .application-badge-diterima {
+        background: #DCFCE7;
+        color: #166534;
+        border: 1px solid #BBF7D0;
+    }
+    .application-badge-ditolak {
+        background: #FEE2E2;
+        color: #991B1B;
+        border: 1px solid #FECACA;
+    }
+    .application-note-box {
+        font-size: 0.82rem;
+        padding: 8px 12px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .application-note-box.note-menunggu {
+        background: #FFFBEB;
+        color: #92400E;
+        border: 1px solid #FDE68A;
+    }
+    .application-note-box.note-diterima {
+        background: #F0FDF4;
+        color: #166534;
+        border: 1px solid #BBF7D0;
+    }
+    .application-note-box.note-ditolak {
+        background: #FEF2F2;
+        color: #991B1B;
+        border: 1px solid #FECACA;
+    }
+
 
     /* Grid Kartu Tim */
     .tim-grid {
@@ -237,6 +320,164 @@
         </div>
     @endif
 
+    {{-- ========================================================================= --}}
+    {{-- BAGIAN: PENGAJUAN GABUNG TIM SAYA                                         --}}
+    {{-- ========================================================================= --}}
+    @if(($authUser['role'] ?? '') === 'mahasiswa')
+        <div class="user-applications-card">
+            <div class="user-applications-header">
+                <div>
+                    <div style="font-size: 0.72rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">
+                        <i class="bi bi-send-check"></i> Status Permohonan Anggota
+                    </div>
+                    <h3 style="font-size: 1.18rem; font-weight: 800; color: var(--primary-dark); margin: 0; display: flex; align-items: center; gap: 8px;">
+                        <span>Pengajuan Gabung Tim Saya</span>
+                        @if(isset($pengajuanGabung) && $pengajuanGabung->isNotEmpty())
+                            <span class="badge badge-primary" style="font-size: 0.72rem; padding: 2px 8px;">
+                                {{ $pengajuanGabung->count() }} Pengajuan
+                            </span>
+                        @endif
+                    </h3>
+                    <p style="font-size: 0.82rem; color: var(--text-muted); margin: 3px 0 0 0;">
+                        Pantau status persetujuan permohonan bergabung ke tim yang kamu ajukan.
+                    </p>
+                </div>
+            </div>
+
+            @if(isset($pengajuanGabung) && $pengajuanGabung->isNotEmpty())
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px;">
+                    @foreach($pengajuanGabung as $pg)
+                        @php
+                            $status = $pg->status_gabung;
+                            $statusClass = match($status) {
+                                'diterima' => 'status-diterima',
+                                'ditolak' => 'status-ditolak',
+                                default => 'status-menunggu',
+                            };
+                            $badgeClass = match($status) {
+                                'diterima' => 'application-badge-diterima',
+                                'ditolak' => 'application-badge-ditolak',
+                                default => 'application-badge-menunggu',
+                            };
+                            $badgeIcon = match($status) {
+                                'diterima' => 'bi-check-circle-fill',
+                                'ditolak' => 'bi-x-circle-fill',
+                                default => 'bi-clock-history',
+                            };
+                            $statusLabel = match($status) {
+                                'diterima' => 'Diterima',
+                                'ditolak' => 'Ditolak',
+                                default => 'Menunggu Persetujuan',
+                            };
+                            $noteClass = match($status) {
+                                'diterima' => 'note-diterima',
+                                'ditolak' => 'note-ditolak',
+                                default => 'note-menunggu',
+                            };
+                            $noteIcon = match($status) {
+                                'diterima' => 'bi-check-circle-fill',
+                                'ditolak' => 'bi-exclamation-circle-fill',
+                                default => 'bi-hourglass-split',
+                            };
+                            $statusNote = match($status) {
+                                'diterima' => 'Pengajuan kamu diterima. Silakan cek status keanggotaan tim kamu.',
+                                'ditolak' => 'Pengajuan kamu ditolak oleh ketua tim.',
+                                default => 'Pengajuan kamu sedang menunggu keputusan ketua tim.',
+                            };
+                            $timTujuan = $pg->tim;
+                            $lombaTujuan = $timTujuan?->lomba;
+                            $ketuaTujuan = $timTujuan?->ketua;
+                        @endphp
+                        <div class="application-item {{ $statusClass }}">
+                            <div>
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 8px;">
+                                    <div>
+                                        <div style="font-weight: 800; color: var(--primary-dark); font-size: 1rem; line-height: 1.3;">
+                                            {{ $timTujuan->nama_tim ?? 'Tim Tidak Ditemukan' }}
+                                        </div>
+                                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+                                            <i class="bi bi-award"></i> {{ $lombaTujuan->nama_lomba ?? 'Kompetisi JTI' }}
+                                        </div>
+                                    </div>
+                                    <span class="badge {{ $badgeClass }}" style="font-size: 0.74rem; padding: 4px 10px; white-space: nowrap;">
+                                        <i class="bi {{ $badgeIcon }}"></i> {{ $statusLabel }}
+                                    </span>
+                                </div>
+
+                                <div style="display: flex; flex-wrap: wrap; gap: 10px; font-size: 0.78rem; color: var(--text-muted); margin-bottom: 10px;">
+                                    <span>
+                                        <i class="bi bi-person-fill" style="color: var(--primary);"></i>
+                                        Ketua: <strong>{{ $ketuaTujuan->nama ?? ($timTujuan->nim ?? '-') }}</strong>
+                                    </span>
+                                    <span>&bull;</span>
+                                    <span>
+                                        <i class="bi bi-briefcase-fill" style="color: var(--primary);"></i>
+                                        Posisi: <strong>{{ $pg->peran ?? 'Anggota' }}</strong>
+                                    </span>
+                                    @if($pg->created_at)
+                                        <span>&bull;</span>
+                                        <span>
+                                            <i class="bi bi-calendar3"></i>
+                                            Diajukan: <strong>{{ $pg->created_at->format('d M Y, H:i') }}</strong>
+                                        </span>
+                                    @endif
+                                </div>
+
+                                <div class="application-note-box {{ $noteClass }}">
+                                    <i class="bi {{ $noteIcon }}" style="font-size: 0.95rem;"></i>
+                                    <span>{{ $statusNote }}</span>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed var(--border); padding-top: 10px; gap: 8px; flex-wrap: wrap;">
+                                <div>
+                                    @if($pg->file_cv)
+                                        <a href="{{ route('tim.cv', ['type' => 'anggota', 'id' => $pg->id_anggota]) }}"
+                                           target="_blank"
+                                           class="btn btn-secondary btn-sm"
+                                           style="font-size: 0.74rem; padding: 4px 10px;"
+                                           title="Lihat Berkas CV yang Anda Lampirkan">
+                                            <i class="bi bi-file-earmark-pdf"></i> Lihat CV Saya
+                                        </a>
+                                    @endif
+                                </div>
+
+                                <div style="display: flex; gap: 6px;">
+                                    @if($status === 'diterima' && $timTujuan)
+                                        <a href="{{ route('bimbingan.index', ['tim_id' => $timTujuan->id_tim]) }}"
+                                           class="btn btn-outline-primary btn-sm"
+                                           style="font-size: 0.74rem; font-weight: 700; padding: 4px 10px;">
+                                            <i class="bi bi-person-video3"></i> Buka Bimbingan Tim &rarr;
+                                        </a>
+                                    @elseif($status === 'ditolak' && $timTujuan && $timTujuan->sisa_kuota_anggota > 0)
+                                        <a href="{{ route('tim.gabung.form', $timTujuan->id_tim) }}"
+                                           class="btn btn-outline-primary btn-sm"
+                                           style="font-size: 0.74rem; font-weight: 700; padding: 4px 10px;"
+                                           title="Ajukan permohonan baru dengan berkas atau peran yang diperbarui">
+                                            <i class="bi bi-arrow-clockwise"></i> Ajukan Ulang &rarr;
+                                        </a>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @else
+                <div style="background: #F8FAFC; border: 1px dashed var(--border); border-radius: var(--radius-md); padding: 24px 20px; text-align: center;">
+                    <div style="width: 44px; height: 44px; border-radius: 50%; background: #EFF6FF; color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; margin: 0 auto 10px;">
+                        <i class="bi bi-inbox-fill"></i>
+                    </div>
+                    <div style="font-size: 0.95rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 4px;">
+                        Kamu belum memiliki pengajuan gabung tim.
+                    </div>
+                    <p style="font-size: 0.82rem; color: var(--text-muted); max-width: 460px; margin: 0 auto;">
+                        Temukan tim yang cocok dan masih membuka lowongan pada daftar tim di bawah, lalu ajukan diri untuk bergabung sebagai anggota.
+                    </p>
+                </div>
+            @endif
+        </div>
+    @endif
+
     <!-- Daftar Tim Kompetisi Mahasiswa -->
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
         <div>
@@ -257,6 +498,7 @@
                     $isKetua = ($tim->nim === $authUser['id']);
                     $isDiterima = $tim->anggotaDiterima->contains('nim', $authUser['id']);
                     $isPending = $tim->anggota->where('nim', $authUser['id'])->where('status_gabung', 'menunggu')->isNotEmpty();
+                    $isDitolak = $tim->anggota->where('nim', $authUser['id'])->where('status_gabung', 'ditolak')->isNotEmpty();
                     $sisaKuota = $tim->sisa_kuota_anggota;
                 @endphp
                 <div class="tim-card">
@@ -366,10 +608,18 @@
                         @elseif($isPending)
                             <button type="button"
                                     class="btn btn-secondary btn-sm"
-                                    style="flex: 1; font-weight: 700; justify-content: center; opacity: 0.8;"
-                                    disabled>
-                                <i class="bi bi-clock-history"></i> Pengajuan Terkirim
+                                    style="flex: 1; font-weight: 700; justify-content: center; opacity: 0.85;"
+                                    disabled
+                                    title="Pengajuan bergabung sedang menunggu keputusan ketua tim">
+                                <i class="bi bi-clock-history"></i> Menunggu Persetujuan
                             </button>
+                        @elseif($isDitolak && $sisaKuota > 0)
+                            <a href="{{ route('tim.gabung.form', $tim->id_tim) }}"
+                               class="btn btn-outline-primary btn-sm"
+                               style="flex: 1; font-weight: 700; justify-content: center;"
+                               title="Pengajuan sebelumnya ditolak oleh ketua tim. Anda dapat mengajukan ulang.">
+                                <i class="bi bi-arrow-clockwise"></i> Ajukan Ulang &rarr;
+                            </a>
                         @elseif($sisaKuota > 0)
                             <a href="{{ route('tim.gabung.form', $tim->id_tim) }}"
                                class="btn btn-outline-primary btn-sm"
@@ -492,9 +742,19 @@
                         Tutup
                     </button>
                     @if($sisaKuota > 0 && $tim->nim !== $authUser['id'] && !$tim->anggotaDiterima->contains('nim', $authUser['id']))
-                        <a href="{{ route('tim.gabung.form', $tim->id_tim) }}" class="btn btn-primary btn-sm" style="font-weight: 700;">
-                            <i class="bi bi-person-plus-fill"></i> Buka Formulir Gabung Tim &rarr;
-                        </a>
+                        @if($tim->anggota->where('nim', $authUser['id'])->where('status_gabung', 'menunggu')->isNotEmpty())
+                            <button type="button" class="btn btn-secondary btn-sm" disabled style="opacity: 0.85;">
+                                <i class="bi bi-clock-history"></i> Menunggu Persetujuan
+                            </button>
+                        @elseif($tim->anggota->where('nim', $authUser['id'])->where('status_gabung', 'ditolak')->isNotEmpty())
+                            <a href="{{ route('tim.gabung.form', $tim->id_tim) }}" class="btn btn-primary btn-sm" style="font-weight: 700;">
+                                <i class="bi bi-arrow-clockwise"></i> Ajukan Ulang Gabung Tim &rarr;
+                            </a>
+                        @else
+                            <a href="{{ route('tim.gabung.form', $tim->id_tim) }}" class="btn btn-primary btn-sm" style="font-weight: 700;">
+                                <i class="bi bi-person-plus-fill"></i> Buka Formulir Gabung Tim &rarr;
+                            </a>
+                        @endif
                     @endif
                 </div>
             </div>

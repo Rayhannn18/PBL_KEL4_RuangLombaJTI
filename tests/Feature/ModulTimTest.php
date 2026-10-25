@@ -218,4 +218,259 @@ class ModulTimTest extends TestCase
         $response->assertSee('Tim Figma Kreatif');
         $response->assertDontSee('Tim Flutter Mobile');
     }
+
+    public function test_halaman_modul_tim_menampilkan_empty_state_jika_belum_ada_pengajuan()
+    {
+        $user = $this->createMahasiswaUser('244107060010', 'Doni Mahasiswa', 'doni@polinema.ac.id');
+
+        $response = $this->actingAs($user)->get('/tim');
+
+        $response->assertStatus(200);
+        $response->assertSee('Pengajuan Gabung Tim Saya');
+        $response->assertSee('Kamu belum memiliki pengajuan gabung tim.');
+    }
+
+    public function test_halaman_modul_tim_menampilkan_pengajuan_dengan_status_menunggu_persetujuan()
+    {
+        $ketua = $this->createMahasiswaUser('244107060011', 'Ketua Garuda', 'garuda@polinema.ac.id');
+        $pelamar = $this->createMahasiswaUser('244107060012', 'Pelamar Elang', 'elang@polinema.ac.id');
+        $lomba = $this->createSampleLomba('Gemastik Cyber Security', 'Keamanan Siber', 'Nasional');
+
+        $tim = Tim::create([
+            'nama_tim' => 'Tim Garuda Cyber',
+            'id_lomba' => $lomba->id_lomba,
+            'nim' => $ketua->nim_nip,
+            'kuota_anggota' => 3,
+            'status_tim' => 'disetujui',
+        ]);
+
+        AnggotaTim::create([
+            'id_tim' => $tim->id_tim,
+            'nim' => $pelamar->nim_nip,
+            'status_gabung' => 'menunggu',
+            'peran' => 'Penetration Tester',
+        ]);
+
+        $response = $this->actingAs($pelamar)->get('/tim');
+
+        $response->assertStatus(200);
+        $response->assertSee('Pengajuan Gabung Tim Saya');
+        $response->assertSee('Tim Garuda Cyber');
+        $response->assertSee('Gemastik Cyber Security');
+        $response->assertSee('Menunggu Persetujuan');
+        $response->assertSee('Pengajuan kamu sedang menunggu keputusan ketua tim.');
+        $response->assertSee('Penetration Tester');
+        $response->assertDontSee('Kamu belum memiliki pengajuan gabung tim.');
+    }
+
+    public function test_halaman_modul_tim_menampilkan_pengajuan_dengan_status_diterima()
+    {
+        $ketua = $this->createMahasiswaUser('244107060013', 'Ketua Bintang', 'bintang@polinema.ac.id');
+        $pelamar = $this->createMahasiswaUser('244107060014', 'Pelamar Surya', 'surya@polinema.ac.id');
+        $lomba = $this->createSampleLomba('LIDM Divisi Poster', 'Inovasi Pembelajaran', 'Nasional');
+
+        $tim = Tim::create([
+            'nama_tim' => 'Tim Surya Digital',
+            'id_lomba' => $lomba->id_lomba,
+            'nim' => $ketua->nim_nip,
+            'kuota_anggota' => 3,
+            'status_tim' => 'disetujui',
+        ]);
+
+        $anggota = AnggotaTim::create([
+            'id_tim' => $tim->id_tim,
+            'nim' => $pelamar->nim_nip,
+            'status_gabung' => 'menunggu',
+            'peran' => 'Illustrator Digital',
+        ]);
+
+        // Ketua tim menyetujui pengajuan
+        $this->actingAs($ketua)->post(route('tim.anggota.respon', $anggota->id_anggota), [
+            'status' => 'diterima',
+        ]);
+
+        $response = $this->actingAs($pelamar)->get('/tim');
+
+        $response->assertStatus(200);
+        $response->assertSee('Pengajuan Gabung Tim Saya');
+        $response->assertSee('Tim Surya Digital');
+        $response->assertSee('LIDM Divisi Poster');
+        $response->assertSee('Diterima');
+        $response->assertSee('Pengajuan kamu diterima. Silakan cek status keanggotaan tim kamu.');
+        $response->assertSee(route('bimbingan.index', ['tim_id' => $tim->id_tim]));
+    }
+
+    public function test_halaman_modul_tim_menampilkan_pengajuan_dengan_status_ditolak()
+    {
+        $ketua = $this->createMahasiswaUser('244107060015', 'Ketua Angkasa', 'angkasa@polinema.ac.id');
+        $pelamar = $this->createMahasiswaUser('244107060016', 'Pelamar Awan', 'awan@polinema.ac.id');
+        $lomba = $this->createSampleLomba('KRI Divisi SAR', 'Robotika', 'Nasional');
+
+        $tim = Tim::create([
+            'nama_tim' => 'Tim Robot Terbang',
+            'id_lomba' => $lomba->id_lomba,
+            'nim' => $ketua->nim_nip,
+            'kuota_anggota' => 3,
+            'status_tim' => 'disetujui',
+        ]);
+
+        $anggota = AnggotaTim::create([
+            'id_tim' => $tim->id_tim,
+            'nim' => $pelamar->nim_nip,
+            'status_gabung' => 'menunggu',
+            'peran' => 'Hardware Specialist',
+        ]);
+
+        // Ketua tim menolak pengajuan
+        $this->actingAs($ketua)->post(route('tim.anggota.respon', $anggota->id_anggota), [
+            'status' => 'ditolak',
+        ]);
+
+        $response = $this->actingAs($pelamar)->get('/tim');
+
+        $response->assertStatus(200);
+        $response->assertSee('Pengajuan Gabung Tim Saya');
+        $response->assertSee('Tim Robot Terbang');
+        $response->assertSee('KRI Divisi SAR');
+        $response->assertSee('Ditolak');
+        $response->assertSee('Pengajuan kamu ditolak oleh ketua tim.');
+    }
+
+    public function test_mahasiswa_hanya_melihat_pengajuan_miliknya_sendiri()
+    {
+        $ketua = $this->createMahasiswaUser('244107060017', 'Ketua Semesta', 'semesta@polinema.ac.id');
+        $mhs1 = $this->createMahasiswaUser('244107060018', 'Mahasiswa Satu', 'mhs1@polinema.ac.id');
+        $mhs2 = $this->createMahasiswaUser('244107060019', 'Mahasiswa Dua', 'mhs2@polinema.ac.id');
+        $lomba = $this->createSampleLomba('Hackathon Big Data', 'Big Data', 'Nasional');
+
+        $tim1 = Tim::create([
+            'nama_tim' => 'Tim BigData One',
+            'id_lomba' => $lomba->id_lomba,
+            'nim' => $ketua->nim_nip,
+            'kuota_anggota' => 4,
+            'status_tim' => 'disetujui',
+        ]);
+
+        $tim2 = Tim::create([
+            'nama_tim' => 'Tim BigData Two',
+            'id_lomba' => $lomba->id_lomba,
+            'nim' => $ketua->nim_nip,
+            'kuota_anggota' => 4,
+            'status_tim' => 'disetujui',
+        ]);
+
+        // Mhs 1 melamar ke Tim BigData One
+        AnggotaTim::create([
+            'id_tim' => $tim1->id_tim,
+            'nim' => $mhs1->nim_nip,
+            'status_gabung' => 'menunggu',
+            'peran' => 'Data Analyst',
+        ]);
+
+        // Mhs 2 melamar ke Tim BigData Two
+        AnggotaTim::create([
+            'id_tim' => $tim2->id_tim,
+            'nim' => $mhs2->nim_nip,
+            'status_gabung' => 'menunggu',
+            'peran' => 'Data Engineer',
+        ]);
+
+        // Mhs 1 mengecek halaman tim
+        $responseMhs1 = $this->actingAs($mhs1)->get('/tim');
+        $responseMhs1->assertStatus(200);
+        $responseMhs1->assertSee('Tim BigData One');
+        $responseMhs1->assertSee('Data Analyst');
+        // Tidak boleh melihat pengajuan milik Mhs 2
+        $responseMhs1->assertDontSee('Data Engineer');
+
+        // Mhs 2 mengecek halaman tim
+        $responseMhs2 = $this->actingAs($mhs2)->get('/tim');
+        $responseMhs2->assertStatus(200);
+        $responseMhs2->assertSee('Tim BigData Two');
+        $responseMhs2->assertSee('Data Engineer');
+        // Tidak boleh melihat pengajuan milik Mhs 1
+        $responseMhs2->assertDontSee('Data Analyst');
+    }
+
+    public function test_mahasiswa_mengajukan_ke_beberapa_tim_melihat_setiap_pengajuan_terpisah()
+    {
+        $ketuaA = $this->createMahasiswaUser('244107060020', 'Ketua Tim A', 'ketuaa@polinema.ac.id');
+        $ketuaB = $this->createMahasiswaUser('244107060021', 'Ketua Tim B', 'ketuab@polinema.ac.id');
+        $pelamar = $this->createMahasiswaUser('244107060022', 'Pelamar Multi', 'multi@polinema.ac.id');
+
+        $lomba1 = $this->createSampleLomba('Lomba AI Vision', 'AI', 'Nasional');
+        $lomba2 = $this->createSampleLomba('Lomba Web App', 'Web', 'Nasional');
+
+        $timA = Tim::create([
+            'nama_tim' => 'Tim Visioner AI',
+            'id_lomba' => $lomba1->id_lomba,
+            'nim' => $ketuaA->nim_nip,
+            'kuota_anggota' => 3,
+            'status_tim' => 'disetujui',
+        ]);
+
+        $timB = Tim::create([
+            'nama_tim' => 'Tim Web Inovatif',
+            'id_lomba' => $lomba2->id_lomba,
+            'nim' => $ketuaB->nim_nip,
+            'kuota_anggota' => 3,
+            'status_tim' => 'disetujui',
+        ]);
+
+        AnggotaTim::create([
+            'id_tim' => $timA->id_tim,
+            'nim' => $pelamar->nim_nip,
+            'status_gabung' => 'menunggu',
+            'peran' => 'ML Engineer',
+        ]);
+
+        AnggotaTim::create([
+            'id_tim' => $timB->id_tim,
+            'nim' => $pelamar->nim_nip,
+            'status_gabung' => 'ditolak',
+            'peran' => 'Fullstack Dev',
+        ]);
+
+        $response = $this->actingAs($pelamar)->get('/tim');
+
+        $response->assertStatus(200);
+        $response->assertSee('Pengajuan Gabung Tim Saya');
+        $response->assertSee('2 Pengajuan');
+        $response->assertSee('Tim Visioner AI');
+        $response->assertSee('ML Engineer');
+        $response->assertSee('Menunggu Persetujuan');
+        $response->assertSee('Tim Web Inovatif');
+        $response->assertSee('Fullstack Dev');
+        $response->assertSee('Ditolak');
+    }
+
+    public function test_tim_yang_dibentuk_sendiri_tidak_masuk_pengajuan_gabung_tim_saya()
+    {
+        $ketua = $this->createMahasiswaUser('244107060023', 'Ketua Inisiator', 'inisiator@polinema.ac.id');
+        $lomba = $this->createSampleLomba('KMHE 2026', 'Energi', 'Nasional');
+
+        $tim = Tim::create([
+            'nama_tim' => 'Tim Mobil Hemat Energi',
+            'id_lomba' => $lomba->id_lomba,
+            'nim' => $ketua->nim_nip,
+            'kuota_anggota' => 3,
+            'status_tim' => 'disetujui',
+        ]);
+
+        AnggotaTim::create([
+            'id_tim' => $tim->id_tim,
+            'nim' => $ketua->nim_nip,
+            'status_gabung' => 'diterima',
+            'peran' => 'Ketua Tim',
+        ]);
+
+        $response = $this->actingAs($ketua)->get('/tim');
+
+        $response->assertStatus(200);
+        // Tim yang dibentuk masuk ke Tim yang Anda Ikuti Saat Ini
+        $response->assertSee('Tim yang Anda Ikuti Saat Ini');
+        $response->assertSee('Ketua Tim');
+        // Tapi pada Pengajuan Gabung Tim Saya, tampil empty state karena belum pernah mengajukan diri ke tim lain
+        $response->assertSee('Kamu belum memiliki pengajuan gabung tim.');
+    }
 }
