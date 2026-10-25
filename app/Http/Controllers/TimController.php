@@ -233,7 +233,7 @@ class TimController extends Controller
             'nama_tim' => 'required|string|max:150',
             'id_lomba' => 'required|exists:lomba,id_lomba',
             'kuota_anggota' => 'required|integer|min:2|max:5',
-            'catatan' => 'nullable|string|max:500',
+            'catatan' => 'required|string|max:500',
             'cv' => 'required|file|mimes:pdf|max:2048',
         ], [
             'nama_tim.required' => 'Nama tim wajib diisi oleh calon Ketua Tim.',
@@ -241,6 +241,7 @@ class TimController extends Controller
             'kuota_anggota.required' => 'Kuota anggota tim wajib ditentukan.',
             'kuota_anggota.min' => 'Kuota tim minimal 2 orang (termasuk Ketua Tim).',
             'kuota_anggota.max' => 'Kuota tim maksimal 5 orang.',
+            'catatan.required' => 'Deskripsi tim / posisi anggota yang dicari wajib diisi.',
             'cv.required' => 'File CV Ketua Tim wajib diunggah dalam format PDF.',
             'cv.file' => 'CV harus berupa file yang valid.',
             'cv.mimes' => 'File CV harus berformat PDF.',
@@ -368,10 +369,11 @@ class TimController extends Controller
 
         $validator = Validator::make($request->all(), [
             'peran' => 'required|string|max:100',
-            'catatan' => 'nullable|string|max:500',
+            'catatan' => 'required|string|max:500',
             'cv' => 'required|file|mimes:pdf|max:2048',
         ], [
             'peran.required' => 'Silakan tentukan peran / bidang keahlian yang Anda tawarkan ke tim.',
+            'catatan.required' => 'Deskripsi atau pesan untuk Ketua Tim wajib diisi.',
             'cv.required' => 'File CV wajib diunggah dalam format PDF.',
             'cv.file' => 'CV harus berupa file yang valid.',
             'cv.mimes' => 'File CV harus berformat PDF.',

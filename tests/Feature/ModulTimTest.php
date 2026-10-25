@@ -132,6 +132,7 @@ class ModulTimTest extends TestCase
             'nama_tim' => 'Tim Pengembang AI',
             'id_lomba' => $lomba->id_lomba,
             'kuota_anggota' => 3,
+            'catatan' => 'Tim fokus pada pengembangan kecerdasan buatan.',
             'cv' => $pdfFile,
         ]);
 
@@ -173,6 +174,7 @@ class ModulTimTest extends TestCase
         $cvPelamar = UploadedFile::fake()->create('cv_pelamar.pdf', 400, 'application/pdf');
         $responseSubmit = $this->actingAs($pelamar)->post(route('tim.gabung', $tim->id_tim), [
             'peran' => 'UI/UX Researcher',
+            'catatan' => 'Berpengalaman dalam user interview dan usability testing.',
             'cv' => $cvPelamar,
         ]);
 
@@ -472,5 +474,142 @@ class ModulTimTest extends TestCase
         $response->assertSee('Ketua Tim');
         // Tapi pada Pengajuan Gabung Tim Saya, tampil empty state karena belum pernah mengajukan diri ke tim lain
         $response->assertSee('Kamu belum memiliki pengajuan gabung tim.');
+    }
+
+    public function test_formulir_pembentukan_tim_gagal_jika_field_wajib_kosong()
+    {
+        $user = $this->createMahasiswaUser('244107060030', 'User Validasi', 'val1@polinema.ac.id');
+
+        $response = $this->actingAs($user)->from('/tim/buat')->post('/tim/buat', []);
+
+        $response->assertRedirect('/tim/buat');
+        $response->assertSessionHasErrors(['nama_tim', 'id_lomba', 'kuota_anggota', 'catatan', 'cv']);
+    }
+
+    public function test_formulir_pembentukan_tim_gagal_jika_deskripsi_kosong()
+    {
+        Storage::fake('public');
+        $user = $this->createMahasiswaUser('244107060031', 'Ketua Tanpa Deskripsi', 'nodesc1@polinema.ac.id');
+        $lomba = $this->createSampleLomba();
+        $pdfFile = UploadedFile::fake()->create('cv_ketua.pdf', 300, 'application/pdf');
+
+        $response = $this->actingAs($user)->from('/tim/buat')->post('/tim/buat', [
+            'nama_tim' => 'Tim Tanpa Deskripsi',
+            'id_lomba' => $lomba->id_lomba,
+            'kuota_anggota' => 3,
+            'catatan' => '',
+            'cv' => $pdfFile,
+        ]);
+
+        $response->assertRedirect('/tim/buat');
+        $response->assertSessionHasErrors(['catatan']);
+        $this->assertDatabaseMissing('tim', ['nama_tim' => 'Tim Tanpa Deskripsi']);
+    }
+
+    public function test_formulir_pembentukan_tim_berhasil_jika_semua_field_wajib_valid()
+    {
+        Storage::fake('public');
+        $user = $this->createMahasiswaUser('244107060032', 'Ketua Lengkap', 'lengkap1@polinema.ac.id');
+        $lomba = $this->createSampleLomba();
+        $pdfFile = UploadedFile::fake()->create('cv_ketua.pdf', 300, 'application/pdf');
+
+        $response = $this->actingAs($user)->post('/tim/buat', [
+            'nama_tim' => 'Tim Sukses Validasi',
+            'id_lomba' => $lomba->id_lomba,
+            'kuota_anggota' => 4,
+            'catatan' => 'Mencari anggota pengembang fullstack dan UI/UX designer.',
+            'cv' => $pdfFile,
+        ]);
+
+        $tim = Tim::where('nama_tim', 'Tim Sukses Validasi')->first();
+        $this->assertNotNull($tim);
+        $response->assertRedirect(route('bimbingan.index', ['tim_id' => $tim->id_tim]));
+        $this->assertDatabaseHas('tim', [
+            'nama_tim' => 'Tim Sukses Validasi',
+            'nim' => $user->nim_nip,
+        ]);
+    }
+
+    public function test_formulir_pengajuan_anggota_gagal_jika_field_wajib_kosong()
+    {
+        $ketua = $this->createMahasiswaUser('244107060033', 'Ketua Tim Sasaran', 'ketuasasaran@polinema.ac.id');
+        $pelamar = $this->createMahasiswaUser('244107060034', 'Pelamar Kosong', 'kosong@polinema.ac.id');
+        $lomba = $this->createSampleLomba();
+
+        $tim = Tim::create([
+            'nama_tim' => 'Tim Uji Form Kosong',
+            'id_lomba' => $lomba->id_lomba,
+            'nim' => $ketua->nim_nip,
+            'kuota_anggota' => 3,
+            'status_tim' => 'disetujui',
+        ]);
+
+        $response = $this->actingAs($pelamar)->from(route('tim.gabung.form', $tim->id_tim))->post(route('tim.gabung', $tim->id_tim), []);
+
+        $response->assertRedirect(route('tim.gabung.form', $tim->id_tim));
+        $response->assertSessionHasErrors(['peran', 'catatan', 'cv']);
+    }
+
+    public function test_formulir_pengajuan_anggota_gagal_jika_deskripsi_kosong()
+    {
+        Storage::fake('public');
+        $ketua = $this->createMahasiswaUser('244107060035', 'Ketua Tim Desain', 'ketuadesain@polinema.ac.id');
+        $pelamar = $this->createMahasiswaUser('244107060036', 'Pelamar Tanpa Catatan', 'nodesc2@polinema.ac.id');
+        $lomba = $this->createSampleLomba();
+
+        $tim = Tim::create([
+            'nama_tim' => 'Tim Uji Deskripsi Anggota',
+            'id_lomba' => $lomba->id_lomba,
+            'nim' => $ketua->nim_nip,
+            'kuota_anggota' => 3,
+            'status_tim' => 'disetujui',
+        ]);
+
+        $cvFile = UploadedFile::fake()->create('cv_pelamar.pdf', 300, 'application/pdf');
+
+        $response = $this->actingAs($pelamar)->from(route('tim.gabung.form', $tim->id_tim))->post(route('tim.gabung', $tim->id_tim), [
+            'peran' => 'Frontend Developer',
+            'catatan' => '',
+            'cv' => $cvFile,
+        ]);
+
+        $response->assertRedirect(route('tim.gabung.form', $tim->id_tim));
+        $response->assertSessionHasErrors(['catatan']);
+        $this->assertDatabaseMissing('anggota_tim', [
+            'id_tim' => $tim->id_tim,
+            'nim' => $pelamar->nim_nip,
+        ]);
+    }
+
+    public function test_formulir_pengajuan_anggota_berhasil_jika_semua_field_wajib_valid()
+    {
+        Storage::fake('public');
+        $ketua = $this->createMahasiswaUser('244107060037', 'Ketua Tim Valid', 'ketuavalid@polinema.ac.id');
+        $pelamar = $this->createMahasiswaUser('244107060038', 'Pelamar Lengkap', 'lengkap2@polinema.ac.id');
+        $lomba = $this->createSampleLomba();
+
+        $tim = Tim::create([
+            'nama_tim' => 'Tim Siap Bertanding',
+            'id_lomba' => $lomba->id_lomba,
+            'nim' => $ketua->nim_nip,
+            'kuota_anggota' => 3,
+            'status_tim' => 'disetujui',
+        ]);
+
+        $cvFile = UploadedFile::fake()->create('cv_pelamar.pdf', 350, 'application/pdf');
+
+        $response = $this->actingAs($pelamar)->post(route('tim.gabung', $tim->id_tim), [
+            'peran' => 'Backend Developer',
+            'catatan' => 'Memiliki pengalaman REST API Laravel dan basis data PostgreSQL.',
+            'cv' => $cvFile,
+        ]);
+
+        $response->assertRedirect(route('tim.lowongan'));
+        $this->assertDatabaseHas('anggota_tim', [
+            'id_tim' => $tim->id_tim,
+            'nim' => $pelamar->nim_nip,
+            'status_gabung' => 'menunggu',
+            'peran' => 'Backend Developer',
+        ]);
     }
 }

@@ -303,6 +303,7 @@ class UploadCvTest extends TestCase
             'nama_tim' => 'Tim Hak Akses',
             'id_lomba' => $lomba->id_lomba,
             'kuota_anggota' => 3,
+            'catatan' => 'Deskripsi tim hak akses.',
             'cv' => $cvKetua,
         ]);
 
@@ -312,6 +313,7 @@ class UploadCvTest extends TestCase
         $cvAnggota = UploadedFile::fake()->create('cv_anggota_resmi.pdf', 250, 'application/pdf');
         $this->actingAs($anggota)->post("/tim/{$tim->id_tim}/gabung", [
             'peran' => 'UI/UX Designer',
+            'catatan' => 'Deskripsi pengalaman anggota.',
             'cv' => $cvAnggota,
         ]);
 
@@ -359,6 +361,7 @@ class UploadCvTest extends TestCase
             'nama_tim' => 'Tim Rollback Fail',
             'id_lomba' => $lomba->id_lomba,
             'kuota_anggota' => 3,
+            'catatan' => 'Deskripsi tim rollback.',
             'cv' => $cvFile,
         ]);
 

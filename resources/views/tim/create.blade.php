@@ -160,11 +160,19 @@
 
             <!-- 5. Informasi atau Deskripsi Tambahan Tim -->
             <div class="form-group" style="margin-bottom: 28px;">
-                <label class="form-label">Deskripsi Singkat / Posisi Anggota yang Dicari (Opsional)</label>
+                <label class="form-label">
+                    Deskripsi Singkat / Posisi Anggota yang Dicari <span style="color: var(--danger);">*</span>
+                </label>
                 <textarea name="catatan"
                           rows="3"
-                          class="form-control"
-                          placeholder="Contoh: Tim ini berfokus pada pengembangan prototype aplikasi IoT dan membutuhkan rekan mahasiswa dengan keahlian UI/UX Designer atau Mobile Developer...">{{ old('catatan') }}</textarea>
+                          class="form-control @error('catatan') is-invalid @enderror"
+                          placeholder="Contoh: Tim ini berfokus pada pengembangan prototype aplikasi IoT dan membutuhkan rekan mahasiswa dengan keahlian UI/UX Designer atau Mobile Developer..."
+                          required>{{ old('catatan') }}</textarea>
+                @error('catatan')
+                    <div style="font-size: 0.8rem; color: var(--danger); margin-top: 5px; font-weight: 600;">
+                        <i class="bi bi-exclamation-circle-fill"></i> {{ $message }}
+                    </div>
+                @enderror
                 <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 5px;">
                     Informasi ini membantu rekan mahasiswa lain memahami fokus dan kebutuhan anggota delegasi Anda di Papan Lowongan Tim.
                 </div>

@@ -154,13 +154,16 @@
                 </div>
             </div>
 
-            <!-- 3. Catatan Singkat untuk Ketua Tim (Opsional) -->
+            <!-- 3. Catatan / Deskripsi Singkat untuk Ketua Tim (Wajib) -->
             <div class="form-group" style="margin-bottom: 28px;">
-                <label class="form-label">Catatan Singkat / Pesan untuk Ketua Tim (Opsional)</label>
+                <label class="form-label">
+                    Deskripsi Singkat / Pesan untuk Ketua Tim <span style="color: var(--danger);">*</span>
+                </label>
                 <textarea name="catatan"
                           rows="3"
                           class="form-control @error('catatan') is-invalid @enderror"
-                          placeholder="Tuliskan pengalaman relevan, tautan portofolio/GitHub, atau motivasi Anda bergabung ke tim ini...">{{ old('catatan') }}</textarea>
+                          placeholder="Tuliskan pengalaman relevan, tautan portofolio/GitHub, atau motivasi Anda bergabung ke tim ini..."
+                          required>{{ old('catatan') }}</textarea>
                 @error('catatan')
                     <div style="font-size: 0.8rem; color: var(--danger); margin-top: 5px; font-weight: 600;">
                         <i class="bi bi-exclamation-circle-fill"></i> {{ $message }}
