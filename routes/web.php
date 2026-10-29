@@ -43,6 +43,7 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
 // Modul Katalog & Eksplorasi Lomba Mahasiswa
 Route::get('/lomba', [LombaController::class, 'index'])->name('lomba.index');
 Route::get('/lomba/{id}', [LombaController::class, 'show'])->name('lomba.show')->whereNumber('id');
+Route::get('/lomba/{id}/pedoman', [LombaController::class, 'downloadPedoman'])->name('lomba.pedoman.download')->whereNumber('id');
 
 // Autentikasi
 Route::middleware('guest')->group(function () {

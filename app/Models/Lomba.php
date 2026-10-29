@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 
 class Lomba extends Model
 {
@@ -30,11 +31,20 @@ class Lomba extends Model
         'poster',
         'nim',
         'id_admin',
+        'tipe_peserta',
+        'mode_pelaksanaan',
+        'poster_path',
+        'buku_pedoman_path',
     ];
 
     protected $casts = [
         'tenggat' => 'date',
-        'biaya' => 'decimal:2',
+        'biaya' => 'integer',
+    ];
+
+    protected $appends = [
+        'poster_url',
+        'buku_pedoman_url',
     ];
 
     // Relations
@@ -99,17 +109,34 @@ class Lomba extends Model
             }
         });
 
-        // Tipe Filter (Individu vs Tim) — Periksa ketersediaan kolom skema
-        $query->when($filters['tipe'] ?? null, function ($q, $tipe) {
-            if (strtolower($tipe) !== 'semua' && ! empty($tipe) && Schema::hasColumn('lomba', 'tipe')) {
-                $q->whereRaw('LOWER(tipe) = ?', [strtolower($tipe)]);
+        // Tipe Filter (Individu vs Kelompok/Tim)
+        $query->when($filters['tipe'] ?? ($filters['tipe_peserta'] ?? null), function ($q, $tipe) {
+            if (strtolower($tipe) !== 'semua' && ! empty($tipe)) {
+                $lower = strtolower($tipe);
+                if (Schema::hasColumn('lomba', 'tipe_peserta')) {
+                    if ($lower === 'tim' || $lower === 'kelompok') {
+                        $q->where(function ($sub) {
+                            $sub->whereRaw('LOWER(tipe_peserta) = ?', ['kelompok'])
+                                ->orWhereRaw('LOWER(tipe_peserta) = ?', ['tim']);
+                        });
+                    } else {
+                        $q->whereRaw('LOWER(tipe_peserta) = ?', [$lower]);
+                    }
+                } elseif (Schema::hasColumn('lomba', 'tipe')) {
+                    $q->whereRaw('LOWER(tipe) = ?', [$lower]);
+                }
             }
         });
 
-        // Mode Filter (Online, Offline, Hybrid) — Periksa ketersediaan kolom skema
-        $query->when($filters['mode'] ?? null, function ($q, $mode) {
-            if (strtolower($mode) !== 'semua' && ! empty($mode) && Schema::hasColumn('lomba', 'mode')) {
-                $q->whereRaw('LOWER(mode) = ?', [strtolower($mode)]);
+        // Mode Filter (Online, Offline, Hybrid)
+        $query->when($filters['mode'] ?? ($filters['mode_pelaksanaan'] ?? null), function ($q, $mode) {
+            if (strtolower($mode) !== 'semua' && ! empty($mode)) {
+                $lower = strtolower($mode);
+                if (Schema::hasColumn('lomba', 'mode_pelaksanaan')) {
+                    $q->whereRaw('LOWER(mode_pelaksanaan) = ?', [$lower]);
+                } elseif (Schema::hasColumn('lomba', 'mode')) {
+                    $q->whereRaw('LOWER(mode) = ?', [$lower]);
+                }
             }
         });
 
@@ -155,10 +182,49 @@ class Lomba extends Model
 
     public function getFormattedBiayaAttribute(): string
     {
-        if ($this->biaya == 0) {
+        if ((int) $this->biaya === 0) {
             return 'Gratis';
         }
 
-        return 'Rp '.number_format($this->biaya, 0, ',', '.');
+        return 'Rp '.number_format((int) $this->biaya, 0, ',', '.');
+    }
+
+    public function getModePelaksanaanLabelAttribute(): string
+    {
+        $mode = $this->mode_pelaksanaan ?? 'Online';
+
+        return match (strtolower($mode)) {
+            'online' => 'Online (Daring)',
+            'offline' => 'Offline (Luring)',
+            'hybrid' => 'Hybrid',
+            default => ucfirst($mode),
+        };
+    }
+
+    public function getPosterUrlAttribute(): ?string
+    {
+        if ($this->poster_path && Storage::disk('public')->exists($this->poster_path)) {
+            return Storage::disk('public')->url($this->poster_path);
+        }
+
+        if ($this->poster) {
+            if (filter_var($this->poster, FILTER_VALIDATE_URL)) {
+                return $this->poster;
+            }
+            if (Storage::disk('public')->exists('lomba/poster/'.$this->poster)) {
+                return Storage::disk('public')->url('lomba/poster/'.$this->poster);
+            }
+        }
+
+        return null;
+    }
+
+    public function getBukuPedomanUrlAttribute(): ?string
+    {
+        if ($this->buku_pedoman_path && Storage::disk('public')->exists($this->buku_pedoman_path)) {
+            return Storage::disk('public')->url($this->buku_pedoman_path);
+        }
+
+        return null;
     }
 }

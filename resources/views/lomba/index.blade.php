@@ -366,18 +366,15 @@
                     </select>
                 </div>
 
-                <!-- 3. Tipe Lomba (Individu / Tim) -->
+                <!-- 3. Tipe Lomba (Individu / Kelompok) -->
                 <div class="filter-field">
                     <label for="filter-tipe">
                         <i class="bi bi-person-lines-fill"></i> Tipe Peserta
-                        @if(!$hasTipeColumn)
-                            <span class="schema-notice" title="Kolom skema 'tipe' di database belum dimigrasi"><i class="bi bi-clock-history"></i> Pending Skema</span>
-                        @endif
                     </label>
-                    <select name="tipe" id="filter-tipe" class="filter-select" onchange="this.form.submit()" {{ !$hasTipeColumn ? 'title="Kolom tipe belum tersedia di database"' : '' }}>
+                    <select name="tipe" id="filter-tipe" class="filter-select" onchange="this.form.submit()">
                         <option value="semua" {{ request('tipe') == 'semua' || !request('tipe') ? 'selected' : '' }}>Semua Tipe</option>
                         <option value="individu" {{ request('tipe') == 'individu' ? 'selected' : '' }}>Individu</option>
-                        <option value="tim" {{ request('tipe') == 'tim' ? 'selected' : '' }}>Tim / Kelompok</option>
+                        <option value="kelompok" {{ request('tipe') == 'kelompok' || request('tipe') == 'tim' ? 'selected' : '' }}>Kelompok</option>
                     </select>
                 </div>
 
@@ -385,11 +382,8 @@
                 <div class="filter-field">
                     <label for="filter-mode">
                         <i class="bi bi-broadcast-pin"></i> Mode Pelaksanaan
-                        @if(!$hasModeColumn)
-                            <span class="schema-notice" title="Kolom skema 'mode' di database belum dimigrasi"><i class="bi bi-clock-history"></i> Pending Skema</span>
-                        @endif
                     </label>
-                    <select name="mode" id="filter-mode" class="filter-select" onchange="this.form.submit()" {{ !$hasModeColumn ? 'title="Kolom mode belum tersedia di database"' : '' }}>
+                    <select name="mode" id="filter-mode" class="filter-select" onchange="this.form.submit()">
                         <option value="semua" {{ request('mode') == 'semua' || !request('mode') ? 'selected' : '' }}>Semua Mode</option>
                         <option value="online" {{ request('mode') == 'online' ? 'selected' : '' }}>Online (Daring)</option>
                         <option value="offline" {{ request('mode') == 'offline' ? 'selected' : '' }}>Offline (Luring)</option>
@@ -514,6 +508,18 @@
                                 <span class="badge {{ $badgeClass }}">
                                     <i class="bi bi-geo-alt-fill"></i> {{ $lomba->tingkat }}
                                 </span>
+
+                                @if(!empty($lomba->tipe_peserta))
+                                    <span class="badge" style="background: #F1F5F9; color: #475569; border: 1px solid #CBD5E1; font-size: 0.72rem;">
+                                        <i class="bi bi-person-fill"></i> {{ $lomba->tipe_peserta }}
+                                    </span>
+                                @endif
+
+                                @if(!empty($lomba->mode_pelaksanaan))
+                                    <span class="badge" style="background: #E0F2FE; color: #0369A1; font-size: 0.72rem;">
+                                        <i class="bi bi-broadcast"></i> {{ $lomba->mode_pelaksanaan }}
+                                    </span>
+                                @endif
                             </div>
 
                             @if($lomba->tenggat)
@@ -530,6 +536,12 @@
                                 @endif
                             @endif
                         </div>
+
+                        @if($lomba->poster_url)
+                            <a href="{{ route('lomba.show', $lomba->id_lomba) }}" style="display: block; margin-bottom: 12px; border-radius: var(--radius-sm); overflow: hidden; background: #F1F5F9; max-height: 140px; text-align: center;">
+                                <img src="{{ $lomba->poster_url }}" alt="Poster {{ $lomba->nama_lomba }}" style="width: 100%; height: 140px; object-fit: cover; display: block;" loading="lazy">
+                            </a>
+                        @endif
 
                         <!-- Judul & Penyelenggara -->
                         <h2 class="lomba-title">

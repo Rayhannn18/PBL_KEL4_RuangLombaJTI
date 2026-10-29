@@ -8,7 +8,6 @@ use App\Models\ProgresBabak;
 use App\Models\Tim;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller

@@ -2,6 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ModePelaksanaan;
+use App\Enums\TingkatLomba;
+use App\Enums\TipePeserta;
+use App\Http\Requests\Admin\StoreLombaRequest;
+use App\Http\Requests\Admin\UpdateLombaRequest;
 use App\Models\Admin;
 use App\Models\Dosen;
 use App\Models\Lomba;
@@ -9,7 +14,9 @@ use App\Models\Mahasiswa;
 use App\Models\ProgresBabak;
 use App\Models\Tim;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class AdminController extends Controller
 {
@@ -26,7 +33,7 @@ class AdminController extends Controller
         $currentTab = $request->query('tab', 'overview');
 
         // 1. Statistik Ringkas Sistem (Cache 60 detik untuk navigasi tab instan)
-        $stats = \Illuminate\Support\Facades\Cache::remember('admin_kpi_stats', 60, function () {
+        $stats = Cache::remember('admin_kpi_stats', 60, function () {
             return [
                 'total_lomba' => Lomba::count(),
                 'lomba_menunggu' => Lomba::where('status_verifikasi', 'menunggu')->count(),
@@ -197,12 +204,9 @@ class AdminController extends Controller
             'Game Development',
         ];
 
-        $tingkatOptions = [
-            'Nasional',
-            'Internasional',
-            'Regional',
-            'Provinsi',
-        ];
+        $tingkatOptions = TingkatLomba::options();
+        $tipePesertaOptions = TipePeserta::options();
+        $modePelaksanaanOptions = ModePelaksanaan::options();
 
         return view('admin.index', compact(
             'currentTab',
@@ -222,7 +226,9 @@ class AdminController extends Controller
             'prestasiList',
             'prodiOptions',
             'kategoriLombaOptions',
-            'tingkatOptions'
+            'tingkatOptions',
+            'tipePesertaOptions',
+            'modePelaksanaanOptions'
         ));
     }
 
@@ -231,7 +237,7 @@ class AdminController extends Controller
      */
     private function clearCache(): void
     {
-        \Illuminate\Support\Facades\Cache::forget('admin_kpi_stats');
+        Cache::forget('admin_kpi_stats');
     }
 
     // ==========================================
@@ -241,34 +247,36 @@ class AdminController extends Controller
     /**
      * Tambah Lomba Baru Resmi oleh Admin Kemahasiswaan
      */
-    public function storeLomba(Request $request)
+    public function storeLomba(StoreLombaRequest $request)
     {
-        $validated = $request->validate([
-            'nama_lomba' => 'required|string|max:255',
-            'kategori' => 'required|string|max:100',
-            'tingkat' => 'required|string|max:50',
-            'penyelenggara' => 'required|string|max:150',
-            'tenggat' => 'required|date',
-            'biaya' => 'nullable|numeric|min:0',
-            'tautan_daftar' => 'required|url|max:255',
-            'deskripsi' => 'nullable|string',
-            'persyaratan' => 'nullable|string',
-            'benefit' => 'nullable|string',
-        ]);
-
+        $validated = $request->validated();
         $adminId = session('auth_user.id');
+
+        $posterPath = null;
+        if ($request->hasFile('poster')) {
+            $posterPath = $request->file('poster')->store('lomba/poster', 'public');
+        }
+
+        $bukuPedomanPath = null;
+        if ($request->hasFile('buku_pedoman')) {
+            $bukuPedomanPath = $request->file('buku_pedoman')->store('lomba/pedoman', 'public');
+        }
 
         Lomba::create([
             'nama_lomba' => $validated['nama_lomba'],
             'kategori' => $validated['kategori'],
             'tingkat' => $validated['tingkat'],
+            'tipe_peserta' => $validated['tipe_peserta'],
+            'mode_pelaksanaan' => $validated['mode_pelaksanaan'],
             'penyelenggara' => $validated['penyelenggara'],
             'tenggat' => $validated['tenggat'],
-            'biaya' => $validated['biaya'] ?? 0,
+            'biaya' => (int) ($validated['biaya'] ?? 0),
             'tautan_daftar' => $validated['tautan_daftar'],
-            'deskripsi' => $validated['deskripsi'] ?? null,
-            'persyaratan' => $validated['persyaratan'] ?? null,
-            'benefit' => $validated['benefit'] ?? null,
+            'deskripsi' => $validated['deskripsi'],
+            'persyaratan' => $validated['persyaratan'],
+            'benefit' => $validated['benefit'],
+            'poster_path' => $posterPath,
+            'buku_pedoman_path' => $bukuPedomanPath,
             'status_verifikasi' => 'terverifikasi', // Otomatis terverifikasi jika dibuat Admin
             'id_admin' => $adminId,
         ]);
@@ -282,40 +290,44 @@ class AdminController extends Controller
     /**
      * Perbarui Data Lomba
      */
-    public function updateLomba(Request $request, $id)
+    public function updateLomba(UpdateLombaRequest $request, $id)
     {
         $lomba = Lomba::findOrFail($id);
-
-        $validated = $request->validate([
-            'nama_lomba' => 'required|string|max:255',
-            'kategori' => 'required|string|max:100',
-            'tingkat' => 'required|string|max:50',
-            'penyelenggara' => 'required|string|max:150',
-            'tenggat' => 'required|date',
-            'biaya' => 'nullable|numeric|min:0',
-            'tautan_daftar' => 'required|url|max:255',
-            'status_verifikasi' => 'required|in:terverifikasi,menunggu,ditolak',
-            'deskripsi' => 'nullable|string',
-            'persyaratan' => 'nullable|string',
-            'benefit' => 'nullable|string',
-        ]);
-
+        $validated = $request->validated();
         $adminId = session('auth_user.id');
 
-        $lomba->update([
+        $updateData = [
             'nama_lomba' => $validated['nama_lomba'],
             'kategori' => $validated['kategori'],
             'tingkat' => $validated['tingkat'],
+            'tipe_peserta' => $validated['tipe_peserta'],
+            'mode_pelaksanaan' => $validated['mode_pelaksanaan'],
             'penyelenggara' => $validated['penyelenggara'],
             'tenggat' => $validated['tenggat'],
-            'biaya' => $validated['biaya'] ?? 0,
+            'biaya' => (int) ($validated['biaya'] ?? 0),
             'tautan_daftar' => $validated['tautan_daftar'],
             'status_verifikasi' => $validated['status_verifikasi'],
-            'deskripsi' => $validated['deskripsi'] ?? null,
-            'persyaratan' => $validated['persyaratan'] ?? null,
-            'benefit' => $validated['benefit'] ?? null,
+            'deskripsi' => $validated['deskripsi'],
+            'persyaratan' => $validated['persyaratan'],
+            'benefit' => $validated['benefit'],
             'id_admin' => $adminId,
-        ]);
+        ];
+
+        if ($request->hasFile('poster')) {
+            if ($lomba->poster_path && Storage::disk('public')->exists($lomba->poster_path)) {
+                Storage::disk('public')->delete($lomba->poster_path);
+            }
+            $updateData['poster_path'] = $request->file('poster')->store('lomba/poster', 'public');
+        }
+
+        if ($request->hasFile('buku_pedoman')) {
+            if ($lomba->buku_pedoman_path && Storage::disk('public')->exists($lomba->buku_pedoman_path)) {
+                Storage::disk('public')->delete($lomba->buku_pedoman_path);
+            }
+            $updateData['buku_pedoman_path'] = $request->file('buku_pedoman')->store('lomba/pedoman', 'public');
+        }
+
+        $lomba->update($updateData);
 
         $this->clearCache();
 
@@ -358,6 +370,15 @@ class AdminController extends Controller
     {
         $lomba = Lomba::findOrFail($id);
         $judul = $lomba->nama_lomba;
+
+        if ($lomba->poster_path && Storage::disk('public')->exists($lomba->poster_path)) {
+            Storage::disk('public')->delete($lomba->poster_path);
+        }
+
+        if ($lomba->buku_pedoman_path && Storage::disk('public')->exists($lomba->buku_pedoman_path)) {
+            Storage::disk('public')->delete($lomba->buku_pedoman_path);
+        }
+
         $lomba->delete();
 
         $this->clearCache();

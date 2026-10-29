@@ -851,7 +851,15 @@
                             </td>
                             <td>
                                 <div style="font-weight: 600;">{{ $item->kategori }}</div>
-                                <span class="badge badge-purple" style="font-size: 0.7rem; margin-top: 3px;">{{ $item->tingkat }}</span>
+                                <div style="display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px;">
+                                    <span class="badge badge-purple" style="font-size: 0.7rem;">{{ $item->tingkat }}</span>
+                                    @if(!empty($item->tipe_peserta))
+                                        <span class="badge" style="font-size: 0.68rem; background: #F1F5F9; color: #475569; border: 1px solid #CBD5E1;">{{ $item->tipe_peserta }}</span>
+                                    @endif
+                                    @if(!empty($item->mode_pelaksanaan))
+                                        <span class="badge" style="font-size: 0.68rem; background: #E0F2FE; color: #0369A1;">{{ $item->mode_pelaksanaan }}</span>
+                                    @endif
+                                </div>
                             </td>
                             <td>{{ $item->penyelenggara }}</td>
                             <td>
@@ -1318,7 +1326,7 @@
             </div>
             <button type="button" class="modal-close" onclick="closeModal('modalTambahLomba')">&times;</button>
         </div>
-        <form action="{{ route('admin.lomba.store') }}" method="POST">
+        <form action="{{ route('admin.lomba.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
             <div class="modal-body">
                 <div class="form-group">
@@ -1328,7 +1336,7 @@
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
                     <div class="form-group">
-                        <label class="form-label">Kategori <span style="color: var(--danger);">*</span></label>
+                        <label class="form-label">Kategori Minat <span style="color: var(--danger);">*</span></label>
                         <select name="kategori" class="form-select" required>
                             @foreach($kategoriLombaOptions as $kat)
                                 <option value="{{ $kat }}">{{ $kat }}</option>
@@ -1336,11 +1344,29 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Tingkat <span style="color: var(--danger);">*</span></label>
+                        <label class="form-label">Tingkat Lomba <span style="color: var(--danger);">*</span></label>
                         <select name="tingkat" class="form-select" required>
                             @foreach($tingkatOptions as $ting)
                                 <option value="{{ $ting }}">{{ $ting }}</option>
                             @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                    <div class="form-group">
+                        <label class="form-label">Tipe Peserta <span style="color: var(--danger);">*</span></label>
+                        <select name="tipe_peserta" class="form-select" required>
+                            <option value="Individu">Individu</option>
+                            <option value="Kelompok" selected>Kelompok</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Mode Pelaksanaan <span style="color: var(--danger);">*</span></label>
+                        <select name="mode_pelaksanaan" class="form-select" required>
+                            <option value="Online">Online (Daring)</option>
+                            <option value="Offline">Offline (Luring)</option>
+                            <option value="Hybrid">Hybrid</option>
                         </select>
                     </div>
                 </div>
@@ -1358,8 +1384,12 @@
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
                     <div class="form-group">
-                        <label class="form-label">Biaya Pendaftaran (Rp)</label>
-                        <input type="number" name="biaya" class="form-control" placeholder="0 jika gratis" value="0" min="0">
+                        <label class="form-label">Biaya Pendaftaran (Rp) <span style="color: var(--danger);">*</span> <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(0 jika gratis)</span></label>
+                        <div style="position: relative; display: flex; align-items: center;">
+                            <span style="position: absolute; left: 12px; font-weight: 700; color: var(--text-muted); font-size: 0.88rem; pointer-events: none;">Rp</span>
+                            <input type="text" id="tambah_lomba_biaya_display" class="form-control" style="padding-left: 38px;" placeholder="0" value="0" required oninput="formatRupiahInput(this, 'tambah_lomba_biaya')">
+                            <input type="hidden" name="biaya" id="tambah_lomba_biaya" value="0">
+                        </div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Tautan Pendaftaran Resmi <span style="color: var(--danger);">*</span></label>
@@ -1368,18 +1398,36 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Deskripsi Lomba</label>
-                    <textarea name="deskripsi" class="form-control" rows="3" placeholder="Uraian singkat mengenai lomba..."></textarea>
+                    <label class="form-label">Deskripsi Kompetisi <span style="color: var(--danger);">*</span></label>
+                    <textarea name="deskripsi" class="form-control" rows="3" required placeholder="Uraian singkat mengenai lomba..."></textarea>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Persyaratan & Ketentuan</label>
-                    <textarea name="persyaratan" class="form-control" rows="2" placeholder="Mahasiswa aktif JTI, kartu identitas, dll..."></textarea>
+                    <label class="form-label">Persyaratan & Ketentuan Delegasi <span style="color: var(--danger);">*</span></label>
+                    <textarea name="persyaratan" class="form-control" rows="2" required placeholder="Mahasiswa aktif JTI, kartu identitas, dll..."></textarea>
                 </div>
 
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label class="form-label">Benefit / Hadiah</label>
-                    <textarea name="benefit" class="form-control" rows="2" placeholder="Uang pembinaan, sertifikat nasional, konversi sks..."></textarea>
+                <div class="form-group">
+                    <label class="form-label">Benefit & Penghargaan <span style="color: var(--danger);">*</span></label>
+                    <textarea name="benefit" class="form-control" rows="2" required placeholder="Uang pembinaan, sertifikat nasional, konversi sks..."></textarea>
+                </div>
+
+                <!-- Input Berkas Poster & Buku Pedoman -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Poster Lomba <span style="color: var(--danger);">*</span> <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(PNG, JPG, JPEG maks 2MB)</span></label>
+                        <input type="file" name="poster" id="tambah_lomba_poster" class="form-control" accept=".png,.jpg,.jpeg,image/png,image/jpeg" required onchange="previewPosterFile(this, 'tambah_poster_preview', 'tambah_poster_preview_img')">
+                        <div id="tambah_poster_preview" style="display: none; margin-top: 8px; border: 1px dashed var(--border); border-radius: var(--radius-sm); padding: 6px; text-align: center; background: #F8FAFC;">
+                            <img id="tambah_poster_preview_img" src="" alt="Pratinjau Poster" style="max-height: 120px; max-width: 100%; border-radius: 4px; object-fit: contain;">
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Buku Pedoman <span style="color: var(--danger);">*</span> <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(PDF, DOC, DOCX maks 10MB)</span></label>
+                        <input type="file" name="buku_pedoman" id="tambah_lomba_pedoman" class="form-control" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required onchange="previewPedomanFile(this, 'tambah_pedoman_info', 'tambah_pedoman_filename')">
+                        <div id="tambah_pedoman_info" style="display: none; margin-top: 8px; font-size: 0.8rem; color: #0369A1; background: #E0F2FE; border-radius: var(--radius-sm); padding: 6px 10px;">
+                            <i class="bi bi-file-earmark-check-fill"></i> <span id="tambah_pedoman_filename"></span>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -1401,7 +1449,7 @@
             </div>
             <button type="button" class="modal-close" onclick="closeModal('modalEditLomba')">&times;</button>
         </div>
-        <form id="formEditLomba" method="POST">
+        <form id="formEditLomba" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
             <div class="modal-body">
@@ -1412,7 +1460,7 @@
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
                     <div class="form-group">
-                        <label class="form-label">Kategori <span style="color: var(--danger);">*</span></label>
+                        <label class="form-label">Kategori Minat <span style="color: var(--danger);">*</span></label>
                         <select name="kategori" id="edit_lomba_kategori" class="form-select" required>
                             @foreach($kategoriLombaOptions as $kat)
                                 <option value="{{ $kat }}">{{ $kat }}</option>
@@ -1420,11 +1468,29 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Tingkat <span style="color: var(--danger);">*</span></label>
+                        <label class="form-label">Tingkat Lomba <span style="color: var(--danger);">*</span></label>
                         <select name="tingkat" id="edit_lomba_tingkat" class="form-select" required>
                             @foreach($tingkatOptions as $ting)
                                 <option value="{{ $ting }}">{{ $ting }}</option>
                             @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                    <div class="form-group">
+                        <label class="form-label">Tipe Peserta <span style="color: var(--danger);">*</span></label>
+                        <select name="tipe_peserta" id="edit_lomba_tipe_peserta" class="form-select" required>
+                            <option value="Individu">Individu</option>
+                            <option value="Kelompok">Kelompok</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Mode Pelaksanaan <span style="color: var(--danger);">*</span></label>
+                        <select name="mode_pelaksanaan" id="edit_lomba_mode_pelaksanaan" class="form-select" required>
+                            <option value="Online">Online (Daring)</option>
+                            <option value="Offline">Offline (Luring)</option>
+                            <option value="Hybrid">Hybrid</option>
                         </select>
                     </div>
                 </div>
@@ -1442,11 +1508,15 @@
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
                     <div class="form-group">
-                        <label class="form-label">Biaya Pendaftaran (Rp)</label>
-                        <input type="number" name="biaya" id="edit_lomba_biaya" class="form-control" min="0">
+                        <label class="form-label">Biaya Pendaftaran (Rp) <span style="color: var(--danger);">*</span> <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(0 jika gratis)</span></label>
+                        <div style="position: relative; display: flex; align-items: center;">
+                            <span style="position: absolute; left: 12px; font-weight: 700; color: var(--text-muted); font-size: 0.88rem; pointer-events: none;">Rp</span>
+                            <input type="text" id="edit_lomba_biaya_display" class="form-control" style="padding-left: 38px;" placeholder="0" value="0" required oninput="formatRupiahInput(this, 'edit_lomba_biaya')">
+                            <input type="hidden" name="biaya" id="edit_lomba_biaya" value="0">
+                        </div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Status Verifikasi</label>
+                        <label class="form-label">Status Verifikasi <span style="color: var(--danger);">*</span></label>
                         <select name="status_verifikasi" id="edit_lomba_status" class="form-select" required>
                             <option value="terverifikasi">Terverifikasi (Publik)</option>
                             <option value="menunggu">Menunggu</option>
@@ -1461,18 +1531,38 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Deskripsi</label>
-                    <textarea name="deskripsi" id="edit_lomba_deskripsi" class="form-control" rows="2"></textarea>
+                    <label class="form-label">Deskripsi Kompetisi <span style="color: var(--danger);">*</span></label>
+                    <textarea name="deskripsi" id="edit_lomba_deskripsi" class="form-control" rows="2" required></textarea>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Persyaratan</label>
-                    <textarea name="persyaratan" id="edit_lomba_persyaratan" class="form-control" rows="2"></textarea>
+                    <label class="form-label">Persyaratan & Ketentuan Delegasi <span style="color: var(--danger);">*</span></label>
+                    <textarea name="persyaratan" id="edit_lomba_persyaratan" class="form-control" rows="2" required></textarea>
                 </div>
 
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label class="form-label">Benefit</label>
-                    <textarea name="benefit" id="edit_lomba_benefit" class="form-control" rows="2"></textarea>
+                <div class="form-group">
+                    <label class="form-label">Benefit & Penghargaan <span style="color: var(--danger);">*</span></label>
+                    <textarea name="benefit" id="edit_lomba_benefit" class="form-control" rows="2" required></textarea>
+                </div>
+
+                <!-- Input Berkas Poster & Buku Pedoman Edit -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Poster Lomba <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(PNG/JPG/JPEG maks 2MB, kosongkan jika tak diubah)</span></label>
+                        <input type="file" name="poster" id="edit_lomba_poster" class="form-control" accept=".png,.jpg,.jpeg,image/png,image/jpeg" onchange="previewPosterFile(this, 'edit_poster_preview', 'edit_poster_preview_img')">
+                        <div id="edit_poster_preview" style="display: none; margin-top: 8px; border: 1px dashed var(--border); border-radius: var(--radius-sm); padding: 6px; text-align: center; background: #F8FAFC;">
+                            <img id="edit_poster_preview_img" src="" alt="Pratinjau Poster" style="max-height: 120px; max-width: 100%; border-radius: 4px; object-fit: contain;">
+                        </div>
+                        <div id="edit_poster_current" style="display: none; margin-top: 6px; font-size: 0.75rem; color: var(--text-muted);"></div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Buku Pedoman <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(PDF/DOC/DOCX maks 10MB, kosongkan jika tak diubah)</span></label>
+                        <input type="file" name="buku_pedoman" id="edit_lomba_pedoman" class="form-control" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onchange="previewPedomanFile(this, 'edit_pedoman_info', 'edit_pedoman_filename')">
+                        <div id="edit_pedoman_info" style="display: none; margin-top: 8px; font-size: 0.8rem; color: #0369A1; background: #E0F2FE; border-radius: var(--radius-sm); padding: 6px 10px;">
+                            <i class="bi bi-file-earmark-check-fill"></i> <span id="edit_pedoman_filename"></span>
+                        </div>
+                        <div id="edit_pedoman_current" style="display: none; margin-top: 6px; font-size: 0.75rem; color: var(--text-muted);"></div>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -1750,43 +1840,146 @@
         }
     }
 
+    // Format Angka Rupiah Real-time
+    function formatRupiahInput(input, hiddenId) {
+        let raw = input.value.replace(/[^0-9]/g, '');
+        if (!raw) {
+            input.value = '';
+            if (hiddenId) {
+                document.getElementById(hiddenId).value = 0;
+            }
+            return;
+        }
+        let number = parseInt(raw, 10);
+        input.value = number.toLocaleString('id-ID');
+        if (hiddenId) {
+            document.getElementById(hiddenId).value = number;
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const tDisplay = document.getElementById('tambah_lomba_biaya_display');
+        if (tDisplay) {
+            tDisplay.addEventListener('blur', function() {
+                if (this.value.trim() === '') {
+                    this.value = '0';
+                    document.getElementById('tambah_lomba_biaya').value = 0;
+                }
+            });
+        }
+        const eDisplay = document.getElementById('edit_lomba_biaya_display');
+        if (eDisplay) {
+            eDisplay.addEventListener('blur', function() {
+                if (this.value.trim() === '') {
+                    this.value = '0';
+                    document.getElementById('edit_lomba_biaya').value = 0;
+                }
+            });
+        }
+    });
+
+    // File Preview Helpers
+    function previewPosterFile(input, containerId, imgId) {
+        const container = document.getElementById(containerId);
+        const img = document.getElementById(imgId);
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            if (file.size > 2 * 1024 * 1024) {
+                alert('Ukuran file poster maksimal 2 MB.');
+                input.value = '';
+                if (container) container.style.display = 'none';
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                if (img) img.src = e.target.result;
+                if (container) container.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        } else {
+            if (container) container.style.display = 'none';
+            if (img) img.src = '';
+        }
+    }
+
+    function previewPedomanFile(input, containerId, filenameId) {
+        const container = document.getElementById(containerId);
+        const nameEl = document.getElementById(filenameId);
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            if (file.size > 10 * 1024 * 1024) {
+                alert('Ukuran berkas buku pedoman maksimal 10 MB.');
+                input.value = '';
+                if (container) container.style.display = 'none';
+                return;
+            }
+            const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
+            if (nameEl) nameEl.textContent = file.name + ' (' + sizeMb + ' MB)';
+            if (container) container.style.display = 'block';
+        } else {
+            if (container) container.style.display = 'none';
+            if (nameEl) nameEl.textContent = '';
+        }
+    }
+
     // Pratinjau Lomba
     function previewLomba(item) {
+        const biayaNum = parseInt(item.biaya, 10) || 0;
+        const formattedBiaya = biayaNum > 0 ? 'Rp ' + biayaNum.toLocaleString('id-ID') : 'Gratis';
+
+        const posterHtml = item.poster_url ? `
+            <div style="text-align: center; margin-bottom: 16px; background: #F8FAFC; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px;">
+                <img src="${item.poster_url}" alt="Poster ${item.nama_lomba}" style="max-height: 220px; max-width: 100%; border-radius: var(--radius-sm); object-fit: contain;">
+            </div>
+        ` : '';
+
+        const pedomanBtn = (item.buku_pedoman_path || item.buku_pedoman_url) ? `
+            <a href="/lomba/${item.id_lomba}/pedoman" target="_blank" class="btn btn-outline-secondary btn-sm" style="margin-left: 8px;">
+                <i class="bi bi-file-earmark-arrow-down-fill"></i> Unduh Buku Pedoman
+            </a>
+        ` : '';
+
         const content = `
+            ${posterHtml}
             <div style="margin-bottom: 16px;">
                 <span class="badge ${item.status_verifikasi === 'terverifikasi' ? 'badge-success' : (item.status_verifikasi === 'menunggu' ? 'badge-warning' : 'badge-danger')}">
                     ${item.status_verifikasi.toUpperCase()}
                 </span>
                 <span class="badge badge-purple" style="margin-left: 6px;">Tingkat ${item.tingkat}</span>
                 <span class="badge badge-primary" style="margin-left: 6px;">${item.kategori}</span>
+                <span class="badge" style="margin-left: 6px; background: #F1F5F9; color: #475569; border: 1px solid #CBD5E1;">${item.tipe_peserta || 'Kelompok'}</span>
+                <span class="badge" style="margin-left: 6px; background: #E0F2FE; color: #0369A1;">${item.mode_pelaksanaan || 'Online'}</span>
             </div>
             <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--primary-dark); margin-bottom: 6px;">
                 ${item.nama_lomba}
             </h3>
             <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
-                Penyelenggara: <strong>${item.penyelenggara}</strong> • Tenggat: <strong>${item.tenggat || '-'}</strong>
+                Penyelenggara: <strong>${item.penyelenggara}</strong> • Tenggat: <strong>${item.tenggat || '-'}</strong> • Biaya: <strong>${formattedBiaya}</strong>
             </div>
 
             <div style="background: #F8FAFC; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 16px;">
-                <div style="font-size: 0.82rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 4px;">Deskripsi:</div>
+                <div style="font-size: 0.82rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 4px;">Deskripsi Kompetisi:</div>
                 <div style="font-size: 0.88rem; color: #334155;">${item.deskripsi || 'Tidak ada deskripsi rinci.'}</div>
             </div>
 
             <div style="margin-bottom: 14px;">
-                <div style="font-size: 0.82rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 4px;">Persyaratan:</div>
+                <div style="font-size: 0.82rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 4px;">Persyaratan & Ketentuan Delegasi:</div>
                 <div style="font-size: 0.85rem; color: #475569;">${item.persyaratan || 'Persyaratan standar mahasiswa aktif.'}</div>
             </div>
 
             <div style="margin-bottom: 16px;">
-                <div style="font-size: 0.82rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 4px;">Benefit / Hadiah:</div>
+                <div style="font-size: 0.82rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 4px;">Benefit & Penghargaan:</div>
                 <div style="font-size: 0.85rem; color: #475569;">${item.benefit || 'Sertifikat apresiasi & penghargaan.'}</div>
             </div>
 
-            ${item.tautan_daftar ? `
-                <a href="${item.tautan_daftar}" target="_blank" class="btn btn-outline-primary btn-sm">
-                    <i class="bi bi-box-arrow-up-right"></i> Buka Tautan Registrasi Lomba
-                </a>
-            ` : ''}
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                ${item.tautan_daftar ? `
+                    <a href="${item.tautan_daftar}" target="_blank" class="btn btn-primary btn-sm">
+                        <i class="bi bi-box-arrow-up-right"></i> Registrasi Lomba
+                    </a>
+                ` : ''}
+                ${pedomanBtn}
+            </div>
         `;
         document.getElementById('previewLombaContent').innerHTML = content;
         openModal('modalPreviewLomba');
@@ -1798,14 +1991,44 @@
         document.getElementById('edit_lomba_nama').value = item.nama_lomba || '';
         document.getElementById('edit_lomba_kategori').value = item.kategori || '';
         document.getElementById('edit_lomba_tingkat').value = item.tingkat || '';
+        document.getElementById('edit_lomba_tipe_peserta').value = item.tipe_peserta || 'Kelompok';
+        document.getElementById('edit_lomba_mode_pelaksanaan').value = item.mode_pelaksanaan || 'Online';
         document.getElementById('edit_lomba_penyelenggara').value = item.penyelenggara || '';
         document.getElementById('edit_lomba_tenggat').value = item.tenggat ? item.tenggat.substring(0, 10) : '';
-        document.getElementById('edit_lomba_biaya').value = item.biaya || 0;
+
+        const biayaVal = parseInt(item.biaya, 10) || 0;
+        document.getElementById('edit_lomba_biaya').value = biayaVal;
+        document.getElementById('edit_lomba_biaya_display').value = biayaVal.toLocaleString('id-ID');
+
         document.getElementById('edit_lomba_status').value = item.status_verifikasi || 'terverifikasi';
         document.getElementById('edit_lomba_tautan').value = item.tautan_daftar || '';
         document.getElementById('edit_lomba_deskripsi').value = item.deskripsi || '';
         document.getElementById('edit_lomba_persyaratan').value = item.persyaratan || '';
         document.getElementById('edit_lomba_benefit').value = item.benefit || '';
+
+        // Reset file inputs & previews
+        document.getElementById('edit_lomba_poster').value = '';
+        document.getElementById('edit_lomba_pedoman').value = '';
+        document.getElementById('edit_poster_preview').style.display = 'none';
+        document.getElementById('edit_poster_preview_img').src = '';
+        document.getElementById('edit_pedoman_info').style.display = 'none';
+        document.getElementById('edit_pedoman_filename').textContent = '';
+
+        const currentPosterEl = document.getElementById('edit_poster_current');
+        if (item.poster_url) {
+            currentPosterEl.innerHTML = '<span style="color: #059669;"><i class="bi bi-check-circle-fill"></i> Poster terunggah</span> (<a href="' + item.poster_url + '" target="_blank" style="text-decoration: underline; color: var(--primary);">Lihat poster</a>)';
+            currentPosterEl.style.display = 'block';
+        } else {
+            currentPosterEl.style.display = 'none';
+        }
+
+        const currentPedomanEl = document.getElementById('edit_pedoman_current');
+        if (item.buku_pedoman_path || item.buku_pedoman_url) {
+            currentPedomanEl.innerHTML = '<span style="color: #059669;"><i class="bi bi-file-earmark-check-fill"></i> Pedoman terunggah</span> (<a href="/lomba/' + item.id_lomba + '/pedoman" target="_blank" style="text-decoration: underline; color: var(--primary);">Unduh berkas</a>)';
+            currentPedomanEl.style.display = 'block';
+        } else {
+            currentPedomanEl.style.display = 'none';
+        }
 
         openModal('modalEditLomba');
     }

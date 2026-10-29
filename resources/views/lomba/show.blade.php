@@ -106,6 +106,12 @@
         <!-- Kolom Kiri: Rincian Lengkap Lomba -->
         <div>
             <div class="detail-card">
+                @if($lomba->poster_url)
+                    <div style="margin-bottom: 20px; border-radius: var(--radius-sm); overflow: hidden; background: #F8FAFC; border: 1px solid var(--border); text-align: center; padding: 12px;">
+                        <img src="{{ $lomba->poster_url }}" alt="Poster {{ $lomba->nama_lomba }}" style="max-height: 400px; max-width: 100%; border-radius: var(--radius-sm); object-fit: contain;">
+                    </div>
+                @endif
+
                 <!-- Header Lomba -->
                 <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px;">
                     <span class="badge badge-primary">{{ $lomba->kategori }}</span>
@@ -124,6 +130,18 @@
                     <span class="badge {{ $badgeClass }}">
                         <i class="bi bi-geo-alt-fill"></i> Tingkat {{ $lomba->tingkat }}
                     </span>
+
+                    @if(!empty($lomba->tipe_peserta))
+                        <span class="badge" style="background: #F1F5F9; color: #475569; border: 1px solid #CBD5E1; font-size: 0.75rem;">
+                            <i class="bi bi-person-fill"></i> {{ $lomba->tipe_peserta }}
+                        </span>
+                    @endif
+
+                    @if(!empty($lomba->mode_pelaksanaan))
+                        <span class="badge" style="background: #E0F2FE; color: #0369A1; font-size: 0.75rem;">
+                            <i class="bi bi-broadcast"></i> {{ $lomba->mode_pelaksanaan_label ?? $lomba->mode_pelaksanaan }}
+                        </span>
+                    @endif
 
                     @if($lomba->tenggat)
                         @if($lomba->tenggat->isPast())
@@ -264,10 +282,37 @@
                         <span class="info-label">Kategori Lomba</span>
                         <span class="info-value">{{ $lomba->kategori }}</span>
                     </li>
+                    <li class="info-item">
+                        <span class="info-label">Tipe Peserta</span>
+                        <span class="info-value">{{ $lomba->tipe_peserta ?? 'Kelompok' }}</span>
+                    </li>
+                    <li class="info-item">
+                        <span class="info-label">Mode Pelaksanaan</span>
+                        <span class="info-value">{{ $lomba->mode_pelaksanaan_label ?? ($lomba->mode_pelaksanaan ?? 'Online') }}</span>
+                    </li>
+                    @if($lomba->buku_pedoman_path)
+                        <li class="info-item">
+                            <span class="info-label">Buku Pedoman</span>
+                            <span class="info-value">
+                                <a href="{{ route('lomba.pedoman.download', $lomba->id_lomba) }}" target="_blank" style="color: var(--primary); font-weight: 600; text-decoration: underline; font-size: 0.82rem;">
+                                    <i class="bi bi-file-earmark-arrow-down-fill"></i> Unduh File
+                                </a>
+                            </span>
+                        </li>
+                    @endif
                 </ul>
 
                 <!-- Tombol Aksi Utama -->
                 <div style="margin-top: 22px; display: flex; flex-direction: column; gap: 10px;">
+                    @if($lomba->buku_pedoman_path)
+                        <a href="{{ route('lomba.pedoman.download', $lomba->id_lomba) }}"
+                           target="_blank"
+                           class="btn btn-outline-secondary"
+                           style="width: 100%; font-weight: 700;">
+                            <i class="bi bi-file-earmark-arrow-down-fill" style="color: #0284C7;"></i> Unduh Buku Pedoman
+                        </a>
+                    @endif
+
                     @if($lomba->tautan_daftar)
                         <a href="{{ $lomba->tautan_daftar }}"
                            target="_blank"

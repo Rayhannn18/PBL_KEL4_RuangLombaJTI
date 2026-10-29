@@ -7,6 +7,8 @@ use App\Models\Tim;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class LombaController extends Controller
 {
@@ -53,18 +55,35 @@ class LombaController extends Controller
             $query->where('biaya', '>', 0);
         }
 
-        // 5. Filter Tipe Lomba (Individu vs Tim) — dicek ketersediaan kolom skema
-        $hasTipeColumn = Schema::hasColumn('lomba', 'tipe');
+        // 5. Filter Tipe Lomba (Individu vs Kelompok/Tim)
+        $hasTipeColumn = Schema::hasColumn('lomba', 'tipe_peserta') || Schema::hasColumn('lomba', 'tipe');
         $tipe = $request->input('tipe');
-        if ($hasTipeColumn && $tipe && strtolower($tipe) !== 'semua') {
-            $query->whereRaw('LOWER(tipe) = ?', [strtolower($tipe)]);
+        if ($tipe && strtolower($tipe) !== 'semua') {
+            $lower = strtolower($tipe);
+            if (Schema::hasColumn('lomba', 'tipe_peserta')) {
+                if ($lower === 'tim' || $lower === 'kelompok') {
+                    $query->where(function ($sub) {
+                        $sub->whereRaw('LOWER(tipe_peserta) = ?', ['kelompok'])
+                            ->orWhereRaw('LOWER(tipe_peserta) = ?', ['tim']);
+                    });
+                } else {
+                    $query->whereRaw('LOWER(tipe_peserta) = ?', [$lower]);
+                }
+            } elseif (Schema::hasColumn('lomba', 'tipe')) {
+                $query->whereRaw('LOWER(tipe) = ?', [$lower]);
+            }
         }
 
-        // 6. Filter Mode Pelaksanaan (Online, Offline, Hybrid) — dicek ketersediaan kolom skema
-        $hasModeColumn = Schema::hasColumn('lomba', 'mode');
+        // 6. Filter Mode Pelaksanaan (Online, Offline, Hybrid)
+        $hasModeColumn = Schema::hasColumn('lomba', 'mode_pelaksanaan') || Schema::hasColumn('lomba', 'mode');
         $mode = $request->input('mode');
-        if ($hasModeColumn && $mode && strtolower($mode) !== 'semua') {
-            $query->whereRaw('LOWER(mode) = ?', [strtolower($mode)]);
+        if ($mode && strtolower($mode) !== 'semua') {
+            $lower = strtolower($mode);
+            if (Schema::hasColumn('lomba', 'mode_pelaksanaan')) {
+                $query->whereRaw('LOWER(mode_pelaksanaan) = ?', [$lower]);
+            } elseif (Schema::hasColumn('lomba', 'mode')) {
+                $query->whereRaw('LOWER(mode) = ?', [$lower]);
+            }
         }
 
         // 7. Filter Kategori Lomba
@@ -151,8 +170,8 @@ class LombaController extends Controller
             ->take(3)
             ->get();
 
-        $hasTipeColumn = Schema::hasColumn('lomba', 'tipe');
-        $hasModeColumn = Schema::hasColumn('lomba', 'mode');
+        $hasTipeColumn = Schema::hasColumn('lomba', 'tipe_peserta') || Schema::hasColumn('lomba', 'tipe');
+        $hasModeColumn = Schema::hasColumn('lomba', 'mode_pelaksanaan') || Schema::hasColumn('lomba', 'mode');
 
         return view('lomba.show', [
             'lomba' => $lomba,
@@ -161,5 +180,22 @@ class LombaController extends Controller
             'hasTipeColumn' => $hasTipeColumn,
             'hasModeColumn' => $hasModeColumn,
         ]);
+    }
+
+    /**
+     * Unduh berkas Buku Pedoman Lomba
+     */
+    public function downloadPedoman($id)
+    {
+        $lomba = Lomba::findOrFail($id);
+
+        if (! $lomba->buku_pedoman_path || ! Storage::disk('public')->exists($lomba->buku_pedoman_path)) {
+            return back()->with('error', 'Buku pedoman resmi belum tersedia untuk kompetisi ini.');
+        }
+
+        $extension = pathinfo($lomba->buku_pedoman_path, PATHINFO_EXTENSION) ?: 'pdf';
+        $filename = 'Buku_Pedoman_'.Str::slug($lomba->nama_lomba).'.'.$extension;
+
+        return Storage::disk('public')->download($lomba->buku_pedoman_path, $filename);
     }
 }

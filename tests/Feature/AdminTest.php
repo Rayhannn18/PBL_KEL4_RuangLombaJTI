@@ -9,6 +9,8 @@ use App\Models\Mahasiswa;
 use App\Models\Tim;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class AdminTest extends TestCase
@@ -137,22 +139,26 @@ class AdminTest extends TestCase
         ]);
     }
 
-    /**
-     * Admin can store a new official lomba
-     */
     public function test_admin_can_create_new_lomba(): void
     {
+        Storage::fake('public');
         $this->loginAdmin();
 
         $payload = [
             'nama_lomba' => 'Hackathon Inovasi JTI 2026',
             'kategori' => 'Software Development',
             'tingkat' => 'Nasional',
+            'tipe_peserta' => 'Kelompok',
+            'mode_pelaksanaan' => 'Online',
             'penyelenggara' => 'Jurusan TI Polinema',
             'tenggat' => '2026-11-30',
             'biaya' => 50000,
             'tautan_daftar' => 'https://jti.polinema.ac.id/hackathon',
             'deskripsi' => 'Kompetisi software inovatif.',
+            'persyaratan' => 'Mahasiswa aktif JTI Polinema.',
+            'benefit' => 'Uang tunai dan sertifikat.',
+            'poster' => UploadedFile::fake()->image('poster.jpg'),
+            'buku_pedoman' => UploadedFile::fake()->create('pedoman.pdf', 100, 'application/pdf'),
         ];
 
         $response = $this->post('/admin/lomba', $payload);
@@ -160,8 +166,97 @@ class AdminTest extends TestCase
 
         $this->assertDatabaseHas('lomba', [
             'nama_lomba' => 'Hackathon Inovasi JTI 2026',
+            'tipe_peserta' => 'Kelompok',
+            'mode_pelaksanaan' => 'Online',
             'status_verifikasi' => 'terverifikasi',
         ]);
+
+        $lomba = Lomba::where('nama_lomba', 'Hackathon Inovasi JTI 2026')->first();
+        $this->assertNotNull($lomba->poster_path);
+        $this->assertNotNull($lomba->buku_pedoman_path);
+        Storage::disk('public')->assertExists($lomba->poster_path);
+        Storage::disk('public')->assertExists($lomba->buku_pedoman_path);
+    }
+
+    /**
+     * Admin can update lomba and replace poster
+     */
+    public function test_admin_can_update_lomba_and_replace_poster(): void
+    {
+        Storage::fake('public');
+        $this->loginAdmin();
+        $lomba = Lomba::first();
+
+        $oldPoster = UploadedFile::fake()->image('old_poster.png');
+        $oldPath = $oldPoster->store('lomba/poster', 'public');
+        $lomba->update(['poster_path' => $oldPath]);
+
+        $newPoster = UploadedFile::fake()->image('new_poster.png');
+
+        $response = $this->put('/admin/lomba/'.$lomba->id_lomba, [
+            'nama_lomba' => 'Lomba Terupdate 2026',
+            'kategori' => $lomba->kategori,
+            'tingkat' => 'Internasional',
+            'tipe_peserta' => 'Individu',
+            'mode_pelaksanaan' => 'Hybrid',
+            'penyelenggara' => $lomba->penyelenggara,
+            'tenggat' => '2026-12-01',
+            'biaya' => 0,
+            'tautan_daftar' => 'https://lomba.example.com',
+            'deskripsi' => 'Deskripsi lomba terupdate.',
+            'persyaratan' => 'Persyaratan terupdate.',
+            'benefit' => 'Benefit terupdate.',
+            'status_verifikasi' => 'terverifikasi',
+            'poster' => $newPoster,
+        ]);
+
+        $response->assertRedirect(route('admin.index', ['tab' => 'lomba']));
+        $lomba->refresh();
+
+        $this->assertEquals('Lomba Terupdate 2026', $lomba->nama_lomba);
+        $this->assertEquals('Internasional', $lomba->tingkat);
+        $this->assertEquals(0, $lomba->biaya);
+        Storage::disk('public')->assertMissing($oldPath);
+        Storage::disk('public')->assertExists($lomba->poster_path);
+    }
+
+    /**
+     * Admin can delete lomba and associated files are removed
+     */
+    public function test_admin_can_delete_lomba_and_its_files(): void
+    {
+        Storage::fake('public');
+        $this->loginAdmin();
+        $lomba = Lomba::first();
+
+        $posterPath = UploadedFile::fake()->image('del_poster.png')->store('lomba/poster', 'public');
+        $pedomanPath = UploadedFile::fake()->create('del_pedoman.pdf', 50, 'application/pdf')->store('lomba/pedoman', 'public');
+
+        $lomba->update([
+            'poster_path' => $posterPath,
+            'buku_pedoman_path' => $pedomanPath,
+        ]);
+
+        $response = $this->delete('/admin/lomba/'.$lomba->id_lomba);
+        $response->assertRedirect(route('admin.index', ['tab' => 'lomba']));
+
+        $this->assertDatabaseMissing('lomba', ['id_lomba' => $lomba->id_lomba]);
+        Storage::disk('public')->assertMissing($posterPath);
+        Storage::disk('public')->assertMissing($pedomanPath);
+    }
+
+    /**
+     * User can download buku pedoman
+     */
+    public function test_can_download_buku_pedoman(): void
+    {
+        Storage::fake('public');
+        $lomba = Lomba::first();
+        $pedomanPath = UploadedFile::fake()->create('panduan_resmi.pdf', 50, 'application/pdf')->store('lomba/pedoman', 'public');
+        $lomba->update(['buku_pedoman_path' => $pedomanPath]);
+
+        $response = $this->get("/lomba/{$lomba->id_lomba}/pedoman");
+        $response->assertStatus(200);
     }
 
     /**
