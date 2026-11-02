@@ -98,12 +98,12 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 - Laravel can be deployed using [Laravel Cloud](https://cloud.laravel.com/), which is the fastest way to deploy and scale production Laravel applications.
 - Activate the `deploying-to-cloud` skill whenever deploying to Laravel Cloud, configuring Cloud environments or resources, using the Cloud CLI, or troubleshooting Cloud deployments.
 
-=== herd rules ===
+=== development server rules ===
 
-# Laravel Herd
+# Development Server
 
-- The application is served by Laravel Herd at `https?://[kebab-case-project-dir].test`. Use the `get-absolute-url` tool to generate valid URLs. Never run commands to serve the site. It is always available.
-- Use the `herd` CLI to manage services, PHP versions, and sites (e.g. `herd sites`, `herd services:start <service>`, `herd php:list`). Run `herd list` to discover all available commands.
+- The application is run locally at `http://localhost:8000` (or `http://127.0.0.1:8000`).
+- Run `php artisan serve` (or `composer run dev` / `php artisan dev`) alongside `npm run dev` for assets.
 
 === tests rules ===
 

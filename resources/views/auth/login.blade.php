@@ -238,6 +238,129 @@
             box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
         }
 
+        .form-control.is-invalid {
+            border-color: #EF4444 !important;
+            background-color: #FEF2F2;
+        }
+        .form-control.is-invalid:focus {
+            border-color: #DC2626 !important;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
+        }
+        .invalid-feedback {
+            color: #DC2626;
+            font-size: 0.82rem;
+            font-weight: 600;
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* SSO Polinema Button */
+        .btn-sso-polinema {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            padding: 13px 15px;
+            background: linear-gradient(135deg, #002B66 0%, #0F3B82 100%);
+            border: 1.5px solid #002B66;
+            border-radius: var(--radius-md);
+            color: #fff;
+            text-decoration: none;
+            box-shadow: 0 4px 14px rgba(0, 43, 102, 0.22);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-sso-polinema::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 4px;
+            background: #FFB800;
+        }
+        .btn-sso-polinema:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 43, 102, 0.35);
+            border-color: #FFB800;
+            background: linear-gradient(135deg, #00204D 0%, #0D326E 100%);
+        }
+        .sso-logo-emblem {
+            width: 44px;
+            height: 44px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #FFFFFF;
+            border-radius: 10px;
+            padding: 3px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+        .sso-img-emblem {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .sso-content {
+            flex: 1;
+            min-width: 0;
+        }
+        .sso-badge-tag {
+            font-size: 0.68rem;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            color: #FFD54F;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 2px;
+        }
+        .sso-title {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: #FFFFFF;
+            line-height: 1.2;
+        }
+        .sso-desc {
+            font-size: 0.74rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 2px;
+        }
+        .sso-arrow {
+            color: #FFB800;
+            font-size: 1.35rem;
+            display: flex;
+            align-items: center;
+            transition: transform 0.2s ease;
+        }
+        .btn-sso-polinema:hover .sso-arrow {
+            transform: translateX(3px);
+            color: #FFF;
+        }
+        .sso-divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 18px 0 14px;
+            color: #94A3B8;
+            font-size: 0.74rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .sso-divider::before,
+        .sso-divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #E2E8F0;
+        }
+        .sso-divider span {
+            padding: 0 10px;
+        }
+
         /* Alert */
         .alert {
             padding: 12px 16px;
@@ -300,10 +423,24 @@
             </div>
 
             <!-- Flash Error / Success Alerts -->
-            @if(session('error'))
+            @if(session('error') && ! $errors->any())
                 <div class="alert alert-danger">
                     <i class="bi bi-exclamation-triangle-fill"></i>
                     <span>{{ session('error') }}</span>
+                </div>
+            @endif
+
+            @if($errors->any())
+                <div class="alert alert-danger" style="display: flex; flex-direction: column; align-items: flex-start; gap: 6px;">
+                    <div style="display: flex; align-items: center; gap: 8px; font-weight: 700;">
+                        <i class="bi bi-exclamation-triangle-fill" style="font-size: 1.1rem; color: #DC2626;"></i>
+                        <span>Gagal Masuk:</span>
+                    </div>
+                    <ul style="margin: 0; padding-left: 24px; font-size: 0.85rem; line-height: 1.4;">
+                        @foreach(array_unique($errors->all()) as $err)
+                            <li>{{ $err }}</li>
+                        @endforeach
+                    </ul>
                 </div>
             @endif
 
@@ -316,21 +453,42 @@
 
             <!-- Role Selector Tabs -->
             <div class="role-tabs">
-                <button type="button" class="role-tab-btn active" onclick="selectRole('mahasiswa', this)">
+                <button type="button" class="role-tab-btn {{ old('role', 'mahasiswa') === 'mahasiswa' ? 'active' : '' }}" data-role="mahasiswa" onclick="selectRole('mahasiswa', this)">
                     <i class="bi bi-mortarboard"></i> Mahasiswa
                 </button>
-                <button type="button" class="role-tab-btn" onclick="selectRole('dosen', this)">
+                <button type="button" class="role-tab-btn {{ old('role') === 'dosen' ? 'active' : '' }}" data-role="dosen" onclick="selectRole('dosen', this)">
                     <i class="bi bi-person-video3"></i> Dosen
                 </button>
-                <button type="button" class="role-tab-btn" onclick="selectRole('admin', this)">
+                <button type="button" class="role-tab-btn {{ old('role') === 'admin' ? 'active' : '' }}" data-role="admin" onclick="selectRole('admin', this)">
                     <i class="bi bi-shield-lock"></i> Admin JTI
                 </button>
+            </div>
+
+            <!-- Tombol SSO Polinema (Khusus Mahasiswa SIAKAD) -->
+            <div id="ssoMahasiswaSection" style="{{ old('role', 'mahasiswa') === 'mahasiswa' ? '' : 'display: none;' }} margin-bottom: 20px;">
+                <a href="{{ route('sso.login') }}" class="btn-sso-polinema" id="ssoPolinemaBtn">
+                    <div class="sso-logo-emblem">
+                        <img src="{{ asset('images/logo-polinema.png') }}" alt="Logo Politeknik Negeri Malang" class="sso-img-emblem">
+                    </div>
+                    <div class="sso-content">
+                        <div class="sso-badge-tag"><i class="bi bi-shield-check"></i> RESMI POLINEMA</div>
+                        <div class="sso-title">Masuk dengan SSO Polinema</div>
+                        <div class="sso-desc">Gunakan akun SIAKAD Politeknik Negeri Malang</div>
+                    </div>
+                    <div class="sso-arrow">
+                        <i class="bi bi-arrow-right-circle-fill"></i>
+                    </div>
+                </a>
+
+                <div class="sso-divider">
+                    <span>atau masuk dengan akun lokal</span>
+                </div>
             </div>
 
             <!-- Form Login -->
             <form action="{{ route('login') }}" method="POST">
                 @csrf
-                <input type="hidden" name="role" id="roleInput" value="mahasiswa">
+                <input type="hidden" name="role" id="roleInput" value="{{ old('role', 'mahasiswa') }}">
 
                 <div class="form-group">
                     <label class="form-label" id="loginLabel">Email Kampus Mahasiswa atau NIM</label>
@@ -339,12 +497,17 @@
                         <input type="text"
                                name="login"
                                id="loginInput"
-                               class="form-control"
+                               class="form-control @error('login') is-invalid @enderror"
                                placeholder="Contoh: sastra22@student.polinema.ac.id atau 244107060116"
                                value="{{ old('login') }}"
                                required
                                autofocus>
                     </div>
+                    @error('login')
+                        <div class="invalid-feedback">
+                            <i class="bi bi-exclamation-circle-fill"></i> {{ $message }}
+                        </div>
+                    @enderror
                 </div>
 
                 <div class="form-group">
@@ -356,13 +519,18 @@
                         <input type="password"
                                name="password"
                                id="passwordInput"
-                               class="form-control"
+                               class="form-control @error('password') is-invalid @enderror"
                                placeholder="Masukkan kata sandi akun Anda"
                                required>
                         <button type="button" class="password-toggle" onclick="togglePassword()" title="Tampilkan/sembunyikan sandi">
                             <i class="bi bi-eye" id="toggleIcon"></i>
                         </button>
                     </div>
+                    @error('password')
+                        <div class="invalid-feedback">
+                            <i class="bi bi-exclamation-circle-fill"></i> {{ $message }}
+                        </div>
+                    @enderror
                 </div>
 
                 <button type="submit" class="btn-submit">
@@ -400,6 +568,11 @@
                 input.placeholder = 'Contoh: admin.jti@polinema.ac.id';
                 icon.className = 'bi bi-shield-lock input-icon';
             }
+
+            const ssoSec = document.getElementById('ssoMahasiswaSection');
+            if (ssoSec) {
+                ssoSec.style.display = (role === 'mahasiswa') ? 'block' : 'none';
+            }
         }
 
         function togglePassword() {
@@ -413,6 +586,15 @@
                 icon.className = 'bi bi-eye';
             }
         }
+
+        // Sinkronisasi tab awal berdasarkan old('role')
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentRole = document.getElementById('roleInput').value;
+            if (currentRole && currentRole !== 'mahasiswa') {
+                const btn = document.querySelector(`.role-tab-btn[data-role="${currentRole}"]`);
+                if (btn) selectRole(currentRole, btn);
+            }
+        });
     </script>
 </body>
 </html>

@@ -241,8 +241,33 @@ class AuthenticationTest extends TestCase
     {
         User::factory()->create(['nim_nip' => '2241720088', 'password' => 'rahasia123']);
 
-        $this->post('/login', ['role' => 'mahasiswa', 'login' => '2241720088', 'password' => 'salah'])
+        $response = $this->from('/login')->post('/login', [
+            'role' => 'mahasiswa',
+            'login' => '2241720088',
+            'password' => 'salah',
+        ]);
+
+        $response->assertRedirect('/login')
+            ->assertSessionHasErrors(['password', 'login']);
+
+        $errors = session('errors')->get('password');
+        $this->assertStringContainsString('Kata sandi salah', $errors[0]);
+        $this->assertGuest();
+    }
+
+    public function test_login_fails_with_unregistered_email(): void
+    {
+        $response = $this->from('/login')->post('/login', [
+            'role' => 'mahasiswa',
+            'login' => 'tidak.ada@student.polinema.ac.id',
+            'password' => 'rahasia123',
+        ]);
+
+        $response->assertRedirect('/login')
             ->assertSessionHasErrors('login');
+
+        $errors = session('errors')->get('login');
+        $this->assertStringContainsString('salah atau belum terdaftar', $errors[0]);
         $this->assertGuest();
     }
 

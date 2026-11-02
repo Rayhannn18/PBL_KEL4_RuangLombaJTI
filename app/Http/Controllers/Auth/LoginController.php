@@ -26,12 +26,44 @@ class LoginController extends Controller
 
         // Admin tidak punya NIM/NIP, jadi hanya boleh masuk dengan email.
         if ($role === UserRole::Admin && $field !== 'email') {
+            $msg = 'Admin hanya dapat masuk menggunakan alamat email resmi.';
+            session()->flash('error', $msg);
             throw ValidationException::withMessages([
-                'login' => 'Admin masuk menggunakan email.',
+                'login' => $msg,
             ]);
         }
 
-        // 'role' ikut dicocokkan: akun dosen tidak bisa masuk lewat pilihan Mahasiswa, dan sebaliknya.
+        // Cek apakah akun ditemukan dengan identitas dan peran yang dipilih
+        $user = Auth::getProvider()->retrieveByCredentials([
+            $field => $request->input('login'),
+            'role' => $role->value,
+        ]);
+
+        if (! $user) {
+            // Cek apakah identitas tersebut terdaftar di peran lain
+            $userAnyRole = Auth::getProvider()->retrieveByCredentials([
+                $field => $request->input('login'),
+                'role' => null,
+            ]);
+
+            if ($userAnyRole) {
+                $roleLabel = $userAnyRole->role instanceof UserRole ? $userAnyRole->role->label() : ucfirst((string) $userAnyRole->role);
+                $msg = 'Akun terdaftar sebagai peran '.$roleLabel.'. Silakan pilih tab peran '.$roleLabel.'.';
+                session()->flash('error', $msg);
+                throw ValidationException::withMessages([
+                    'login' => $msg,
+                ]);
+            }
+
+            $label = $field === 'email' ? 'Email' : ($role === UserRole::Mahasiswa ? 'Email atau NIM' : 'Email atau NIP');
+            $msg = $label.' salah atau belum terdaftar.';
+            session()->flash('error', $msg);
+            throw ValidationException::withMessages([
+                'login' => $msg,
+            ]);
+        }
+
+        // Akun ditemukan, verifikasi kata sandi
         $credentials = [
             $field => $request->input('login'),
             'password' => $request->input('password'),
@@ -39,8 +71,11 @@ class LoginController extends Controller
         ];
 
         if (! Auth::attempt($credentials)) {
+            $msg = 'Kata sandi salah. Silakan periksa kembali kata sandi Anda.';
+            session()->flash('error', $msg);
             throw ValidationException::withMessages([
-                'login' => 'Akun tidak ditemukan untuk peran '.$role->label().', atau kata sandi salah.',
+                'password' => $msg,
+                'login' => $msg,
             ]);
         }
 

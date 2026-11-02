@@ -468,17 +468,8 @@
                             {{ $userRoleLabel }}
                         </span>
                     </span>
-                    <form action="{{ route('logout') }}" method="POST" style="display: inline; margin: 0;">
-                        @csrf
-                        <button type="submit" style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #FCA5A5; padding: 2px 10px; border-radius: 999px; font-size: 0.75rem; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; font-family: inherit;">
-                            <i class="bi bi-box-arrow-right"></i> Keluar
-                        </button>
-                    </form>
                 @else
                     <span style="opacity: 0.85;"><i class="bi bi-person"></i> Tamu / Pengunjung</span>
-                    <a href="{{ route('login') }}" style="color: #93C5FD; font-weight: 600; text-decoration: underline; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 4px;">
-                        <i class="bi bi-box-arrow-in-right"></i> Masuk Akun
-                    </a>
                 @endauth
             </div>
         </div>

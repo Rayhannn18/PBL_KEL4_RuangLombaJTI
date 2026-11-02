@@ -41,6 +41,11 @@ class MultiActorUserProvider implements UserProvider
             return $this->userFromAdmin($adm);
         }
 
+        $usr = User::where('id', $identifier)->orWhere('nim_nip', (string) $identifier)->first();
+        if ($usr) {
+            return $usr;
+        }
+
         return null;
     }
 
@@ -90,7 +95,15 @@ class MultiActorUserProvider implements UserProvider
                 ->orWhereRaw('LOWER(email_kampus) = ?', [strtolower($login)])
                 ->first();
 
-            return $mhs ? $this->userFromMahasiswa($mhs) : null;
+            if ($mhs) {
+                return $this->userFromMahasiswa($mhs);
+            }
+
+            return User::where('role', 'mahasiswa')
+                ->where(function ($q) use ($login) {
+                    $q->where('nim_nip', $login)
+                        ->orWhereRaw('LOWER(email) = ?', [strtolower($login)]);
+                })->first();
         }
 
         if ($role === 'dosen') {
@@ -98,13 +111,27 @@ class MultiActorUserProvider implements UserProvider
                 ->orWhereRaw('LOWER(email_kampus) = ?', [strtolower($login)])
                 ->first();
 
-            return $dsn ? $this->userFromDosen($dsn) : null;
+            if ($dsn) {
+                return $this->userFromDosen($dsn);
+            }
+
+            return User::where('role', 'dosen')
+                ->where(function ($q) use ($login) {
+                    $q->where('nim_nip', $login)
+                        ->orWhereRaw('LOWER(email) = ?', [strtolower($login)]);
+                })->first();
         }
 
         if ($role === 'admin') {
             $adm = Admin::whereRaw('LOWER(email) = ?', [strtolower($login)])->first();
 
-            return $adm ? $this->userFromAdmin($adm) : null;
+            if ($adm) {
+                return $this->userFromAdmin($adm);
+            }
+
+            return User::where('role', 'admin')
+                ->whereRaw('LOWER(email) = ?', [strtolower($login)])
+                ->first();
         }
 
         // Jika role tidak spesifik, cari berturut-turut pada tabel admin, dosen, mahasiswa
@@ -123,7 +150,10 @@ class MultiActorUserProvider implements UserProvider
             return $this->userFromMahasiswa($mhs);
         }
 
-        return null;
+        return User::where(function ($q) use ($login) {
+            $q->whereRaw('LOWER(email) = ?', [strtolower($login)])
+                ->orWhere('nim_nip', $login);
+        })->first();
     }
 
     /**

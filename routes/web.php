@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Auth\SSOController;
 use App\Http\Controllers\BimbinganController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LombaController;
@@ -49,6 +50,10 @@ Route::get('/lomba/{id}/pedoman', [LombaController::class, 'downloadPedoman'])->
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'create'])->name('login');
     Route::post('/login', [LoginController::class, 'store'])->middleware('throttle:5,1');
+
+    // Portal SSO Politeknik Negeri Malang (SIAKAD) Mahasiswa
+    Route::get('/auth/sso/polinema', [SSOController::class, 'create'])->name('sso.login');
+    Route::post('/auth/sso/polinema', [SSOController::class, 'authenticate'])->name('sso.authenticate')->middleware('throttle:10,1');
 
     Route::get('/register', [RegisterController::class, 'create'])->name('register');
     Route::post('/register', [RegisterController::class, 'store']);
