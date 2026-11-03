@@ -19,6 +19,7 @@ class ProgresBabak extends Model
         'tanggal_update',
         'hasil_akhir',
         'status_setuju',
+        'catatan_dosen',
     ];
 
     protected $casts = [
@@ -30,9 +31,22 @@ class ProgresBabak extends Model
         return $this->belongsTo(PengajuanBimbingan::class, 'id_pengajuan', 'id_pengajuan');
     }
 
-    public function setujuiProgres()
+    public function setujuiProgres(?string $catatan = null)
     {
-        $this->update(['status_setuju' => 'disetujui']);
+        $this->update([
+            'status_setuju' => 'disetujui',
+            'catatan_dosen' => $catatan,
+        ]);
+
+        return $this;
+    }
+
+    public function tolakProgres(string $catatan)
+    {
+        $this->update([
+            'status_setuju' => 'ditolak',
+            'catatan_dosen' => $catatan,
+        ]);
 
         return $this;
     }

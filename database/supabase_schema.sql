@@ -115,6 +115,7 @@ CREATE TABLE IF NOT EXISTS progres_babak (
     tanggal_update DATE NOT NULL,
     hasil_akhir VARCHAR(100), -- Juara 1, Juara 2, Juara 3, Juara Harapan, Lolos, Finalis
     status_setuju VARCHAR(30) DEFAULT 'menunggu', -- disetujui, menunggu, ditolak
+    catatan_dosen TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

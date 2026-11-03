@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Enums\UserRole;
 use App\Http\Requests\ResponPengajuanRequest;
+use App\Http\Requests\ResponProgresBabakRequest;
+use App\Http\Requests\StoreProgresBabakRequest;
 use App\Http\Requests\UpdateLogbookRequest;
 use App\Http\Requests\ValidasiLogbookRequest;
 use App\Models\AnggotaTim;
@@ -11,6 +13,7 @@ use App\Models\Dosen;
 use App\Models\Logbook;
 use App\Models\Lomba;
 use App\Models\PengajuanBimbingan;
+use App\Models\ProgresBabak;
 use App\Models\Tim;
 use App\Models\User;
 use App\Services\DosenRecommendationService;
@@ -166,7 +169,11 @@ class BimbinganController extends Controller
             $nidn = $authUser['id'];
             $dosen = Dosen::where('nidn', $nidn)->first();
 
-            $pengajuanList = PengajuanBimbingan::where('nidn', $nidn)
+            $search = $request->query('search');
+            $statusFilter = $request->query('status');
+            $lombaFilter = $request->query('lomba_id');
+
+            $query = PengajuanBimbingan::where('nidn', $nidn)
                 ->with([
                     'tim.lomba',
                     'tim.ketua',
@@ -177,9 +184,43 @@ class BimbinganController extends Controller
                     'progresBabak' => function ($q) {
                         $q->orderBy('tanggal_update', 'desc')->orderBy('id_progres', 'desc');
                     },
-                ])
-                ->latest()
-                ->get();
+                ]);
+
+            if ($search) {
+                $query->whereHas('tim', function ($q) use ($search) {
+                    $q->where('nama_tim', 'like', "%{$search}%")
+                        ->orWhereHas('ketua', function ($sq) use ($search) {
+                            $sq->where('nama', 'like', "%{$search}%")
+                                ->orWhere('nim', 'like', "%{$search}%");
+                        });
+                });
+            }
+
+            if ($statusFilter && in_array($statusFilter, ['menunggu', 'disetujui', 'ditolak'])) {
+                $query->where('status', $statusFilter);
+            }
+
+            if ($lombaFilter && $lombaFilter !== 'all') {
+                $query->whereHas('tim', function ($q) use ($lombaFilter) {
+                    $q->where('id_lomba', (int) $lombaFilter);
+                });
+            }
+
+            $pengajuanList = $query->latest()->paginate(10)->withQueryString();
+
+            // Statistik Ringkasan Dosen
+            $totalSesiLogbook = Logbook::whereHas('pengajuan', fn ($q) => $q->where('nidn', $nidn))->count();
+            $logbookMenungguValidasi = Logbook::whereHas('pengajuan', fn ($q) => $q->where('nidn', $nidn))
+                ->where('status_validasi', 'menunggu')
+                ->count();
+            $timAktifCount = PengajuanBimbingan::where('nidn', $nidn)->where('status', 'disetujui')->count();
+            $pengajuanMenungguCount = PengajuanBimbingan::where('nidn', $nidn)->where('status', 'menunggu')->count();
+            $riwayatLamaCount = PengajuanBimbingan::where('nidn', $nidn)->where('status', 'ditolak')->count();
+
+            // Daftar opsi lomba unik yang pernah diajukan ke dosen ini untuk dropdown filter
+            $lombaOptions = Lomba::whereHas('tim.pengajuanBimbingan', function ($q) use ($nidn) {
+                $q->where('nidn', $nidn);
+            })->get(['id_lomba', 'nama_lomba']);
 
             return view('bimbingan.index', [
                 'authUser' => $authUser,
@@ -187,6 +228,15 @@ class BimbinganController extends Controller
                 'dosen' => $dosen,
                 'pengajuanList' => $pengajuanList,
                 'hasLomba' => true,
+                'totalSesiLogbook' => $totalSesiLogbook,
+                'logbookMenungguValidasi' => $logbookMenungguValidasi,
+                'timAktifCount' => $timAktifCount,
+                'pengajuanMenungguCount' => $pengajuanMenungguCount,
+                'riwayatLamaCount' => $riwayatLamaCount,
+                'lombaOptions' => $lombaOptions,
+                'search' => $search,
+                'statusFilter' => $statusFilter,
+                'lombaFilter' => $lombaFilter,
             ]);
         }
 
@@ -360,6 +410,71 @@ class BimbinganController extends Controller
         ]);
 
         return back()->with('success', 'Catatan logbook berhasil diperbarui dan diajukan ulang untuk validasi dosen.');
+    }
+
+    /**
+     * Mahasiswa Melaporkan Capaian Progres Babak Kompetisi
+     */
+    public function storeProgres(StoreProgresBabakRequest $request)
+    {
+        $validated = $request->validated();
+        $authUser = $this->authUser();
+
+        if (! $authUser || $authUser['role'] !== 'mahasiswa') {
+            return back()->with('error', 'Hanya anggota tim mahasiswa yang dapat melaporkan progres babak.');
+        }
+
+        $pengajuan = PengajuanBimbingan::with(['tim.anggotaDiterima'])->findOrFail($validated['id_pengajuan']);
+
+        if ($pengajuan->status !== 'disetujui') {
+            return back()->with('error', 'Laporan progres babak hanya dapat diajukan setelah bimbingan resmi disetujui oleh Dosen Pembimbing.');
+        }
+
+        $isMember = ($pengajuan->tim->nim === $authUser['id']) ||
+            $pengajuan->tim->anggotaDiterima->contains('nim', $authUser['id']);
+
+        if (! $isMember) {
+            return back()->with('error', 'Anda bukan anggota resmi dari tim ini.');
+        }
+
+        ProgresBabak::create([
+            'id_pengajuan' => $pengajuan->id_pengajuan,
+            'babak' => $validated['babak'],
+            'tanggal_update' => $validated['tanggal_update'],
+            'hasil_akhir' => $validated['hasil_akhir'],
+            'status_setuju' => 'menunggu',
+        ]);
+
+        return back()->with('success', 'Laporan progres babak kompetisi berhasil dikirimkan! Menunggu verifikasi Dosen Pembimbing.');
+    }
+
+    /**
+     * Dosen Memvalidasi / Merespon Progres Babak (Setujui / Tolak dengan Catatan)
+     */
+    public function responProgresBabak(ResponProgresBabakRequest $request, $id)
+    {
+        $validated = $request->validated();
+        $authUser = $this->authUser();
+
+        if (! $authUser || ! in_array($authUser['role'], ['dosen', 'admin'])) {
+            return back()->with('error', 'Hanya Dosen Pembimbing atau Administrator yang berhak memvalidasi progres babak.');
+        }
+
+        $progres = ProgresBabak::with('pengajuan')->findOrFail($id);
+
+        if ($authUser['role'] === 'dosen' && $progres->pengajuan->nidn !== $authUser['id']) {
+            return back()->with('error', 'Anda hanya dapat memvalidasi progres babak untuk tim bimbingan Anda.');
+        }
+
+        if ($validated['status_setuju'] === 'disetujui') {
+            $progres->setujuiProgres($validated['catatan_dosen'] ?? null);
+            $pesan = "Capaian babak '{$progres->babak}' berhasil disetujui.";
+        } else {
+            $progres->tolakProgres($validated['catatan_dosen']);
+            $pesan = "Capaian babak '{$progres->babak}' ditolak dengan catatan evaluasi.";
+        }
+
+        return back()->with('success', $pesan);
     }
 
     /**

@@ -956,36 +956,63 @@
                 </div>
 
                 <!-- Kartu Monitoring Progres Babak Tim -->
-                @if($pengajuan && $pengajuan->progresBabak->isNotEmpty())
+                @if($pengajuan && $pengajuan->status === 'disetujui')
                     <div class="card">
                         <div class="card-header">
                             <div>
                                 <div class="card-title">
                                     <i class="bi bi-flag-fill" style="color: var(--primary);"></i> Monitoring Progres Babak
                                 </div>
-                                <div style="font-size: 0.78rem; color: var(--text-muted);">Tahapan kompetisi yang ditempuh tim</div>
+                                <div style="font-size: 0.78rem; color: var(--text-muted);">Tahapan kompetisi yang ditempuh tim bimbingan</div>
+                            </div>
+                            <div>
+                                <button type="button" class="btn btn-primary btn-sm" onclick="openModalTambahProgres()">
+                                    <i class="bi bi-plus-lg"></i> Lapor Progres Babak
+                                </button>
                             </div>
                         </div>
                         <div class="card-body">
-                            <div style="display: flex; flex-direction: column; gap: 10px;">
-                                @foreach($pengajuan->progresBabak as $prog)
-                                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background: #F8FAFC; border: 1px solid var(--border); border-radius: 8px;">
-                                        <div>
-                                            <div style="font-weight: 700; font-size: 0.9rem; color: var(--primary-dark);">
-                                                Babak: {{ $prog->babak }}
+                            @if($pengajuan->progresBabak->isEmpty())
+                                <div style="text-align: center; padding: 25px 20px; color: var(--text-muted); font-size: 0.85rem;">
+                                    <i class="bi bi-flag" style="font-size: 1.8rem; opacity: 0.5; display: block; margin-bottom: 6px;"></i>
+                                    Belum ada laporan progres babak kompetisi. Klik tombol <strong>"Lapor Progres Babak"</strong> di atas setiap kali tim Anda menyelesaikan tahapan lomba.
+                                </div>
+                            @else
+                                <div style="display: flex; flex-direction: column; gap: 10px;">
+                                    @foreach($pengajuan->progresBabak as $prog)
+                                        <div style="padding: 12px 14px; background: #F8FAFC; border: 1px solid var(--border); border-radius: 8px;">
+                                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                                                <div>
+                                                    <div style="font-weight: 700; font-size: 0.9rem; color: var(--primary-dark);">
+                                                        Babak: {{ $prog->babak }}
+                                                    </div>
+                                                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">
+                                                        Tanggal Update: {{ $prog->tanggal_update ? $prog->tanggal_update->format('d M Y') : '-' }}
+                                                    </div>
+                                                </div>
+                                                <div style="display: flex; align-items: center; gap: 6px;">
+                                                    <span class="badge {{ str_contains(strtolower($prog->hasil_akhir ?? ''), 'juara') ? 'badge-warning' : 'badge-primary' }}">
+                                                        {{ $prog->hasil_akhir ?? 'Sedang Berlangsung' }}
+                                                    </span>
+                                                    @if($prog->status_setuju === 'disetujui')
+                                                        <span class="badge badge-success"><i class="bi bi-check-circle-fill"></i> Disetujui Dosen</span>
+                                                    @elseif($prog->status_setuju === 'ditolak')
+                                                        <span class="badge badge-danger"><i class="bi bi-x-circle-fill"></i> Ditolak</span>
+                                                    @else
+                                                        <span class="badge badge-warning"><i class="bi bi-clock-history"></i> Menunggu Verifikasi</span>
+                                                    @endif
+                                                </div>
                                             </div>
-                                            <div style="font-size: 0.75rem; color: var(--text-muted);">
-                                                Tanggal Update: {{ $prog->tanggal_update ? $prog->tanggal_update->format('d M Y') : '-' }}
-                                            </div>
+
+                                            @if($prog->catatan_dosen)
+                                                <div style="margin-top: 8px; font-size: 0.78rem; background: {{ $prog->status_setuju === 'ditolak' ? '#FEF2F2' : '#F0FDF4' }}; border-left: 3px solid {{ $prog->status_setuju === 'ditolak' ? '#EF4444' : '#22C55E' }}; padding: 6px 10px; border-radius: 4px; color: {{ $prog->status_setuju === 'ditolak' ? '#991B1B' : '#166534' }};">
+                                                    <strong>Catatan Dosen Pembimbing:</strong> "{{ $prog->catatan_dosen }}"
+                                                </div>
+                                            @endif
                                         </div>
-                                        <div>
-                                            <span class="badge {{ str_contains(strtolower($prog->hasil_akhir ?? ''), 'juara') ? 'badge-warning' : 'badge-primary' }}">
-                                                {{ $prog->hasil_akhir ?? 'Sedang Berlangsung' }}
-                                            </span>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
+                                    @endforeach
+                                </div>
+                            @endif
                         </div>
                     </div>
                 @endif
@@ -999,24 +1026,42 @@
     {{-- ========================================================================= --}}
     @elseif($role === 'dosen')
 
-        <!-- Statistik Bimbingan Dosen -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px;">
-            <div class="card" style="padding: 18px;">
-                <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Total Kuota Bimbingan</div>
-                <div style="font-size: 1.8rem; font-weight: 800; color: var(--primary-dark); margin: 4px 0;">{{ $dosen->kuota_bimbingan ?? 5 }} Tim</div>
-                <div style="font-size: 0.75rem; color: var(--text-muted);">Kapasitas maksimal bimbingan semester ini</div>
+        <!-- Statistik & Ringkasan Bimbingan Dosen -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 20px;">
+            <div class="card" style="padding: 16px;">
+                <div style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Total Kuota Bimbingan</div>
+                <div style="font-size: 1.6rem; font-weight: 800; color: var(--primary-dark); margin: 2px 0;">{{ $dosen->kuota_bimbingan ?? 5 }} Tim</div>
+                <div style="font-size: 0.72rem; color: var(--text-muted);">Kapasitas semester ini</div>
             </div>
 
-            <div class="card" style="padding: 18px;">
-                <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Tim Bimbingan Aktif</div>
-                <div style="font-size: 1.8rem; font-weight: 800; color: #10B981; margin: 4px 0;">{{ $pengajuanList->where('status', 'disetujui')->count() }} Tim</div>
-                <div style="font-size: 0.75rem; color: var(--text-muted);">Tim yang resmi Anda setujui</div>
+            <div class="card" style="padding: 16px;">
+                <div style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Bimbingan Aktif</div>
+                <div style="font-size: 1.6rem; font-weight: 800; color: #10B981; margin: 2px 0;">{{ $timAktifCount ?? 0 }} Tim</div>
+                <div style="font-size: 0.72rem; color: var(--text-muted);">Tim resmi disetujui</div>
             </div>
 
-            <div class="card" style="padding: 18px;">
-                <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Pengajuan Menunggu</div>
-                <div style="font-size: 1.8rem; font-weight: 800; color: #F59E0B; margin: 4px 0;">{{ $pengajuanList->where('status', 'menunggu')->count() }} Tim</div>
-                <div style="font-size: 0.75rem; color: var(--text-muted);">Menunggu konfirmasi persetujuan</div>
+            <div class="card" style="padding: 16px;">
+                <div style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Pengajuan Masuk</div>
+                <div style="font-size: 1.6rem; font-weight: 800; color: #F59E0B; margin: 2px 0;">{{ $pengajuanMenungguCount ?? 0 }} Tim</div>
+                <div style="font-size: 0.72rem; color: var(--text-muted);">Menunggu konfirmasi</div>
+            </div>
+
+            <div class="card" style="padding: 16px;">
+                <div style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Total Sesi Logbook</div>
+                <div style="font-size: 1.6rem; font-weight: 800; color: #3B82F6; margin: 2px 0;">{{ $totalSesiLogbook ?? 0 }} Sesi</div>
+                <div style="font-size: 0.72rem; color: var(--text-muted);">Konsultasi tercatat</div>
+            </div>
+
+            <div class="card" style="padding: 16px;">
+                <div style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Logbook Menunggu</div>
+                <div style="font-size: 1.6rem; font-weight: 800; color: {{ ($logbookMenungguValidasi ?? 0) > 0 ? '#EF4444' : '#64748B' }}; margin: 2px 0;">{{ $logbookMenungguValidasi ?? 0 }} Sesi</div>
+                <div style="font-size: 0.72rem; color: var(--text-muted);">Perlu validasi dosen</div>
+            </div>
+
+            <div class="card" style="padding: 16px;">
+                <div style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Riwayat Ditolak</div>
+                <div style="font-size: 1.6rem; font-weight: 800; color: #64748B; margin: 2px 0;">{{ $riwayatLamaCount ?? 0 }} Tim</div>
+                <div style="font-size: 0.72rem; color: var(--text-muted);">Pengajuan masa lalu</div>
             </div>
         </div>
 
@@ -1024,9 +1069,57 @@
         <div class="card">
             <div class="card-header">
                 <div>
-                    <div class="card-title"><i class="bi bi-people-fill" style="color: var(--primary);"></i> Daftar Tim Mahasiswa Bimbingan</div>
-                    <div style="font-size: 0.78rem; color: var(--text-muted);">Kelola persetujuan bimbingan dan validasi logbook mahasiswa</div>
+                    <div class="card-title"><i class="bi bi-people-fill" style="color: var(--primary);"></i> Daftar Tim Mahasiswa Bimbingan (Rekap & Riwayat)</div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted);">Kelola persetujuan bimbingan, pencarian riwayat pengajuan, dan monitoring kompetisi</div>
                 </div>
+            </div>
+
+            <!-- Toolbar Filter & Pencarian Rekap -->
+            <div style="background: #FFFFFF; border-bottom: 1px solid var(--border); padding: 14px 18px;">
+                <form action="{{ route('bimbingan.index') }}" method="GET" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px; flex: 1; min-width: 300px;">
+                        <!-- Pencarian Nama Tim / Ketua -->
+                        <div style="flex: 1; min-width: 200px;">
+                            <input type="text" name="search" value="{{ request('search') }}" class="form-control" placeholder="Cari nama tim atau ketua..." style="font-size: 0.85rem; padding: 7px 12px;">
+                        </div>
+
+                        <!-- Filter Status -->
+                        <div style="width: 170px;">
+                            <select name="status" class="form-control" style="font-size: 0.85rem; padding: 7px 10px;">
+                                <option value="">-- Semua Status --</option>
+                                <option value="menunggu" {{ request('status') === 'menunggu' ? 'selected' : '' }}>Menunggu Konfirmasi</option>
+                                <option value="disetujui" {{ request('status') === 'disetujui' ? 'selected' : '' }}>Disetujui (Aktif)</option>
+                                <option value="ditolak" {{ request('status') === 'ditolak' ? 'selected' : '' }}>Ditolak</option>
+                            </select>
+                        </div>
+
+                        <!-- Filter Lomba -->
+                        <div style="width: 200px;">
+                            <select name="lomba_id" class="form-control" style="font-size: 0.85rem; padding: 7px 10px;">
+                                <option value="">-- Semua Kompetisi --</option>
+                                @if(isset($lombaOptions))
+                                    @foreach($lombaOptions as $lopt)
+                                        <option value="{{ $lopt->id_lomba }}" {{ request('lomba_id') == $lopt->id_lomba ? 'selected' : '' }}>
+                                            {{ Str::limit($lopt->nama_lomba, 25) }}
+                                        </option>
+                                    @endforeach
+                                @endif
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 8px;">
+                        <button type="submit" class="btn btn-primary btn-sm" style="padding: 7px 14px; font-size: 0.85rem;">
+                            <i class="bi bi-filter"></i> Filter
+                        </button>
+
+                        @if(request()->hasAny(['search', 'status', 'lomba_id']))
+                            <a href="{{ route('bimbingan.index') }}" class="btn btn-secondary btn-sm" style="padding: 7px 12px; font-size: 0.85rem;">
+                                <i class="bi bi-arrow-counterclockwise"></i> Reset
+                            </a>
+                        @endif
+                    </div>
+                </form>
             </div>
             <div class="card-body">
                 @if($pengajuanList->isEmpty())
@@ -1188,6 +1281,68 @@
                                     @endif
                                 </div>
 
+                                <!-- Bagian Progres Babak Kompetisi -->
+                                @if($item->status === 'disetujui')
+                                    <div style="border-top: 1px solid var(--border); padding-top: 12px; margin-top: 10px;">
+                                        <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 8px;">
+                                            <i class="bi bi-flag-fill text-primary"></i> TAHAPAN PROGRES BABAK KOMPETISI ({{ $item->progresBabak->count() }} Tahapan Dilaporkan):
+                                        </div>
+
+                                        @if($item->progresBabak->isEmpty())
+                                            <div style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">
+                                                Mahasiswa belum melaporkan capaian tahapan kompetisi.
+                                            </div>
+                                        @else
+                                            <div style="display: flex; flex-direction: column; gap: 8px;">
+                                                @foreach($item->progresBabak as $pb)
+                                                    <div style="background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px;">
+                                                        <div style="max-width: 620px; flex: 1;">
+                                                            <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 8px;">
+                                                                <span><i class="bi bi-calendar-event"></i> {{ $pb->tanggal_update ? $pb->tanggal_update->format('d/m/Y') : '-' }}</span>
+                                                                <span>&bull;</span>
+                                                                @if($pb->status_setuju === 'disetujui')
+                                                                    <span class="badge badge-success" style="font-size: 0.7rem;"><i class="bi bi-check-all"></i> Disetujui Dosen</span>
+                                                                @elseif($pb->status_setuju === 'ditolak')
+                                                                    <span class="badge badge-danger" style="font-size: 0.7rem;"><i class="bi bi-x-circle-fill"></i> Ditolak</span>
+                                                                @else
+                                                                    <span class="badge badge-warning" style="font-size: 0.7rem;"><i class="bi bi-clock-history"></i> Menunggu Verifikasi</span>
+                                                                @endif
+                                                            </div>
+                                                            <div style="font-size: 0.88rem; font-weight: 700; color: var(--primary-dark); margin-top: 4px;">
+                                                                Babak: {{ $pb->babak }} &bull; <span class="badge {{ str_contains(strtolower($pb->hasil_akhir ?? ''), 'juara') ? 'badge-warning' : 'badge-primary' }}" style="font-size: 0.75rem;">{{ $pb->hasil_akhir ?? '-' }}</span>
+                                                            </div>
+
+                                                            @if($pb->catatan_dosen)
+                                                                <div style="margin-top: 8px; font-size: 0.78rem; background: #FEF2F2; border-left: 3px solid #EF4444; padding: 6px 10px; border-radius: 4px; color: #991B1B;">
+                                                                    <strong>Catatan/Feedback Anda:</strong> "{{ $pb->catatan_dosen }}"
+                                                                </div>
+                                                            @endif
+                                                        </div>
+
+                                                        <div style="display: flex; gap: 6px; align-items: center;">
+                                                            @if($pb->status_setuju !== 'disetujui')
+                                                                <form action="{{ route('bimbingan.progres.respon', $pb->id_progres) }}" method="POST" style="margin: 0;">
+                                                                    @csrf
+                                                                    <input type="hidden" name="status_setuju" value="disetujui">
+                                                                    <button type="submit" class="btn btn-success btn-sm" style="padding: 4px 10px; font-size: 0.78rem;">
+                                                                        <i class="bi bi-check2-circle"></i> Setujui
+                                                                    </button>
+                                                                </form>
+
+                                                                <button type="button" class="btn btn-outline-danger btn-sm" style="padding: 4px 10px; font-size: 0.78rem;" onclick="openModalTolakProgres({{ $pb->id_progres }}, '{{ addslashes($pb->babak) }}')">
+                                                                    <i class="bi bi-x-circle"></i> Tolak Babak
+                                                                </button>
+                                                            @else
+                                                                <span class="badge badge-success"><i class="bi bi-check-all"></i> Terverifikasi</span>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endif
+
                                 <!-- Bagian Logbook Mahasiswa Bimbingan -->
                                 @if($item->status === 'disetujui')
                                     <div style="border-top: 1px solid var(--border); padding-top: 12px; margin-top: 10px;">
@@ -1257,6 +1412,12 @@
                             </div>
                         @endforeach
                     </div>
+
+                    @if($pengajuanList->hasPages())
+                        <div style="margin-top: 20px; display: flex; justify-content: center;">
+                            {{ $pengajuanList->links() }}
+                        </div>
+                    @endif
                 @endif
             </div>
         </div>
@@ -1461,6 +1622,45 @@
                 </form>
             </div>
         </div>
+
+        {{-- MODAL 2C: Form Tambah Laporan Progres Babak Mahasiswa                     --}}
+        <div id="modalTambahProgres" class="modal-backdrop-custom" style="display: none;">
+            <div class="modal-box">
+                <div class="modal-header-custom">
+                    <div style="font-weight: 800; font-size: 1.05rem; color: var(--primary-dark);">
+                        <i class="bi bi-flag-fill" style="color: var(--primary);"></i> Lapor Progres Babak Kompetisi
+                    </div>
+                    <button type="button" onclick="closeModalTambahProgres()" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+                </div>
+                <form action="{{ route('bimbingan.progres.store') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="id_pengajuan" value="{{ $pengajuan->id_pengajuan }}">
+
+                    <div class="modal-body-custom">
+                        <div class="form-group" style="margin-bottom: 14px;">
+                            <label class="form-label">Tahapan / Babak Kompetisi *</label>
+                            <input type="text" name="babak" class="form-control" placeholder="Contoh: Babak Penyisihan, Babak Semifinal, Babak Final..." required maxlength="50">
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 14px;">
+                            <label class="form-label">Tanggal Capaian / Update *</label>
+                            <input type="date" name="tanggal_update" class="form-control" value="{{ date('Y-m-d') }}" required>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Hasil / Status Capaian Babak *</label>
+                            <input type="text" name="hasil_akhir" class="form-control" placeholder="Contoh: Lolos ke Semifinal, Finalis, Juara 1..." required maxlength="100">
+                        </div>
+                    </div>
+                    <div class="modal-footer-custom">
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="closeModalTambahProgres()">Batal</button>
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="bi bi-send-fill"></i> Kirim Laporan Progres
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     @endif
 
     {{-- ========================================================================= --}}
@@ -1528,6 +1728,40 @@
                         <button type="button" class="btn btn-secondary btn-sm" onclick="closeModalRevisiLogbook()">Batal</button>
                         <button type="submit" class="btn btn-danger btn-sm">
                             <i class="bi bi-send-fill"></i> Kirim Catatan Revisi
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {{-- MODAL 5: Form Tolak Progres Babak Kompetisi oleh Dosen                   --}}
+        <div id="modalTolakProgres" class="modal-backdrop-custom" style="display: none;">
+            <div class="modal-box">
+                <div class="modal-header-custom">
+                    <div style="font-weight: 800; font-size: 1.05rem; color: #991B1B;">
+                        <i class="bi bi-x-circle-fill" style="color: #DC2626;"></i> Tolak / Evaluasi Progres Babak
+                    </div>
+                    <button type="button" onclick="closeModalTolakProgres()" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+                </div>
+                <form id="formTolakProgres" action="" method="POST">
+                    @csrf
+                    <input type="hidden" name="status_setuju" value="ditolak">
+
+                    <div class="modal-body-custom">
+                        <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">
+                            Babak Kompetisi: <strong id="namaBabakTolak" style="color: var(--primary-dark);">-</strong>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Catatan Evaluasi / Alasan Penolakan (Wajib) *</label>
+                            <textarea name="catatan_dosen" id="catatanDosenProgres" rows="4" class="form-control" placeholder="Tuliskan catatan evaluasi, kekurangan tahapan, atau arahan tindak lanjut bagi tim..." maxlength="1000" required></textarea>
+                            <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; text-align: right;">Maksimal 1000 karakter</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer-custom">
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="closeModalTolakProgres()">Batal</button>
+                        <button type="submit" class="btn btn-danger btn-sm">
+                            <i class="bi bi-send-fill"></i> Kirim Penolakan
                         </button>
                     </div>
                 </form>
@@ -1624,6 +1858,35 @@
         if (modal) modal.style.display = 'none';
     }
 
+    function openModalTambahProgres() {
+        const modal = document.getElementById('modalTambahProgres');
+        if (modal) modal.style.display = 'flex';
+    }
+
+    function closeModalTambahProgres() {
+        const modal = document.getElementById('modalTambahProgres');
+        if (modal) modal.style.display = 'none';
+    }
+
+    function openModalTolakProgres(idProgres, namaBabak) {
+        const modal = document.getElementById('modalTolakProgres');
+        const form = document.getElementById('formTolakProgres');
+        const labelBabak = document.getElementById('namaBabakTolak');
+        const textarea = document.getElementById('catatanDosenProgres');
+
+        if (modal && form) {
+            form.action = `/bimbingan/progres/${idProgres}/respon`;
+            if (labelBabak) labelBabak.textContent = namaBabak;
+            if (textarea) textarea.value = '';
+            modal.style.display = 'flex';
+        }
+    }
+
+    function closeModalTolakProgres() {
+        const modal = document.getElementById('modalTolakProgres');
+        if (modal) modal.style.display = 'none';
+    }
+
     function pilihDosenAi(nidn) {
         const select = document.getElementById('dosenSelect') || document.getElementById('dosenSelectPengganti');
         if (select) {
@@ -1638,13 +1901,17 @@
         const modalDaftar = document.getElementById('modalDaftarTim');
         const modalLogbook = document.getElementById('modalLogbook');
         const modalEditLogbook = document.getElementById('modalEditLogbook');
+        const modalTambahProgres = document.getElementById('modalTambahProgres');
         const modalTolak = document.getElementById('modalTolakPengajuan');
         const modalRevisi = document.getElementById('modalRevisiLogbook');
+        const modalTolakProgres = document.getElementById('modalTolakProgres');
         if (e.target === modalDaftar) closeModalDaftarTim();
         if (e.target === modalLogbook) closeModalLogbook();
         if (e.target === modalEditLogbook) closeModalEditLogbook();
+        if (e.target === modalTambahProgres) closeModalTambahProgres();
         if (e.target === modalTolak) closeModalTolakPengajuan();
         if (e.target === modalRevisi) closeModalRevisiLogbook();
+        if (e.target === modalTolakProgres) closeModalTolakProgres();
     });
 </script>
 @endpush
