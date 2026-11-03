@@ -931,6 +931,21 @@
                                                         <strong>Rencana Tindak Lanjut:</strong> {{ $log->tindak_lanjut }}
                                                     </div>
                                                 @endif
+
+                                                @if($log->catatan_dosen)
+                                                    <div style="margin-top: 8px; font-size: 0.8rem; background: {{ $log->status_validasi === 'revisi' ? '#FEF2F2' : '#F0FDF4' }}; border-left: 3px solid {{ $log->status_validasi === 'revisi' ? '#EF4444' : '#22C55E' }}; padding: 8px 12px; border-radius: 4px; color: {{ $log->status_validasi === 'revisi' ? '#991B1B' : '#166534' }};">
+                                                        <i class="bi {{ $log->status_validasi === 'revisi' ? 'bi-exclamation-circle-fill' : 'bi-chat-left-quote-fill' }}"></i>
+                                                        <strong>Catatan Dosen Pembimbing:</strong> "{{ $log->catatan_dosen }}"
+                                                    </div>
+                                                @endif
+
+                                                @if($log->status_validasi === 'revisi')
+                                                    <div style="margin-top: 8px; display: flex; justify-content: flex-end;">
+                                                        <button type="button" class="btn btn-warning btn-sm" style="font-size: 0.78rem; padding: 3px 10px;" onclick="openModalEditLogbook({{ $log->id_logbook }}, '{{ $log->tanggal ? $log->tanggal->format('Y-m-d') : '' }}', '{{ addslashes($log->materi) }}', '{{ addslashes($log->tindak_lanjut ?? '') }}')">
+                                                            <i class="bi bi-pencil-square"></i> Perbaiki Logbook
+                                                        </button>
+                                                    </div>
+                                                @endif
                                             </div>
                                         </div>
                                     @endforeach
@@ -1187,28 +1202,52 @@
                                         @else
                                             <div style="display: flex; flex-direction: column; gap: 8px;">
                                                 @foreach($item->logbook as $lb)
-                                                    <div style="background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-                                                        <div style="max-width: 600px;">
-                                                            <div style="font-size: 0.75rem; color: var(--text-muted);">
-                                                                Tanggal: {{ $lb->tanggal ? $lb->tanggal->format('d/m/Y') : '-' }} &bull;
-                                                                Status: <strong>{{ ucfirst($lb->status_validasi) }}</strong>
+                                                    <div style="background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px;">
+                                                        <div style="max-width: 620px; flex: 1;">
+                                                            <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 8px;">
+                                                                <span><i class="bi bi-calendar3"></i> {{ $lb->tanggal ? $lb->tanggal->format('d/m/Y') : '-' }}</span>
+                                                                <span>&bull;</span>
+                                                                @if($lb->status_validasi === 'disetujui')
+                                                                    <span class="badge badge-success" style="font-size: 0.7rem;"><i class="bi bi-check-all"></i> Disetujui</span>
+                                                                @elseif($lb->status_validasi === 'revisi')
+                                                                    <span class="badge badge-danger" style="font-size: 0.7rem;"><i class="bi bi-exclamation-triangle-fill"></i> Perlu Revisi</span>
+                                                                @else
+                                                                    <span class="badge badge-warning" style="font-size: 0.7rem;"><i class="bi bi-clock-history"></i> Menunggu Validasi</span>
+                                                                @endif
                                                             </div>
-                                                            <div style="font-size: 0.84rem; font-weight: 600; color: var(--text-main);">
+                                                            <div style="font-size: 0.88rem; font-weight: 700; color: var(--primary-dark); margin-top: 4px;">
                                                                 {{ $lb->materi }}
                                                             </div>
+                                                            @if($lb->tindak_lanjut && $lb->tindak_lanjut !== '-')
+                                                                <div style="font-size: 0.78rem; color: #475569; margin-top: 3px;">
+                                                                    <strong>Tindak Lanjut:</strong> {{ $lb->tindak_lanjut }}
+                                                                </div>
+                                                            @endif
+
+                                                            @if($lb->catatan_dosen)
+                                                                <div style="margin-top: 8px; font-size: 0.78rem; background: #FEF2F2; border-left: 3px solid #EF4444; padding: 6px 10px; border-radius: 4px; color: #991B1B;">
+                                                                    <strong>Catatan/Feedback Anda:</strong> "{{ $lb->catatan_dosen }}"
+                                                                </div>
+                                                            @endif
                                                         </div>
 
-                                                        @if($lb->status_validasi !== 'disetujui')
-                                                            <form action="{{ route('bimbingan.logbook.validasi', $lb->id_logbook) }}" method="POST">
-                                                                @csrf
-                                                                <input type="hidden" name="status_validasi" value="disetujui">
-                                                                <button type="submit" class="btn btn-outline-primary btn-sm">
-                                                                    <i class="bi bi-check2-circle"></i> Setujui Logbook
+                                                        <div style="display: flex; gap: 6px; align-items: center;">
+                                                            @if($lb->status_validasi !== 'disetujui')
+                                                                <form action="{{ route('bimbingan.logbook.validasi', $lb->id_logbook) }}" method="POST" style="margin: 0;">
+                                                                    @csrf
+                                                                    <input type="hidden" name="status_validasi" value="disetujui">
+                                                                    <button type="submit" class="btn btn-success btn-sm" style="padding: 4px 10px; font-size: 0.78rem;">
+                                                                        <i class="bi bi-check2-circle"></i> Setujui
+                                                                    </button>
+                                                                </form>
+
+                                                                <button type="button" class="btn btn-outline-danger btn-sm" style="padding: 4px 10px; font-size: 0.78rem;" onclick="openModalRevisiLogbook({{ $lb->id_logbook }}, '{{ addslashes($lb->materi) }}')">
+                                                                    <i class="bi bi-pencil-square"></i> Perlu Revisi
                                                                 </button>
-                                                            </form>
-                                                        @else
-                                                            <span class="badge badge-success"><i class="bi bi-check-all"></i> Terverifikasi</span>
-                                                        @endif
+                                                            @else
+                                                                <span class="badge badge-success"><i class="bi bi-check-all"></i> Terverifikasi</span>
+                                                            @endif
+                                                        </div>
                                                     </div>
                                                 @endforeach
                                             </div>
@@ -1383,6 +1422,45 @@
                 </form>
             </div>
         </div>
+
+        {{-- MODAL 2B: Form Edit / Perbaiki Logbook Bimbingan                         --}}
+        <div id="modalEditLogbook" class="modal-backdrop-custom" style="display: none;">
+            <div class="modal-box">
+                <div class="modal-header-custom">
+                    <div style="font-weight: 800; font-size: 1.05rem; color: var(--primary-dark);">
+                        <i class="bi bi-pencil-square" style="color: var(--primary);"></i> Perbaiki Catatan Logbook
+                    </div>
+                    <button type="button" onclick="closeModalEditLogbook()" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+                </div>
+                <form id="formEditLogbook" action="" method="POST">
+                    @csrf
+                    @method('PUT')
+
+                    <div class="modal-body-custom">
+                        <div class="form-group" style="margin-bottom: 14px;">
+                            <label class="form-label">Tanggal Pelaksanaan Bimbingan *</label>
+                            <input type="date" name="tanggal" id="editLogbookTanggal" class="form-control" required>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 14px;">
+                            <label class="form-label">Materi / Bahasan Konsultasi *</label>
+                            <textarea name="materi" id="editLogbookMateri" rows="3" class="form-control" required maxlength="1000"></textarea>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Arahan & Tindak Lanjut dari Dosen</label>
+                            <textarea name="tindak_lanjut" id="editLogbookTindakLanjut" rows="2" class="form-control" maxlength="1000"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer-custom">
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="closeModalEditLogbook()">Batal</button>
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="bi bi-save"></i> Simpan & Ajukan Ulang
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     @endif
 
     {{-- ========================================================================= --}}
@@ -1416,6 +1494,40 @@
                         <button type="button" class="btn btn-secondary btn-sm" onclick="closeModalTolakPengajuan()">Batal</button>
                         <button type="submit" class="btn btn-danger btn-sm">
                             <i class="bi bi-x-circle-fill"></i> Konfirmasi Penolakan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {{-- MODAL 4: Form Minta Revisi Logbook Mahasiswa oleh Dosen                  --}}
+        <div id="modalRevisiLogbook" class="modal-backdrop-custom" style="display: none;">
+            <div class="modal-box">
+                <div class="modal-header-custom">
+                    <div style="font-weight: 800; font-size: 1.05rem; color: #991B1B;">
+                        <i class="bi bi-exclamation-triangle-fill" style="color: #DC2626;"></i> Minta Revisi & Catatan Feedback Logbook
+                    </div>
+                    <button type="button" onclick="closeModalRevisiLogbook()" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+                </div>
+                <form id="formRevisiLogbook" action="" method="POST">
+                    @csrf
+                    <input type="hidden" name="status_validasi" value="revisi">
+
+                    <div class="modal-body-custom">
+                        <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">
+                            Materi Logbook: <strong id="materiLogbookRevisi" style="color: var(--primary-dark);">-</strong>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Catatan Perbaikan / Arahan Feedback (Wajib) *</label>
+                            <textarea name="catatan_dosen" id="catatanDosenRevisi" rows="4" class="form-control" placeholder="Tuliskan poin perbaikan, materi yang belum lengkap, atau arahan tindak lanjut..." maxlength="1000" required></textarea>
+                            <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; text-align: right;">Maksimal 1000 karakter</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer-custom">
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="closeModalRevisiLogbook()">Batal</button>
+                        <button type="submit" class="btn btn-danger btn-sm">
+                            <i class="bi bi-send-fill"></i> Kirim Catatan Revisi
                         </button>
                     </div>
                 </form>
@@ -1472,6 +1584,46 @@
         if (modal) modal.style.display = 'none';
     }
 
+    function openModalRevisiLogbook(idLogbook, materi) {
+        const modal = document.getElementById('modalRevisiLogbook');
+        const form = document.getElementById('formRevisiLogbook');
+        const labelMateri = document.getElementById('materiLogbookRevisi');
+        const textarea = document.getElementById('catatanDosenRevisi');
+
+        if (modal && form) {
+            form.action = `/bimbingan/logbook/${idLogbook}/validasi`;
+            if (labelMateri) labelMateri.textContent = materi;
+            if (textarea) textarea.value = '';
+            modal.style.display = 'flex';
+        }
+    }
+
+    function closeModalRevisiLogbook() {
+        const modal = document.getElementById('modalRevisiLogbook');
+        if (modal) modal.style.display = 'none';
+    }
+
+    function openModalEditLogbook(idLogbook, tanggal, materi, tindakLanjut) {
+        const modal = document.getElementById('modalEditLogbook');
+        const form = document.getElementById('formEditLogbook');
+        const inputTanggal = document.getElementById('editLogbookTanggal');
+        const inputMateri = document.getElementById('editLogbookMateri');
+        const inputTindak = document.getElementById('editLogbookTindakLanjut');
+
+        if (modal && form) {
+            form.action = `/bimbingan/logbook/${idLogbook}`;
+            if (inputTanggal) inputTanggal.value = tanggal || '';
+            if (inputMateri) inputMateri.value = materi || '';
+            if (inputTindak) inputTindak.value = tindakLanjut || '';
+            modal.style.display = 'flex';
+        }
+    }
+
+    function closeModalEditLogbook() {
+        const modal = document.getElementById('modalEditLogbook');
+        if (modal) modal.style.display = 'none';
+    }
+
     function pilihDosenAi(nidn) {
         const select = document.getElementById('dosenSelect') || document.getElementById('dosenSelectPengganti');
         if (select) {
@@ -1485,10 +1637,14 @@
     window.addEventListener('click', function(e) {
         const modalDaftar = document.getElementById('modalDaftarTim');
         const modalLogbook = document.getElementById('modalLogbook');
+        const modalEditLogbook = document.getElementById('modalEditLogbook');
         const modalTolak = document.getElementById('modalTolakPengajuan');
+        const modalRevisi = document.getElementById('modalRevisiLogbook');
         if (e.target === modalDaftar) closeModalDaftarTim();
         if (e.target === modalLogbook) closeModalLogbook();
+        if (e.target === modalEditLogbook) closeModalEditLogbook();
         if (e.target === modalTolak) closeModalTolakPengajuan();
+        if (e.target === modalRevisi) closeModalRevisiLogbook();
     });
 </script>
 @endpush

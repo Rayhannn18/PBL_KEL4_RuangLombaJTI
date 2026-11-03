@@ -79,6 +79,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/bimbingan', [BimbinganController::class, 'index'])->name('bimbingan.index');
     Route::post('/bimbingan/ajukan', [BimbinganController::class, 'ajukan'])->name('bimbingan.ajukan');
     Route::post('/bimbingan/logbook', [BimbinganController::class, 'storeLogbook'])->name('bimbingan.logbook.store');
+    Route::put('/bimbingan/logbook/{id}', [BimbinganController::class, 'updateLogbook'])->name('bimbingan.logbook.update');
     Route::post('/bimbingan/logbook/{id}/validasi', [BimbinganController::class, 'validasiLogbook'])->middleware('dosen')->name('bimbingan.logbook.validasi');
     Route::post('/bimbingan/pengajuan/{id}/respon', [BimbinganController::class, 'responPengajuan'])->middleware('dosen')->name('bimbingan.pengajuan.respon');
     Route::post('/bimbingan/daftar-tim-cepat', [BimbinganController::class, 'gabungLombaCepat'])->name('bimbingan.daftar_tim');

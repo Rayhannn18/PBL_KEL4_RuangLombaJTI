@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Enums\UserRole;
 use App\Http\Requests\ResponPengajuanRequest;
+use App\Http\Requests\UpdateLogbookRequest;
+use App\Http\Requests\ValidasiLogbookRequest;
 use App\Models\AnggotaTim;
 use App\Models\Dosen;
 use App\Models\Logbook;
@@ -299,13 +301,11 @@ class BimbinganController extends Controller
     }
 
     /**
-     * Dosen Memvalidasi Logbook (Setujui / Revisi)
+     * Dosen Memvalidasi Logbook (Setujui / Revisi dengan Catatan)
      */
-    public function validasiLogbook(Request $request, $id)
+    public function validasiLogbook(ValidasiLogbookRequest $request, $id)
     {
-        $validated = $request->validate([
-            'status_validasi' => 'required|in:disetujui,revisi',
-        ]);
+        $validated = $request->validated();
 
         $authUser = $this->authUser();
         if (! $authUser || ! in_array($authUser['role'], ['dosen', 'admin'])) {
@@ -318,15 +318,48 @@ class BimbinganController extends Controller
             return back()->with('error', 'Anda hanya dapat memvalidasi logbook untuk tim bimbingan Anda.');
         }
 
-        $logbook->update([
-            'status_validasi' => $validated['status_validasi'],
-        ]);
+        $logbook->validasi($validated['status_validasi'], $validated['catatan_dosen'] ?? null);
 
         $pesan = $validated['status_validasi'] === 'disetujui'
-            ? 'Logbook berhasil divalidasi dan disetujui.'
-            : 'Status logbook ditandai memerlukan revisi mahasiswa.';
+            ? 'Logbook bimbingan berhasil disetujui.'
+            : 'Status logbook ditandai memerlukan revisi mahasiswa beserta catatan feedback.';
 
         return back()->with('success', $pesan);
+    }
+
+    /**
+     * Mahasiswa Memperbarui Entri Logbook yang Memerlukan Revisi
+     */
+    public function updateLogbook(UpdateLogbookRequest $request, $id)
+    {
+        $validated = $request->validated();
+
+        $authUser = $this->authUser();
+        if (! $authUser || $authUser['role'] !== 'mahasiswa') {
+            return back()->with('error', 'Hanya anggota tim mahasiswa yang dapat memperbarui logbook bimbingan.');
+        }
+
+        $logbook = Logbook::with(['pengajuan.tim.anggotaDiterima'])->findOrFail($id);
+
+        $isMember = ($logbook->pengajuan->tim->nim === $authUser['id']) ||
+            $logbook->pengajuan->tim->anggotaDiterima->contains('nim', $authUser['id']);
+
+        if (! $isMember) {
+            return back()->with('error', 'Anda bukan anggota resmi dari tim ini.');
+        }
+
+        if ($logbook->status_validasi === 'disetujui') {
+            return back()->with('error', 'Logbook yang sudah disetujui oleh Dosen Pembimbing tidak dapat diubah.');
+        }
+
+        $logbook->update([
+            'tanggal' => $validated['tanggal'],
+            'materi' => $validated['materi'],
+            'tindak_lanjut' => $validated['tindak_lanjut'] ?? '-',
+            'status_validasi' => 'menunggu',
+        ]);
+
+        return back()->with('success', 'Catatan logbook berhasil diperbarui dan diajukan ulang untuk validasi dosen.');
     }
 
     /**

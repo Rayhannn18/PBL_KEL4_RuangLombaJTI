@@ -19,6 +19,7 @@ class Logbook extends Model
         'materi',
         'tindak_lanjut',
         'status_validasi',
+        'catatan_dosen',
     ];
 
     protected $casts = [
@@ -30,9 +31,12 @@ class Logbook extends Model
         return $this->belongsTo(PengajuanBimbingan::class, 'id_pengajuan', 'id_pengajuan');
     }
 
-    public function validasi(string $status = 'disetujui')
+    public function validasi(string $status = 'disetujui', ?string $catatanDosen = null)
     {
-        $this->update(['status_validasi' => $status]);
+        $this->update([
+            'status_validasi' => $status,
+            'catatan_dosen' => $catatanDosen,
+        ]);
 
         return $this;
     }

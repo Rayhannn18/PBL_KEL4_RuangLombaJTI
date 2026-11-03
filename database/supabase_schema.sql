@@ -102,6 +102,7 @@ CREATE TABLE IF NOT EXISTS logbook (
     materi TEXT NOT NULL,
     tindak_lanjut TEXT,
     status_validasi VARCHAR(30) DEFAULT 'menunggu', -- disetujui, menunggu, revisi
+    catatan_dosen TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
