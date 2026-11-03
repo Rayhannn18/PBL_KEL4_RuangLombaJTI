@@ -1022,10 +1022,10 @@
                     <div style="display: flex; flex-direction: column; gap: 18px;">
                         @foreach($pengajuanList as $item)
                             <div style="background: #F8FAFC; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 18px;">
-                                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
                                     <div>
-                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                            <h4 style="font-size: 1.1rem; font-weight: 800; color: var(--primary-dark); margin: 0;">
+                                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                            <h4 style="font-size: 1.15rem; font-weight: 800; color: var(--primary-dark); margin: 0;">
                                                 {{ $item->tim->nama_tim ?? '-' }}
                                             </h4>
                                             @if($item->status === 'disetujui')
@@ -1036,9 +1036,28 @@
                                                 <span class="badge badge-warning">Menunggu Konfirmasi</span>
                                             @endif
                                         </div>
-                                        <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 3px;">
-                                            Kompetisi: <strong>{{ $item->tim->lomba->nama_lomba ?? '-' }}</strong> &bull; Ketua: {{ $item->tim->ketua->nama ?? '-' }} (NIM: {{ $item->tim->nim }})
+
+                                        <!-- Info Lomba: Nama, Kategori, Tingkat, Tenggat -->
+                                        <div style="font-size: 0.84rem; color: var(--text-muted); margin-top: 6px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
+                                            <span>Kompetisi: <strong style="color: var(--primary-dark);">{{ $item->tim->lomba->nama_lomba ?? '-' }}</strong></span>
+                                            @if($item->tim->lomba)
+                                                <span class="badge badge-secondary" style="font-size: 0.72rem; padding: 3px 7px;">
+                                                    <i class="bi bi-tag-fill"></i> {{ $item->tim->lomba->kategori ?? 'Umum' }}
+                                                </span>
+                                                <span class="badge badge-info" style="font-size: 0.72rem; padding: 3px 7px;">
+                                                    <i class="bi bi-trophy"></i> {{ $item->tim->lomba->tingkat ?? 'Nasional' }}
+                                                </span>
+                                                <span class="badge badge-light text-dark" style="font-size: 0.72rem; padding: 3px 7px; border: 1px solid var(--border);">
+                                                    <i class="bi bi-calendar-event"></i> Tenggat: {{ $item->tim->lomba->tenggat ? \Carbon\Carbon::parse($item->tim->lomba->tenggat)->format('d M Y') : '-' }}
+                                                </span>
+                                            @endif
                                         </div>
+
+                                        @if($item->catatan)
+                                            <div style="margin-top: 8px; font-size: 0.8rem; background: #FFFBEB; border-left: 3px solid #F59E0B; padding: 6px 12px; border-radius: 4px; color: #92400E;">
+                                                <i class="bi bi-chat-quote-fill"></i> <strong>Catatan Pengajuan Tim:</strong> "{{ $item->catatan }}"
+                                            </div>
+                                        @endif
                                     </div>
 
                                     @if($item->status === 'menunggu')
@@ -1054,6 +1073,102 @@
                                             <button type="button" class="btn btn-danger btn-sm" onclick="openModalTolakPengajuan({{ $item->id_pengajuan }}, '{{ addslashes($item->tim->nama_tim ?? 'Tim Mahasiswa') }}')">
                                                 <i class="bi bi-x-lg"></i> Tolak Bimbingan
                                             </button>
+                                        </div>
+                                    @endif
+                                </div>
+
+                                <!-- Detail Susunan Anggota Tim & Unduh CV -->
+                                <div style="background: #FFFFFF; border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; margin-bottom: 12px;">
+                                    <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+                                        <i class="bi bi-people-fill text-primary"></i> Susunan Anggota Tim Bimbingan
+                                    </div>
+
+                                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px;">
+                                        <!-- Ketua Tim -->
+                                        <div style="background: #F8FAFC; border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center;">
+                                            <div>
+                                                <div style="display: flex; align-items: center; gap: 6px;">
+                                                    <span class="badge badge-primary" style="font-size: 0.68rem; padding: 2px 6px;">Ketua Tim</span>
+                                                    <strong style="font-size: 0.85rem; color: var(--primary-dark);">{{ $item->tim->ketua->nama ?? '-' }}</strong>
+                                                </div>
+                                                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 3px;">
+                                                    NIM: {{ $item->tim->nim }} &bull; Prodi: {{ $item->tim->ketua->prodi ?? '-' }}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                @if($item->tim->file_cv)
+                                                    <a href="{{ route('tim.cv', ['type' => 'ketua', 'id' => $item->tim->id_tim]) }}" target="_blank" class="btn btn-outline-primary btn-sm" style="padding: 3px 8px; font-size: 0.75rem;">
+                                                        <i class="bi bi-file-earmark-pdf"></i> Unduh CV
+                                                    </a>
+                                                @else
+                                                    <span style="font-size: 0.72rem; color: var(--text-muted); font-style: italic;">CV -</span>
+                                                @endif
+                                            </div>
+                                        </div>
+
+                                        <!-- Anggota Tim Diterima -->
+                                        @if($item->tim && $item->tim->anggotaDiterima->isNotEmpty())
+                                            @foreach($item->tim->anggotaDiterima as $ang)
+                                                <div style="background: #F8FAFC; border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center;">
+                                                    <div>
+                                                        <div style="display: flex; align-items: center; gap: 6px;">
+                                                            <span class="badge badge-secondary" style="font-size: 0.68rem; padding: 2px 6px;">{{ $ang->peran ?? 'Anggota' }}</span>
+                                                            <strong style="font-size: 0.85rem; color: var(--text-main);">{{ $ang->mahasiswa->nama ?? '-' }}</strong>
+                                                        </div>
+                                                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 3px;">
+                                                            NIM: {{ $ang->nim }} &bull; Prodi: {{ $ang->mahasiswa->prodi ?? '-' }}
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        @if($ang->file_cv)
+                                                            <a href="{{ route('tim.cv', ['type' => 'anggota', 'id' => $ang->id_anggota]) }}" target="_blank" class="btn btn-outline-primary btn-sm" style="padding: 3px 8px; font-size: 0.75rem;">
+                                                                <i class="bi bi-file-earmark-pdf"></i> Unduh CV
+                                                            </a>
+                                                        @else
+                                                            <span style="font-size: 0.72rem; color: var(--text-muted); font-style: italic;">CV -</span>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <!-- Progres Babak Terakhir -->
+                                @php
+                                    $latestProgres = $item->progresBabak->first();
+                                @endphp
+                                <div style="background: #FFFFFF; border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                                        <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">
+                                            <i class="bi bi-flag-fill text-warning"></i> Progres Babak Terakhir:
+                                        </div>
+                                        @if($latestProgres)
+                                            <span style="font-weight: 700; font-size: 0.86rem; color: var(--primary-dark);">
+                                                {{ $latestProgres->babak }}
+                                            </span>
+                                            <span style="font-size: 0.75rem; color: var(--text-muted);">
+                                                ({{ $latestProgres->tanggal_update ? $latestProgres->tanggal_update->format('d M Y') : '-' }})
+                                            </span>
+                                        @else
+                                            <span style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">
+                                                Belum ada laporan progres babak kompetisi
+                                            </span>
+                                        @endif
+                                    </div>
+
+                                    @if($latestProgres)
+                                        <div style="display: flex; align-items: center; gap: 6px;">
+                                            <span class="badge {{ str_contains(strtolower($latestProgres->hasil_akhir ?? ''), 'juara') ? 'badge-warning' : 'badge-primary' }}">
+                                                {{ $latestProgres->hasil_akhir ?? 'Sedang Berlangsung' }}
+                                            </span>
+                                            @if($latestProgres->status_setuju === 'disetujui')
+                                                <span class="badge badge-success"><i class="bi bi-check-circle"></i> Disetujui Dosen</span>
+                                            @elseif($latestProgres->status_setuju === 'ditolak')
+                                                <span class="badge badge-danger"><i class="bi bi-x-circle"></i> Ditolak</span>
+                                            @else
+                                                <span class="badge badge-warning"><i class="bi bi-clock"></i> Menunggu Validasi</span>
+                                            @endif
                                         </div>
                                     @endif
                                 </div>

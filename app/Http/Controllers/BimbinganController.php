@@ -172,7 +172,9 @@ class BimbinganController extends Controller
                     'logbook' => function ($q) {
                         $q->orderBy('tanggal', 'desc');
                     },
-                    'progresBabak',
+                    'progresBabak' => function ($q) {
+                        $q->orderBy('tanggal_update', 'desc')->orderBy('id_progres', 'desc');
+                    },
                 ])
                 ->latest()
                 ->get();
