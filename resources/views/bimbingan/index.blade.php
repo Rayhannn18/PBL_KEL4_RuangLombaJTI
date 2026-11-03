@@ -225,6 +225,76 @@
         justify-content: flex-end;
         gap: 10px;
     }
+
+    /* AI Dosen Recommendation Box */
+    .ai-rec-container {
+        background: linear-gradient(135deg, #EEF2FF 0%, #FAF5FF 100%);
+        border: 1px solid #C7D2FE;
+        border-radius: var(--radius-md);
+        padding: 16px;
+        margin-bottom: 20px;
+    }
+    .ai-rec-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .ai-rec-title {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: #3730A3;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .ai-rec-card {
+        background: #FFFFFF;
+        border: 1px solid #E0E7FF;
+        border-radius: var(--radius-sm);
+        padding: 12px 14px;
+        margin-bottom: 10px;
+        transition: all 0.2s ease;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+    .ai-rec-card:hover {
+        border-color: #6366F1;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.12);
+        transform: translateY(-1px);
+    }
+    .ai-rec-badge {
+        background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+        color: #FFFFFF;
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 3px 9px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        box-shadow: 0 1px 2px rgba(79, 70, 229, 0.2);
+    }
+    .ai-rec-btn {
+        background: #EEF2FF;
+        border: 1px solid #C7D2FE;
+        color: #4338CA;
+        font-size: 0.76rem;
+        font-weight: 600;
+        padding: 5px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .ai-rec-btn:hover {
+        background: #4F46E5;
+        color: #FFFFFF;
+        border-color: #4F46E5;
+    }
 </style>
 @endpush
 
@@ -587,38 +657,100 @@
                     <div class="card-body">
                         @if(! $pengajuan)
                             <!-- Sub-kondisi A: Belum mengajukan Dosen Pembimbing -->
-                            <div style="background: #FEF3C7; border: 1px solid #FDE68A; border-radius: var(--radius-sm); padding: 14px; margin-bottom: 18px; color: #92400E; font-size: 0.85rem;">
-                                <div style="font-weight: 700; margin-bottom: 2px;">
-                                    <i class="bi bi-exclamation-circle-fill"></i> Belum Memiliki Dosen Pembimbing
+                            @if($isKetua ?? ($selectedTim->nim === $authUser['id']))
+                                <div style="background: #FEF3C7; border: 1px solid #FDE68A; border-radius: var(--radius-sm); padding: 14px; margin-bottom: 18px; color: #92400E; font-size: 0.85rem;">
+                                    <div style="font-weight: 700; margin-bottom: 2px;">
+                                        <i class="bi bi-exclamation-circle-fill"></i> Belum Memiliki Dosen Pembimbing
+                                    </div>
+                                    Sebagai <strong>Ketua Tim</strong>, silakan pilih salah satu dosen di Jurusan Teknologi Informasi untuk diajukan sebagai pembimbing karya tim Anda.
                                 </div>
-                                Silakan pilih salah satu dosen di Jurusan Teknologi Informasi untuk diajukan sebagai pembimbing karya tim Anda.
-                            </div>
-
-                            <form action="{{ route('bimbingan.ajukan') }}" method="POST">
-                                @csrf
-                                <input type="hidden" name="id_tim" value="{{ $selectedTim->id_tim }}">
-
-                                <div class="form-group" style="margin-bottom: 14px;">
-                                    <label class="form-label">Pilih Dosen Pembimbing *</label>
-                                    <select name="nidn" class="form-select" required>
-                                        <option value="" disabled selected>-- Pilih Dosen JTI --</option>
-                                        @foreach($dosenList as $dsn)
-                                            <option value="{{ $dsn->nidn }}" {{ $dsn->sisa_kuota <= 0 ? 'disabled' : '' }}>
-                                                {{ $dsn->nama }} (Keahlian: {{ $dsn->bidang_keahlian }}) — Sisa Kuota: {{ $dsn->sisa_kuota }}
-                                            </option>
-                                        @endforeach
-                                    </select>
+                            @else
+                                <div style="background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: var(--radius-sm); padding: 16px; margin-bottom: 18px; color: #1E40AF; font-size: 0.85rem;">
+                                    <div style="font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                                        <i class="bi bi-shield-lock-fill"></i> Hak Akses Khusus Ketua Tim
+                                    </div>
+                                    Tim Anda saat ini belum memiliki dosen pembimbing. Hak memilih dan mengajukan dosen pembimbing hanya dimiliki oleh <strong>Ketua Tim ({{ $selectedTim->ketua->nama ?? 'Ketua Tim' }})</strong>.
                                 </div>
+                            @endif
 
-                                <div class="form-group" style="margin-bottom: 16px;">
-                                    <label class="form-label">Catatan / Rencana Ide Karya untuk Dosen (Opsional)</label>
-                                    <textarea name="catatan" rows="3" class="form-control" placeholder="Jelaskan ringkas ide atau judul proyek yang ingin dikembangkan bersama dosen..."></textarea>
+                            @if(isset($aiRekomendasi) && !empty($aiRekomendasi['top']))
+                                <div class="ai-rec-container">
+                                    <div class="ai-rec-header">
+                                        <div class="ai-rec-title">
+                                            <i class="bi bi-stars" style="color: #6366F1;"></i>
+                                            Rekomendasi AI Dosen Pembimbing
+                                        </div>
+                                        <span class="ai-rec-badge">
+                                            <i class="bi bi-cpu-fill"></i> Gemini AI
+                                        </span>
+                                    </div>
+                                    <p style="font-size: 0.79rem; color: #4B5563; margin-bottom: 12px; line-height: 1.4;">
+                                        Berdasarkan analisis kompetensi dengan bidang lomba <strong>{{ $selectedTim->lomba->nama_lomba ?? 'Kompetisi' }}</strong> (Kategori: <em>{{ $selectedTim->lomba->kategori ?? '-' }}</em>), berikut dosen yang paling cocok:
+                                    </p>
+
+                                    @foreach($aiRekomendasi['top'] as $recDsn)
+                                        <div class="ai-rec-card">
+                                            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 4px;">
+                                                <div>
+                                                    <strong style="font-size: 0.86rem; color: #1E293B;">{{ $recDsn['nama'] }}</strong>
+                                                    <div style="font-size: 0.75rem; color: #64748B;">
+                                                        Keahlian: {{ $recDsn['bidang_keahlian'] }} &bull; Sisa Kuota: {{ $recDsn['sisa_kuota'] }}
+                                                    </div>
+                                                </div>
+                                                <span style="background: #EEF2FF; color: #4338CA; font-weight: 700; font-size: 0.76rem; padding: 2px 8px; border-radius: 6px; border: 1px solid #C7D2FE; white-space: nowrap;">
+                                                    ⭐ {{ $recDsn['skor'] }}% Cocok
+                                                </span>
+                                            </div>
+                                            <div style="font-size: 0.78rem; color: #475569; font-style: italic; margin-bottom: 8px; line-height: 1.35;">
+                                                "{{ $recDsn['alasan'] }}"
+                                            </div>
+                                            <div style="text-align: right;">
+                                                @if($isKetua ?? ($selectedTim->nim === $authUser['id']))
+                                                    <button type="button" class="ai-rec-btn" onclick="pilihDosenAi('{{ $recDsn['nidn'] }}')">
+                                                        <i class="bi bi-check2-circle"></i> Pilih Dosen Ini
+                                                    </button>
+                                                @else
+                                                    <span style="font-size: 0.74rem; color: var(--text-muted); font-style: italic;">
+                                                        <i class="bi bi-info-circle"></i> Rekomendasi referensi anggota
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @endforeach
                                 </div>
+                            @endif
 
-                                <button type="submit" class="btn btn-primary" style="width: 100%;">
-                                    <i class="bi bi-send-fill"></i> Kirim Pengajuan Bimbingan
-                                </button>
-                            </form>
+                            @if($isKetua ?? ($selectedTim->nim === $authUser['id']))
+                                <form action="{{ route('bimbingan.ajukan') }}" method="POST">
+                                    @csrf
+                                    <input type="hidden" name="id_tim" value="{{ $selectedTim->id_tim }}">
+
+                                    <div class="form-group" style="margin-bottom: 14px;">
+                                        <label class="form-label">Pilih Dosen Pembimbing *</label>
+                                        <select name="nidn" id="dosenSelect" class="form-select" required>
+                                            <option value="" disabled selected>-- Pilih Dosen JTI --</option>
+                                            @foreach($dosenList as $dsn)
+                                                @php
+                                                    $recItem = $aiRekomendasi['map'][(string) $dsn->nidn] ?? null;
+                                                @endphp
+                                                <option value="{{ $dsn->nidn }}" {{ $dsn->sisa_kuota <= 0 ? 'disabled' : '' }}>
+                                                    @if($recItem && $recItem['is_top']) [⭐ AI Match: {{ $recItem['skor'] }}%] @endif
+                                                    {{ $dsn->nama }} (Keahlian: {{ $dsn->bidang_keahlian }}) — Sisa Kuota: {{ $dsn->sisa_kuota }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group" style="margin-bottom: 16px;">
+                                        <label class="form-label">Catatan / Rencana Ide Karya untuk Dosen (Opsional)</label>
+                                        <textarea name="catatan" rows="3" class="form-control" placeholder="Jelaskan ringkas ide atau judul proyek yang ingin dikembangkan bersama dosen..."></textarea>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary" style="width: 100%;">
+                                        <i class="bi bi-send-fill"></i> Kirim Pengajuan Bimbingan
+                                    </button>
+                                </form>
+                            @endif
 
                         @elseif($pengajuan->status === 'menunggu')
                             <!-- Sub-kondisi B: Pengajuan Sedang Menunggu Persetujuan Dosen -->
@@ -649,26 +781,39 @@
                                 Catatan Dosen: {{ $pengajuan->catatan ?? 'Silakan memilih dosen pembimbing lain.' }}
                             </div>
 
-                            <form action="{{ route('bimbingan.ajukan') }}" method="POST">
-                                @csrf
-                                <input type="hidden" name="id_tim" value="{{ $selectedTim->id_tim }}">
+                            @if($isKetua ?? ($selectedTim->nim === $authUser['id']))
+                                <form action="{{ route('bimbingan.ajukan') }}" method="POST">
+                                    @csrf
+                                    <input type="hidden" name="id_tim" value="{{ $selectedTim->id_tim }}">
 
-                                <div class="form-group" style="margin-bottom: 14px;">
-                                    <label class="form-label">Pilih Dosen Pengganti *</label>
-                                    <select name="nidn" class="form-select" required>
-                                        <option value="" disabled selected>-- Pilih Dosen JTI --</option>
-                                        @foreach($dosenList as $dsn)
-                                            <option value="{{ $dsn->nidn }}" {{ $dsn->sisa_kuota <= 0 ? 'disabled' : '' }}>
-                                                {{ $dsn->nama }} (Keahlian: {{ $dsn->bidang_keahlian }})
-                                            </option>
-                                        @endforeach
-                                    </select>
+                                    <div class="form-group" style="margin-bottom: 14px;">
+                                        <label class="form-label">Pilih Dosen Pengganti *</label>
+                                        <select name="nidn" id="dosenSelectPengganti" class="form-select" required>
+                                            <option value="" disabled selected>-- Pilih Dosen JTI --</option>
+                                            @foreach($dosenList as $dsn)
+                                                @php
+                                                    $recItem = $aiRekomendasi['map'][(string) $dsn->nidn] ?? null;
+                                                @endphp
+                                                <option value="{{ $dsn->nidn }}" {{ $dsn->sisa_kuota <= 0 ? 'disabled' : '' }}>
+                                                    @if($recItem && $recItem['is_top']) [⭐ AI Match: {{ $recItem['skor'] }}%] @endif
+                                                    {{ $dsn->nama }} (Keahlian: {{ $dsn->bidang_keahlian }}) — Sisa Kuota: {{ $dsn->sisa_kuota }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary" style="width: 100%;">
+                                        <i class="bi bi-send-fill"></i> Ajukan Dosen Lain
+                                    </button>
+                                </form>
+                            @else
+                                <div style="background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: var(--radius-sm); padding: 14px; margin-bottom: 16px; color: #1E40AF; font-size: 0.85rem;">
+                                    <div style="font-weight: 700; margin-bottom: 2px;">
+                                        <i class="bi bi-info-circle-fill"></i> Menunggu Pemilihan Dosen Pengganti
+                                    </div>
+                                    Hanya <strong>Ketua Tim ({{ $selectedTim->ketua->nama ?? 'Ketua Tim' }})</strong> yang memiliki wewenang untuk mengajukan dosen pembimbing pengganti.
                                 </div>
-
-                                <button type="submit" class="btn btn-primary" style="width: 100%;">
-                                    <i class="bi bi-send-fill"></i> Ajukan Dosen Lain
-                                </button>
-                            </form>
+                            @endif
 
                         @else
                             <!-- Sub-kondisi D: Bimbingan Resmi Disetujui -->
@@ -1157,6 +1302,15 @@
     function closeModalLogbook() {
         const modal = document.getElementById('modalLogbook');
         if (modal) modal.style.display = 'none';
+    }
+
+    function pilihDosenAi(nidn) {
+        const select = document.getElementById('dosenSelect') || document.getElementById('dosenSelectPengganti');
+        if (select) {
+            select.value = nidn;
+            select.focus();
+            select.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
     }
 
     // Tutup modal jika klik di luar box

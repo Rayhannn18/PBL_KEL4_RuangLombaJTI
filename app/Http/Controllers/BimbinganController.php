@@ -10,6 +10,7 @@ use App\Models\Lomba;
 use App\Models\PengajuanBimbingan;
 use App\Models\Tim;
 use App\Models\User;
+use App\Services\DosenRecommendationService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -121,6 +122,29 @@ class BimbinganController extends Controller
             // Daftar dosen yang tersedia untuk pengajuan pembimbing
             $dosenList = Dosen::with('pengajuanBimbingan')->get();
 
+            // Rekomendasi Dosen Pembimbing berbasis AI (Gemini) sesuai bidang lomba tim
+            $aiRekomendasi = [
+                'map' => [],
+                'top' => [],
+                'source' => 'none',
+            ];
+
+            if ($selectedTim && $selectedTim->lomba) {
+                /** @var DosenRecommendationService $recService */
+                $recService = app(DosenRecommendationService::class);
+                $aiRekomendasi = $recService->recommend($selectedTim->lomba, $dosenList);
+
+                // Urutkan daftar dosen agar rekomendasi AI teratas tampil paling awal
+                $dosenList = $dosenList->sortByDesc(function (Dosen $d) use ($aiRekomendasi) {
+                    $skor = $aiRekomendasi['map'][(string) $d->nidn]['skor'] ?? 0;
+
+                    // Dosen yang memiliki kuota diprioritaskan
+                    return ($d->sisa_kuota > 0 ? 1000 : 0) + $skor;
+                })->values();
+            }
+
+            $isKetua = ($selectedTim->nim === $authUser['id']);
+
             return view('bimbingan.index', [
                 'authUser' => $authUser,
                 'role' => 'mahasiswa',
@@ -129,6 +153,8 @@ class BimbinganController extends Controller
                 'selectedTim' => $selectedTim,
                 'pengajuan' => $pengajuan,
                 'dosenList' => $dosenList,
+                'aiRekomendasi' => $aiRekomendasi,
+                'isKetua' => $isKetua,
             ]);
         }
 
@@ -196,12 +222,9 @@ class BimbinganController extends Controller
 
         $tim = Tim::findOrFail($validated['id_tim']);
 
-        // Verifikasi bahwa user adalah ketua atau anggota tim
-        $isMember = ($tim->nim === $authUser['id']) ||
-            $tim->anggotaDiterima()->where('nim', $authUser['id'])->exists();
-
-        if (! $isMember) {
-            return back()->with('error', 'Anda tidak memiliki hak akses untuk tim ini.');
+        // Verifikasi bahwa user adalah ketua tim
+        if ($tim->nim !== $authUser['id']) {
+            return back()->with('error', 'Hanya Ketua Tim yang memiliki hak wewenang untuk memilih dan mengajukan Dosen Pembimbing.');
         }
 
         // Cek jika sudah ada pengajuan bimbingan aktif atau menunggu

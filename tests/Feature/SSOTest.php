@@ -21,6 +21,23 @@ class SSOTest extends TestCase
             ->assertSee('Kata Sandi SIAKAD');
     }
 
+    public function test_sso_portal_shows_rayhan_giri_as_demo_account(): void
+    {
+        Mahasiswa::create([
+            'nim' => '244107060122',
+            'nama' => 'Rayhan Giri',
+            'email_kampus' => 'rayhan.giri@student.polinema.ac.id',
+            'password' => Hash::make('password123'),
+            'prodi' => 'D-IV Sistem Informasi Bisnis',
+            'angkatan' => 2024,
+        ]);
+
+        $this->get(route('sso.login'))
+            ->assertOk()
+            ->assertSee('244107060122')
+            ->assertSee('Rayhan Giri');
+    }
+
     public function test_mahasiswa_can_login_via_sso_with_valid_siakad_credentials(): void
     {
         $mahasiswa = Mahasiswa::create([

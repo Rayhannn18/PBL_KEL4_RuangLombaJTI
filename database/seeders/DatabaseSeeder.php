@@ -105,7 +105,7 @@ class DatabaseSeeder extends Seeder
             ],
             [
                 'nim' => '244107060122',
-                'nama' => 'Rayhan Giri Putra',
+                'nama' => 'Rayhan Giri',
                 'email_kampus' => 'rayhan.giri@student.polinema.ac.id',
                 'password' => Hash::make('password123'),
                 'prodi' => 'D-IV Sistem Informasi Bisnis',

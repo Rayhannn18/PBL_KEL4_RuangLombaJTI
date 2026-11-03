@@ -26,7 +26,8 @@ class SSOController extends Controller
         $demoMahasiswa = collect();
         try {
             $demoMahasiswa = Mahasiswa::select('nim', 'nama', 'prodi')
-                ->limit(4)
+                ->whereIn('nim', ['244107060116', '244107060147', '244107060083', '244107060122'])
+                ->orderBy('nim')
                 ->get();
         } catch (\Throwable $e) {
             // Fallback list mahasiswa terdaftar agar halaman portal SSO tetap tampil sempurna
@@ -34,6 +35,7 @@ class SSOController extends Controller
                 (object) ['nim' => '244107060116', 'nama' => 'Sastra Maheva Zaky', 'prodi' => 'D-IV Sistem Informasi Bisnis'],
                 (object) ['nim' => '244107060147', 'nama' => 'Nadya Syantika Naraya', 'prodi' => 'D-IV Sistem Informasi Bisnis'],
                 (object) ['nim' => '244107060083', 'nama' => 'Gempita Fitri Nurdini', 'prodi' => 'D-IV Sistem Informasi Bisnis'],
+                (object) ['nim' => '244107060122', 'nama' => 'Rayhan Giri', 'prodi' => 'D-IV Sistem Informasi Bisnis'],
             ]);
         }
 

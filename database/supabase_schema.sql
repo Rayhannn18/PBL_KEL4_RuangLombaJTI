@@ -142,7 +142,7 @@ INSERT INTO mahasiswa (nim, nama, email_kampus, password, prodi, angkatan) VALUE
 ('244107060116', 'Sastra Maheva Zaky', 'sastra.maheva@student.polinema.ac.id', '$2y$12$jPlC939k0JVM.NEmWOo6UebSn0UPlSXF.xnpco1aIBPK6GfB4x83O', 'D-IV Sistem Informasi Bisnis', 2024),
 ('244107060147', 'Nadya Syantika Naraya', 'nadya.syantika@student.polinema.ac.id', '$2y$12$jPlC939k0JVM.NEmWOo6UebSn0UPlSXF.xnpco1aIBPK6GfB4x83O', 'D-IV Sistem Informasi Bisnis', 2024),
 ('244107060083', 'Gempita Fitri Nurdini', 'gempita.fitri@student.polinema.ac.id', '$2y$12$jPlC939k0JVM.NEmWOo6UebSn0UPlSXF.xnpco1aIBPK6GfB4x83O', 'D-IV Sistem Informasi Bisnis', 2024),
-('244107060122', 'Rayhan Giri Putra', 'rayhan.giri@student.polinema.ac.id', '$2y$12$jPlC939k0JVM.NEmWOo6UebSn0UPlSXF.xnpco1aIBPK6GfB4x83O', 'D-IV Sistem Informasi Bisnis', 2024),
+('244107060122', 'Rayhan Giri', 'rayhan.giri@student.polinema.ac.id', '$2y$12$jPlC939k0JVM.NEmWOo6UebSn0UPlSXF.xnpco1aIBPK6GfB4x83O', 'D-IV Sistem Informasi Bisnis', 2024),
 ('2341720055', 'Ahmad Fajar Pratama', 'ahmad.fajar@student.polinema.ac.id', '$2y$12$jPlC939k0JVM.NEmWOo6UebSn0UPlSXF.xnpco1aIBPK6GfB4x83O', 'D-IV Teknik Informatika', 2023),
 ('2341720089', 'Citra Dewi Kusuma', 'citra.dewi@student.polinema.ac.id', '$2y$12$jPlC939k0JVM.NEmWOo6UebSn0UPlSXF.xnpco1aIBPK6GfB4x83O', 'D-IV Teknik Informatika', 2023),
 ('254107060012', 'Bima Arya Nugraha', 'bima.arya@student.polinema.ac.id', '$2y$12$jPlC939k0JVM.NEmWOo6UebSn0UPlSXF.xnpco1aIBPK6GfB4x83O', 'D-IV Sistem Informasi Bisnis', 2025),
