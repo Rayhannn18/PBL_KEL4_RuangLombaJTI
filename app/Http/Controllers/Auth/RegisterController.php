@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Models\Dosen;
 use App\Models\Mahasiswa;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -33,6 +34,16 @@ class RegisterController extends Controller
                 'angkatan' => (int) $data['angkatan'],
             ]);
 
+            User::create([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'password' => Hash::make($data['password']),
+                'role' => UserRole::Mahasiswa,
+                'nim_nip' => $data['nim_nip'],
+                'prodi' => $data['prodi'],
+                'angkatan' => (int) $data['angkatan'],
+            ]);
+
             session([
                 'auth_user' => [
                     'id' => $mahasiswa->nim,
@@ -52,8 +63,18 @@ class RegisterController extends Controller
                 'nama' => $data['name'],
                 'email_kampus' => $data['email'],
                 'password' => Hash::make($data['password']),
-                'bidang_keahlian' => 'Dosen JTI',
+                'bidang_keahlian' => 'Belum Diatur (Silakan Lengkapi Profil)',
                 'kuota_bimbingan' => 5,
+            ]);
+
+            User::create([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'password' => Hash::make($data['password']),
+                'role' => UserRole::Dosen,
+                'nim_nip' => $data['nim_nip'],
+                'prodi' => null,
+                'angkatan' => null,
             ]);
 
             session([
@@ -67,6 +88,10 @@ class RegisterController extends Controller
             ]);
 
             Auth::loginUsingId($dosen->nidn);
+
+            $request->session()->regenerate();
+
+            return redirect()->route('dosen.profil')->with('info', 'Selamat datang! Silakan lengkapi bidang keahlian dan kuota bimbingan Anda.');
         }
 
         $request->session()->regenerate();

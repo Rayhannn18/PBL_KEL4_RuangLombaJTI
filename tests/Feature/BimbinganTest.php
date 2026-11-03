@@ -180,6 +180,8 @@ class BimbinganTest extends TestCase
      */
     public function test_mahasiswa_melihat_rekomendasi_ai_dosen_pembimbing(): void
     {
+        config(['services.gemini.api_key' => 'test-key']);
+
         Http::fake([
             'generativelanguage.googleapis.com/*' => Http::response([
                 'candidates' => [

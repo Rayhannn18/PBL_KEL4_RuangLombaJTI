@@ -1051,13 +1051,9 @@
                                                 </button>
                                             </form>
 
-                                            <form action="{{ route('bimbingan.pengajuan.respon', $item->id_pengajuan) }}" method="POST">
-                                                @csrf
-                                                <input type="hidden" name="status" value="ditolak">
-                                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Apakah Anda yakin ingin menolak pengajuan bimbingan ini?')">
-                                                    <i class="bi bi-x-lg"></i> Tolak
-                                                </button>
-                                            </form>
+                                            <button type="button" class="btn btn-danger btn-sm" onclick="openModalTolakPengajuan({{ $item->id_pengajuan }}, '{{ addslashes($item->tim->nama_tim ?? 'Tim Mahasiswa') }}')">
+                                                <i class="bi bi-x-lg"></i> Tolak Bimbingan
+                                            </button>
                                         </div>
                                     @endif
                                 </div>
@@ -1274,6 +1270,44 @@
         </div>
     @endif
 
+    {{-- ========================================================================= --}}
+    {{-- MODAL 3: Form Penolakan Pengajuan Bimbingan dengan Catatan Alasan Dosen   --}}
+    {{-- ========================================================================= --}}
+    @if($role === 'dosen' || $role === 'admin')
+        <div id="modalTolakPengajuan" class="modal-backdrop-custom" style="display: none;">
+            <div class="modal-box">
+                <div class="modal-header-custom">
+                    <div style="font-weight: 800; font-size: 1.05rem; color: #991B1B;">
+                        <i class="bi bi-x-circle-fill" style="color: #DC2626;"></i> Tolak Pengajuan Bimbingan
+                    </div>
+                    <button type="button" onclick="closeModalTolakPengajuan()" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+                </div>
+                <form id="formTolakPengajuan" action="" method="POST">
+                    @csrf
+                    <input type="hidden" name="status" value="ditolak">
+
+                    <div class="modal-body-custom">
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">
+                            Anda akan menolak pengajuan bimbingan dari <strong id="namaTimTolak">Tim Mahasiswa</strong>. Silakan tuliskan alasan penolakan agar tim mahasiswa dapat memahami dan melakukan evaluasi.
+                        </p>
+
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Alasan Penolakan (Wajib) *</label>
+                            <textarea name="catatan" id="catatanTolak" rows="4" class="form-control" placeholder="Contoh: Maaf, topik lomba kurang sesuai dengan bidang fokus saya saat ini, silakan berkonsultasi dengan dosen bidang AI/Cyber Security..." maxlength="500" required></textarea>
+                            <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; text-align: right;">Maksimal 500 karakter</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer-custom">
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="closeModalTolakPengajuan()">Batal</button>
+                        <button type="submit" class="btn btn-danger btn-sm">
+                            <i class="bi bi-x-circle-fill"></i> Konfirmasi Penolakan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endif
+
 @endsection
 
 @push('scripts')
@@ -1304,6 +1338,25 @@
         if (modal) modal.style.display = 'none';
     }
 
+    function openModalTolakPengajuan(idPengajuan, namaTim) {
+        const modal = document.getElementById('modalTolakPengajuan');
+        const form = document.getElementById('formTolakPengajuan');
+        const labelTim = document.getElementById('namaTimTolak');
+        const textarea = document.getElementById('catatanTolak');
+
+        if (modal && form) {
+            form.action = `/bimbingan/pengajuan/${idPengajuan}/respon`;
+            if (labelTim) labelTim.textContent = namaTim;
+            if (textarea) textarea.value = '';
+            modal.style.display = 'flex';
+        }
+    }
+
+    function closeModalTolakPengajuan() {
+        const modal = document.getElementById('modalTolakPengajuan');
+        if (modal) modal.style.display = 'none';
+    }
+
     function pilihDosenAi(nidn) {
         const select = document.getElementById('dosenSelect') || document.getElementById('dosenSelectPengganti');
         if (select) {
@@ -1317,8 +1370,10 @@
     window.addEventListener('click', function(e) {
         const modalDaftar = document.getElementById('modalDaftarTim');
         const modalLogbook = document.getElementById('modalLogbook');
+        const modalTolak = document.getElementById('modalTolakPengajuan');
         if (e.target === modalDaftar) closeModalDaftarTim();
         if (e.target === modalLogbook) closeModalLogbook();
+        if (e.target === modalTolak) closeModalTolakPengajuan();
     });
 </script>
 @endpush

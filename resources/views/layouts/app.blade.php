@@ -528,6 +528,11 @@
                                 <i class="bi bi-person-video3"></i> Modul Bimbingan
                             </a>
                         </li>
+                        <li>
+                            <a href="{{ route('dosen.profil') }}" class="nav-link {{ request()->routeIs('dosen.profil*') ? 'active' : '' }}">
+                                <i class="bi bi-person-badge"></i> Profil Pembimbing
+                            </a>
+                        </li>
                     @elseif($userRole === 'admin')
                         <li>
                             <a href="{{ route('bimbingan.index') }}" class="nav-link {{ request()->routeIs('bimbingan.*') ? 'active' : '' }}">

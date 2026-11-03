@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\UserRole;
+use App\Http\Requests\ResponPengajuanRequest;
 use App\Models\AnggotaTim;
 use App\Models\Dosen;
 use App\Models\Logbook;
@@ -15,6 +16,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class BimbinganController extends Controller
 {
@@ -328,32 +330,56 @@ class BimbinganController extends Controller
     /**
      * Dosen / Admin Merespon Pengajuan Bimbingan (Setujui / Tolak)
      */
-    public function responPengajuan(Request $request, $id)
+    public function responPengajuan(ResponPengajuanRequest $request, $id)
     {
-        $validated = $request->validate([
-            'status' => 'required|in:disetujui,ditolak',
-            'catatan' => 'nullable|string|max:500',
-        ]);
-
+        $validated = $request->validated();
         $authUser = $this->authUser();
+
         if (! $authUser || ! in_array($authUser['role'], ['dosen', 'admin'])) {
             return back()->with('error', 'Hanya Dosen Pembimbing atau Administrator yang berhak merespons pengajuan bimbingan.');
         }
 
-        $pengajuan = PengajuanBimbingan::with('tim')->findOrFail($id);
+        return DB::transaction(function () use ($validated, $authUser, $id) {
+            /** @var PengajuanBimbingan $pengajuan */
+            $pengajuan = PengajuanBimbingan::with('tim')->lockForUpdate()->findOrFail($id);
 
-        if ($authUser['role'] === 'dosen' && $pengajuan->nidn !== $authUser['id']) {
-            return back()->with('error', 'Anda hanya dapat merespons pengajuan bimbingan yang ditujukan kepada Anda.');
-        }
+            // 1. Otorisasi per dosen pembimbing
+            if ($authUser['role'] === 'dosen' && $pengajuan->nidn !== $authUser['id']) {
+                return back()->with('error', 'Anda hanya dapat merespons pengajuan bimbingan yang ditujukan kepada Anda.');
+            }
 
-        $pengajuan->update([
-            'status' => $validated['status'],
-            'catatan' => $validated['catatan'] ?? $pengajuan->catatan,
-        ]);
+            // 2. Cegah respon ganda: hanya pengajuan berstatus 'menunggu' yang boleh direspon
+            if ($pengajuan->status !== 'menunggu') {
+                return back()->with('error', "Pengajuan bimbingan ini sudah direspons sebelumnya dengan status '{$pengajuan->status}'.");
+            }
 
-        $statusTeks = $validated['status'] === 'disetujui' ? 'disetujui' : 'ditolak';
+            // 3. Jika menyetujui: cek sisa kuota bimbingan dosen dengan lockForUpdate
+            if ($validated['status'] === 'disetujui') {
+                $dosen = Dosen::where('nidn', $pengajuan->nidn)->lockForUpdate()->first();
 
-        return back()->with('success', "Pengajuan bimbingan tim {$pengajuan->tim->nama_tim} telah {$statusTeks}.");
+                if (! $dosen) {
+                    return back()->with('error', 'Data Dosen Pembimbing tidak ditemukan.');
+                }
+
+                $bimbinganAktifCount = PengajuanBimbingan::where('nidn', $dosen->nidn)
+                    ->where('status', 'disetujui')
+                    ->count();
+
+                if ($bimbinganAktifCount >= $dosen->kuota_bimbingan) {
+                    return back()->with('error', "Kuota bimbingan untuk {$dosen->nama} sudah penuh (Maks: {$dosen->kuota_bimbingan} tim). Tidak dapat menerima pengajuan ini.");
+                }
+            }
+
+            // 4. Update status dan catatan alasan
+            $pengajuan->update([
+                'status' => $validated['status'],
+                'catatan' => $validated['catatan'] ?? ($validated['status'] === 'disetujui' ? 'Bimbingan resmi diterima oleh Dosen Pembimbing.' : $pengajuan->catatan),
+            ]);
+
+            $statusTeks = $validated['status'] === 'disetujui' ? 'disetujui' : 'ditolak';
+
+            return back()->with('success', "Pengajuan bimbingan tim {$pengajuan->tim->nama_tim} telah {$statusTeks}.");
+        });
     }
 
     /**

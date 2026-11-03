@@ -51,7 +51,7 @@ class AuthenticationTest extends TestCase
             'name' => 'Dr. Eng. Rosa Andrie Asmara, S.T., M.T.',
             'nim_nip' => '198010102005012001',
             'email' => 'rosa.andrie@polinema.ac.id',
-        ]))->assertRedirect('/dashboard');
+        ]))->assertRedirect(route('dosen.profil'));
 
         $dosen = User::firstOrFail();
         $this->assertSame(UserRole::Dosen, $dosen->role);

@@ -45,6 +45,21 @@ class DosenRecommendationService
     }
 
     /**
+     * Hapus cache rekomendasi AI secara terarah untuk seluruh lomba
+     * tanpa melakukan Cache::flush() global.
+     */
+    public static function clearAllRecommendationsCache(): void
+    {
+        try {
+            Lomba::pluck('id_lomba')->each(function ($id) {
+                Cache::forget("ai_dosen_rec_v1_{$id}");
+            });
+        } catch (\Throwable $e) {
+            Log::warning('Gagal membersihkan cache rekomendasi dosen: '.$e->getMessage());
+        }
+    }
+
+    /**
      * Panggil Google Gemini API untuk menganalisis kecocokan bidang lomba dengan dosen.
      *
      * @param  Collection<int, Dosen>  $dosenList

@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\SSOController;
 use App\Http\Controllers\BimbinganController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DosenController;
 use App\Http\Controllers\LombaController;
 use App\Http\Controllers\TimController;
 use Illuminate\Support\Facades\Route;
@@ -78,7 +79,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/bimbingan', [BimbinganController::class, 'index'])->name('bimbingan.index');
     Route::post('/bimbingan/ajukan', [BimbinganController::class, 'ajukan'])->name('bimbingan.ajukan');
     Route::post('/bimbingan/logbook', [BimbinganController::class, 'storeLogbook'])->name('bimbingan.logbook.store');
-    Route::post('/bimbingan/logbook/{id}/validasi', [BimbinganController::class, 'validasiLogbook'])->name('bimbingan.logbook.validasi');
-    Route::post('/bimbingan/pengajuan/{id}/respon', [BimbinganController::class, 'responPengajuan'])->name('bimbingan.pengajuan.respon');
+    Route::post('/bimbingan/logbook/{id}/validasi', [BimbinganController::class, 'validasiLogbook'])->middleware('dosen')->name('bimbingan.logbook.validasi');
+    Route::post('/bimbingan/pengajuan/{id}/respon', [BimbinganController::class, 'responPengajuan'])->middleware('dosen')->name('bimbingan.pengajuan.respon');
     Route::post('/bimbingan/daftar-tim-cepat', [BimbinganController::class, 'gabungLombaCepat'])->name('bimbingan.daftar_tim');
+
+    // Profil & Pengaturan Kuota Dosen Pembimbing
+    Route::middleware('dosen')->prefix('dosen')->name('dosen.')->group(function () {
+        Route::get('/profil', [DosenController::class, 'profil'])->name('profil');
+        Route::put('/profil', [DosenController::class, 'updateProfil'])->name('profil.update');
+    });
 });
