@@ -931,7 +931,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                            <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);">
                                 <i class="bi bi-inbox" style="font-size: 2.2rem; display: block; margin-bottom: 8px;"></i>
                                 Tidak ditemukan data lomba yang sesuai dengan kriteria filter atau pencarian saat ini.
                             </td>
@@ -985,11 +985,10 @@
                         <th style="width: 50px;">ID</th>
                         <th>Nama Tim</th>
                         <th>Lomba yang Diikuti</th>
-                        <th>Ketua Tim (NIM & Prodi)</th>
-                        <th>Anggota Terdaftar</th>
-                        <th>Dosen Pembimbing</th>
+                        <th>Ketua Tim</th>
+                        <th>Kuota Anggota Tim</th>
                         <th>Status Tim</th>
-                        <th style="text-align: right; width: 170px;">Aksi Persetujuan</th>
+                        <th style="text-align: right; width: 180px;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -998,6 +997,12 @@
                             <td style="font-weight: 700; color: #94A3B8;">#{{ $tim->id_tim }}</td>
                             <td>
                                 <div style="font-weight: 700; color: var(--primary-dark);">{{ $tim->nama_tim }}</div>
+                                @if(!empty($tim->catatan))
+                                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 3px;"
+                                         title="{{ $tim->catatan }}">
+                                        {{ \Illuminate\Support\Str::limit($tim->catatan, 80) }}
+                                    </div>
+                                @endif
                                 <span style="font-size: 0.72rem; color: var(--text-muted);">
                                     Dibuat: {{ $tim->created_at ? $tim->created_at->format('d M Y') : '-' }}
                                 </span>
@@ -1010,34 +1015,27 @@
                                 @if($tim->ketua)
                                     <div style="font-weight: 700;">{{ $tim->ketua->nama }}</div>
                                     <div style="font-size: 0.75rem; color: var(--text-muted);">
-                                        NIM: {{ $tim->ketua->nim }} • {{ $tim->ketua->prodi }}
+                                        {{ $tim->ketua->nim }} &bull; {{ $tim->ketua->prodi }}
+                                    </div>
+                                    <div style="margin-top: 4px;">
+                                        @if($tim->file_cv)
+                                            <a href="{{ route('tim.cv', ['type' => 'ketua', 'id' => $tim->id_tim]) }}"
+                                               target="_blank"
+                                               style="font-size: 0.72rem; color: #2563EB; display: inline-flex; align-items: center; gap: 3px;">
+                                                <i class="bi bi-file-earmark-pdf-fill"></i> Lihat CV
+                                            </a>
+                                        @else
+                                            <span style="font-size: 0.72rem; color: var(--text-muted);">-</span>
+                                        @endif
                                     </div>
                                 @else
                                     <span style="color: var(--text-muted);">-</span>
                                 @endif
                             </td>
                             <td>
-                                <div style="display: flex; align-items: center; gap: 6px;">
-                                    <span class="badge {{ $tim->anggota->count() >= $tim->kuota_anggota ? 'badge-success' : 'badge-primary' }}">
-                                        {{ $tim->anggota->count() }} / {{ $tim->kuota_anggota }} Orang
-                                    </span>
-                                </div>
-                                <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">
-                                    Sisa Kuota: {{ $tim->sisa_kuota_anggota }} slot
-                                </div>
-                            </td>
-                            <td>
-                                @php
-                                    $bimbingan = $tim->pengajuanBimbingan->first();
-                                @endphp
-                                @if($bimbingan && $bimbingan->dosen)
-                                    <div style="font-size: 0.82rem; font-weight: 600;">{{ $bimbingan->dosen->nama }}</div>
-                                    <span class="badge {{ $bimbingan->status === 'disetujui' ? 'badge-success' : 'badge-warning' }}" style="font-size: 0.68rem;">
-                                        {{ ucfirst($bimbingan->status) }}
-                                    </span>
-                                @else
-                                    <span style="font-size: 0.78rem; color: var(--text-muted);">Belum ada pembimbing</span>
-                                @endif
+                                <span class="badge badge-primary" style="font-size: 0.8rem;">
+                                    {{ $tim->kuota_anggota }} Orang
+                                </span>
                             </td>
                             <td>
                                 @if($tim->status_tim === 'disetujui')
@@ -1059,7 +1057,7 @@
                                                 <i class="bi bi-check-lg"></i> Setujui
                                             </button>
                                         </form>
-                                        <form action="{{ route('admin.tim.verifikasi', $tim->id_tim) }}" method="POST" style="margin: 0;">
+                                        <form action="{{ route('admin.tim.verifikasi', $tim->id_tim) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menolak pengajuan tim ini?');" style="margin: 0;">
                                             @csrf
                                             <input type="hidden" name="status" value="ditolak">
                                             <button type="submit" class="btn btn-danger btn-sm" title="Tolak Pengajuan Tim">
@@ -1077,7 +1075,7 @@
                                                 </button>
                                             </form>
                                         @elseif($tim->status_tim === 'disetujui')
-                                            <form action="{{ route('admin.tim.verifikasi', $tim->id_tim) }}" method="POST" style="margin: 0;">
+                                            <form action="{{ route('admin.tim.verifikasi', $tim->id_tim) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menolak tim ini?');" style="margin: 0;">
                                                 @csrf
                                                 <input type="hidden" name="status" value="ditolak">
                                                 <button type="submit" class="btn btn-secondary btn-sm" style="color: var(--danger);" title="Tolak Tim">
@@ -1088,7 +1086,7 @@
                                     @endif
 
                                     <!-- Hapus Tim -->
-                                    <form action="{{ route('admin.tim.destroy', $tim->id_tim) }}" method="POST" onsubmit="return confirm('Hapus data tim ini?');" style="margin: 0;">
+                                    <form action="{{ route('admin.tim.destroy', $tim->id_tim) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data tim ini?');" style="margin: 0;">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-secondary btn-sm" style="color: var(--danger);" title="Hapus Tim">
@@ -1100,7 +1098,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                            <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);">
                                 <i class="bi bi-people" style="font-size: 2.2rem; display: block; margin-bottom: 8px;"></i>
                                 Tidak ditemukan data tim lomba yang sesuai dengan filter saat ini.
                             </td>

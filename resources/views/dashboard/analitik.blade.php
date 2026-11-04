@@ -201,6 +201,9 @@
                 $userRoleVal = $currentUser ? ($currentUser->role instanceof \App\Enums\UserRole ? $currentUser->role->value : (string) $currentUser->role) : ($sessionUser['role'] ?? null);
                 $userRoleLabel = $currentUser ? ($currentUser->role instanceof \App\Enums\UserRole ? $currentUser->role->label() : ucfirst($userRoleVal ?? '')) : ucfirst($sessionUser['role'] ?? '');
                 $userId = $currentUser->nim_nip ?? ($sessionUser['id'] ?? null);
+                if ($userRoleVal === 'mahasiswa' && \App\Models\Tim::ketuaDisetujui($userId)) {
+                    $userRoleLabel = 'Ketua Tim';
+                }
             @endphp
             @if($userName)
                 <div class="dashboard-header-user">

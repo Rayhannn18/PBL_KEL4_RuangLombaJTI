@@ -254,6 +254,22 @@ class TimController extends Controller
         }
 
         $validated = $validator->validated();
+        $nim = $authUser['id'];
+
+        // Cek duplikasi pengajuan: satu mahasiswa tidak boleh punya tim aktif/menunggu
+        // untuk lomba yang sama. Jika sebelumnya ditolak, boleh mengajukan lagi.
+        $pengajuanAktif = Tim::where('nim', $nim)
+            ->where('id_lomba', $validated['id_lomba'])
+            ->whereIn('status_tim', ['menunggu_persetujuan', 'disetujui'])
+            ->first();
+
+        if ($pengajuanAktif) {
+            $statusLabel = $pengajuanAktif->status_tim === 'disetujui' ? 'sudah disetujui' : 'sedang menunggu persetujuan admin';
+            return back()->withInput()->withErrors([
+                'id_lomba' => "Anda sudah memiliki tim \"{$pengajuanAktif->nama_tim}\" untuk lomba ini yang {$statusLabel}. Satu mahasiswa hanya dapat memimpin satu tim per lomba.",
+            ]);
+        }
+
         $lomba = Lomba::findOrFail($validated['id_lomba']);
 
         $cvPath = null;
@@ -267,8 +283,9 @@ class TimController extends Controller
                     'id_lomba' => $lomba->id_lomba,
                     'nim' => $authUser['id'],
                     'kuota_anggota' => (int) $validated['kuota_anggota'],
-                    'status_tim' => 'disetujui',
+                    'status_tim' => 'menunggu_persetujuan',
                     'file_cv' => $cvPath,
+                    'catatan' => $validated['catatan'],
                 ]);
 
                 // Ketua tim otomatis terdaftar sebagai anggota resmi pertama
@@ -285,8 +302,8 @@ class TimController extends Controller
 
             Cache::flush();
 
-            return redirect()->route('bimbingan.index', ['tim_id' => $tim->id_tim])
-                ->with('success', "Selamat! Tim '{$tim->nama_tim}' berhasil dibentuk untuk ajang '{$lomba->nama_lomba}'. Anda kini aktif sebagai Ketua Tim.");
+            return redirect()->route('tim.index')
+                ->with('success', "Pengajuan tim \"{$tim->nama_tim}\" untuk lomba \"{$lomba->nama_lomba}\" berhasil dikirim dan sedang menunggu persetujuan admin. Badge Ketua Tim akan aktif setelah pengajuan disetujui.");
         } catch (\Throwable $e) {
             if ($cvPath && Storage::disk('public')->exists($cvPath)) {
                 Storage::disk('public')->delete($cvPath);
@@ -313,6 +330,11 @@ class TimController extends Controller
 
         $tim = Tim::with(['lomba', 'ketua', 'anggotaDiterima.mahasiswa', 'anggota'])->findOrFail($id);
         $nim = $authUser['id'];
+
+        // Cek 0: Tim harus sudah disetujui agar dapat menerima pelamar
+        if ($tim->status_tim !== 'disetujui') {
+            return redirect()->route('tim.lowongan')->with('error', 'Tim ini belum disetujui dan tidak membuka lowongan anggota.');
+        }
 
         // Cek 1: Mahasiswa tidak boleh mendaftar ke tim yang diketuainya sendiri
         if ($tim->nim === $nim) {
@@ -389,6 +411,11 @@ class TimController extends Controller
 
         $tim = Tim::with(['anggotaDiterima', 'anggota'])->findOrFail($id);
         $nim = $authUser['id'];
+
+        // Cek 0: Tim harus sudah disetujui agar dapat menerima pelamar
+        if ($tim->status_tim !== 'disetujui') {
+            return back()->with('error', 'Tim ini belum disetujui dan tidak membuka lowongan anggota.');
+        }
 
         // Cek 1: Mahasiswa tidak boleh mendaftar ke tim yang diketuainya sendiri
         if ($tim->nim === $nim) {
@@ -476,6 +503,11 @@ class TimController extends Controller
         // Hanya ketua tim yang bersangkutan yang dapat memvalidasi pengajuan
         if ($anggota->tim->nim !== $authUser['id']) {
             return back()->with('error', 'Hanya Ketua Tim yang berhak menyetujui atau menolak calon anggota.');
+        }
+
+        // Tim harus berstatus disetujui agar bisa menerima anggota
+        if ($anggota->tim->status_tim !== 'disetujui') {
+            return back()->with('error', 'Tim ini belum disetujui oleh admin, sehingga belum dapat menerima anggota.');
         }
 
         if ($validated['status'] === 'diterima') {

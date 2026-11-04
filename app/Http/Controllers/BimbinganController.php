@@ -76,12 +76,14 @@ class BimbinganController extends Controller
             $nim = $authUser['id'];
 
             // Cari seluruh tim di mana mahasiswa ini adalah Ketua atau Anggota yang diterima dalam 1 query tunggal
-            $timList = Tim::where(function ($q) use ($nim) {
-                $q->where('nim', $nim)
-                    ->orWhereHas('anggotaDiterima', function ($sub) use ($nim) {
-                        $sub->where('nim', $nim);
-                    });
-            })
+            // Hanya tim berstatus 'disetujui' yang dianggap aktif untuk modul bimbingan
+            $timList = Tim::where('status_tim', 'disetujui')
+                ->where(function ($q) use ($nim) {
+                    $q->where('nim', $nim)
+                        ->orWhereHas('anggotaDiterima', function ($sub) use ($nim) {
+                            $sub->where('nim', $nim);
+                        });
+                })
                 ->with(['lomba', 'ketua', 'bimbinganDisetujui.dosen', 'pengajuanBimbingan.dosen', 'anggotaDiterima.mahasiswa', 'anggota.mahasiswa'])
                 ->get();
 
@@ -277,6 +279,11 @@ class BimbinganController extends Controller
         }
 
         $tim = Tim::findOrFail($validated['id_tim']);
+
+        // Tim harus sudah disetujui admin sebelum dapat mengajukan dosen pembimbing
+        if ($tim->status_tim !== 'disetujui') {
+            return back()->with('error', 'Tim ini belum disetujui oleh admin. Pengajuan dosen pembimbing hanya dapat dilakukan setelah tim disetujui.');
+        }
 
         // Verifikasi bahwa user adalah ketua tim
         if ($tim->nim !== $authUser['id']) {
@@ -550,6 +557,21 @@ class BimbinganController extends Controller
         }
 
         $lomba = Lomba::findOrFail($validated['id_lomba']);
+        $nim = $authUser['id'];
+
+        // Cek duplikasi pengajuan untuk lomba yang sama
+        $pengajuanAktif = Tim::where('nim', $nim)
+            ->where('id_lomba', $validated['id_lomba'])
+            ->whereIn('status_tim', ['menunggu_persetujuan', 'disetujui'])
+            ->first();
+
+        if ($pengajuanAktif) {
+            $statusLabel = $pengajuanAktif->status_tim === 'disetujui' ? 'sudah disetujui' : 'sedang menunggu persetujuan admin';
+
+            return back()->withInput()->withErrors([
+                'id_lomba' => "Anda sudah memiliki tim \"{$pengajuanAktif->nama_tim}\" untuk lomba ini yang {$statusLabel}. Satu mahasiswa hanya dapat memimpin satu tim per lomba.",
+            ]);
+        }
 
         // Buat tim baru dengan mahasiswa yang sedang login sebagai ketua tim
         $tim = Tim::create([
@@ -557,7 +579,7 @@ class BimbinganController extends Controller
             'id_lomba' => $lomba->id_lomba,
             'nim' => $authUser['id'],
             'kuota_anggota' => $validated['kuota_anggota'] ?? 3,
-            'status_tim' => 'disetujui',
+            'status_tim' => 'menunggu_persetujuan',
         ]);
 
         // Daftarkan ketua juga sebagai anggota tim utama dengan status diterima
@@ -570,7 +592,7 @@ class BimbinganController extends Controller
 
         Cache::flush();
 
-        return redirect()->route('bimbingan.index', ['tim_id' => $tim->id_tim])
-            ->with('success', "Selamat! Tim '{$tim->nama_tim}' berhasil didaftarkan untuk kompetisi '{$lomba->nama_lomba}'. Modul bimbingan Anda kini telah aktif!");
+        return redirect()->route('tim.index')
+            ->with('success', "Pengajuan tim \"{$tim->nama_tim}\" untuk lomba \"{$lomba->nama_lomba}\" berhasil dikirim dan sedang menunggu persetujuan admin. Modul bimbingan akan aktif setelah tim disetujui.");
     }
 }

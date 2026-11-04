@@ -460,6 +460,10 @@
                     @php
                         $userRoleVal = auth()->user()->role instanceof \App\Enums\UserRole ? auth()->user()->role->value : (string) auth()->user()->role;
                         $userRoleLabel = auth()->user()->role instanceof \App\Enums\UserRole ? auth()->user()->role->label() : ucfirst($userRoleVal);
+                        $nim = session('auth_user.id') ?? auth()->user()->nim_nip;
+                        if ($userRoleVal === 'mahasiswa' && \App\Models\Tim::ketuaDisetujui($nim)) {
+                            $userRoleLabel = 'Ketua Tim';
+                        }
                     @endphp
                     <span style="display: flex; align-items: center; gap: 6px;">
                         <i class="bi bi-person-check-fill" style="color: #6EE7B7;"></i>

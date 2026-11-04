@@ -91,7 +91,7 @@ class AdminController extends Controller
         $timList = collect();
 
         if ($currentTab === 'tim') {
-            $timQuery = Tim::with(['lomba', 'ketua', 'anggota.mahasiswa', 'admin', 'pengajuanBimbingan.dosen'])->latest();
+            $timQuery = Tim::with(['lomba', 'ketua', 'admin'])->latest();
 
             if ($timStatusFilter !== 'semua') {
                 $timQuery->where('status_tim', $timStatusFilter);
@@ -403,6 +403,19 @@ class AdminController extends Controller
         $tim = Tim::with('ketua')->findOrFail($id);
         $adminId = session('auth_user.id');
         $status = $request->status;
+
+        // Tolak jika status_tim sudah sama dengan yang diminta
+        if ($tim->status_tim === $status) {
+            $labelMap = [
+                'disetujui' => 'disetujui',
+                'ditolak' => 'ditolak',
+                'menunggu_persetujuan' => 'menunggu persetujuan',
+            ];
+            $label = $labelMap[$status] ?? $status;
+
+            return redirect()->route('admin.index', ['tab' => 'tim'])
+                ->with('error', "Status tim \"{$tim->nama_tim}\" sudah {$label}, tidak ada perubahan yang dilakukan.");
+        }
 
         $tim->update([
             'status_tim' => $status,
