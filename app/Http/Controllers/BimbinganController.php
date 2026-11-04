@@ -338,13 +338,13 @@ class BimbinganController extends Controller
 
         $pengajuan = PengajuanBimbingan::with(['tim.anggotaDiterima'])->findOrFail($validated['id_pengajuan']);
 
-        if ($pengajuan->status !== 'disetujui') {
-            return back()->with('error', 'Logbook hanya dapat ditambahkan setelah bimbingan resmi disetujui oleh Dosen Pembimbing.');
+        if ($pengajuan->status !== 'disetujui' || $pengajuan->tim->status_tim !== 'disetujui') {
+            return back()->with('error', 'Logbook hanya dapat ditambahkan setelah bimbingan resmi disetujui oleh Dosen Pembimbing dan tim telah disetujui oleh Admin.');
         }
 
         // Pengecekan Otorisasi:
         if ($authUser['role'] === 'mahasiswa') {
-            $isKetua = ($pengajuan->tim->nim === $authUser['id']);
+            $isKetua = ($pengajuan->tim->nim === $authUser['id'] && Tim::ketuaDisetujui($authUser['id']));
             $isAnggota = $pengajuan->tim->anggotaDiterima->contains('nim', $authUser['id']);
 
             if (! $isKetua) {
@@ -425,8 +425,12 @@ class BimbinganController extends Controller
 
         $logbook = Logbook::with(['pengajuan.tim.anggotaDiterima'])->findOrFail($id);
 
+        if ($logbook->pengajuan->tim->status_tim !== 'disetujui') {
+            return back()->with('error', 'Tim belum disetujui oleh Admin.');
+        }
+
         if ($authUser['role'] === 'mahasiswa') {
-            $isKetua = ($logbook->pengajuan->tim->nim === $authUser['id']);
+            $isKetua = ($logbook->pengajuan->tim->nim === $authUser['id'] && Tim::ketuaDisetujui($authUser['id']));
             $isAnggota = $logbook->pengajuan->tim->anggotaDiterima->contains('nim', $authUser['id']);
 
             if (! $isKetua) {
@@ -480,8 +484,12 @@ class BimbinganController extends Controller
 
         $logbook = Logbook::with(['pengajuan.tim.anggotaDiterima'])->findOrFail($id);
 
+        if ($logbook->pengajuan->tim->status_tim !== 'disetujui') {
+            return back()->with('error', 'Tim belum disetujui oleh Admin.');
+        }
+
         if ($authUser['role'] === 'mahasiswa') {
-            $isKetua = ($logbook->pengajuan->tim->nim === $authUser['id']);
+            $isKetua = ($logbook->pengajuan->tim->nim === $authUser['id'] && Tim::ketuaDisetujui($authUser['id']));
             $isAnggota = $logbook->pengajuan->tim->anggotaDiterima->contains('nim', $authUser['id']);
 
             if (! $isKetua) {
@@ -673,11 +681,11 @@ class BimbinganController extends Controller
             'status_tim' => 'menunggu_persetujuan',
         ]);
 
-        // Daftarkan ketua juga sebagai anggota tim utama dengan status diterima
+        // Daftarkan calon ketua tim dengan status menunggu (belum disetujui admin)
         AnggotaTim::create([
             'id_tim' => $tim->id_tim,
             'nim' => $authUser['id'],
-            'status_gabung' => 'diterima',
+            'status_gabung' => 'menunggu',
             'peran' => 'Ketua Tim',
         ]);
 

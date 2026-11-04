@@ -138,12 +138,12 @@ class ModulTimTest extends TestCase
 
         $tim = Tim::where('nama_tim', 'Tim Pengembang AI')->first();
         $this->assertNotNull($tim);
-        $response->assertRedirect(route('bimbingan.index', ['tim_id' => $tim->id_tim]));
+        $response->assertRedirect(route('tim.index'));
         $this->assertDatabaseHas('tim', [
             'nama_tim' => 'Tim Pengembang AI',
             'nim' => '244107060004',
             'id_lomba' => $lomba->id_lomba,
-            'status_tim' => 'disetujui',
+            'status_tim' => 'menunggu_persetujuan',
         ]);
         $this->assertNotNull($tim->file_cv);
         Storage::disk('public')->assertExists($tim->file_cv);
@@ -523,10 +523,11 @@ class ModulTimTest extends TestCase
 
         $tim = Tim::where('nama_tim', 'Tim Sukses Validasi')->first();
         $this->assertNotNull($tim);
-        $response->assertRedirect(route('bimbingan.index', ['tim_id' => $tim->id_tim]));
+        $response->assertRedirect(route('tim.index'));
         $this->assertDatabaseHas('tim', [
             'nama_tim' => 'Tim Sukses Validasi',
             'nim' => $user->nim_nip,
+            'status_tim' => 'menunggu_persetujuan',
         ]);
     }
 

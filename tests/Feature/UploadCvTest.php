@@ -79,16 +79,17 @@ class UploadCvTest extends TestCase
 
         $tim = Tim::where('nama_tim', 'Tim Garuda TI')->first();
         $this->assertNotNull($tim, 'Tim gagal disimpan di database.');
-        $response->assertRedirect(route('bimbingan.index', ['tim_id' => $tim->id_tim]));
+        $response->assertRedirect(route('tim.index'));
         $response->assertSessionHas('success');
 
-        // Path tersimpan di tim dan anggota_tim
+        // Path tersimpan di tim dan anggota_tim (status menunggu persetujuan admin)
         $this->assertNotEmpty($tim->file_cv);
+        $this->assertEquals('menunggu_persetujuan', $tim->status_tim);
         $this->assertDatabaseHas('anggota_tim', [
             'id_tim' => $tim->id_tim,
             'nim' => $user->nim_nip,
             'peran' => 'Ketua Tim',
-            'status_gabung' => 'diterima',
+            'status_gabung' => 'menunggu',
             'file_cv' => $tim->file_cv,
         ]);
 
@@ -308,6 +309,7 @@ class UploadCvTest extends TestCase
         ]);
 
         $tim = Tim::where('nama_tim', 'Tim Hak Akses')->firstOrFail();
+        $tim->update(['status_tim' => 'disetujui']);
 
         // 2. Anggota daftar ke tim
         $cvAnggota = UploadedFile::fake()->create('cv_anggota_resmi.pdf', 250, 'application/pdf');

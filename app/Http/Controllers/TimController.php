@@ -124,6 +124,7 @@ class TimController extends Controller
         // Ambil tim mahasiswa yang sedang login saat ini (jika ada) untuk ringkasan di Bagian A
         $userTeams = collect();
         $pengajuanGabung = collect();
+        $pengajuanKetua = collect();
         if ($authUser['role'] === 'mahasiswa') {
             $nim = $authUser['id'];
             if (! $request->filled('q') && ! $request->filled('tingkat') && ! $request->filled('kategori')) {
@@ -142,6 +143,12 @@ class TimController extends Controller
                     ->with(['lomba', 'ketua', 'anggotaDiterima.mahasiswa'])
                     ->get();
             }
+
+            // Ambil seluruh riwayat pengajuan pembentukan tim oleh mahasiswa ini (calon Ketua Tim)
+            $pengajuanKetua = Tim::where('nim', $nim)
+                ->with(['lomba', 'admin'])
+                ->latest()
+                ->get();
 
             // Ambil riwayat pengajuan gabung ke tim lain oleh mahasiswa yang sedang login
             $pengajuanGabung = AnggotaTim::where('nim', $nim)
@@ -165,6 +172,7 @@ class TimController extends Controller
             'currentStatusKuota' => $filterStatus,
             'userTeams' => $userTeams,
             'pengajuanGabung' => $pengajuanGabung,
+            'pengajuanKetua' => $pengajuanKetua,
         ]);
     }
 
@@ -291,11 +299,11 @@ class TimController extends Controller
                     'catatan' => $validated['catatan'],
                 ]);
 
-                // Ketua tim otomatis terdaftar sebagai anggota resmi pertama
+                // Daftarkan pengajuan calon ketua tim dengan status menunggu (belum menjadi Ketua Tim resmi sebelum disetujui admin)
                 AnggotaTim::create([
                     'id_tim' => $tim->id_tim,
                     'nim' => $authUser['id'],
-                    'status_gabung' => 'diterima',
+                    'status_gabung' => 'menunggu',
                     'peran' => 'Ketua Tim',
                     'file_cv' => $cvPath,
                 ]);
@@ -510,9 +518,9 @@ class TimController extends Controller
             return back()->with('error', 'Hanya Ketua Tim yang berhak menyetujui atau menolak calon anggota.');
         }
 
-        // Tim harus berstatus disetujui agar bisa menerima anggota
+        // Tim harus berstatus disetujui agar bisa mengelola anggota
         if ($anggota->tim->status_tim !== 'disetujui') {
-            return back()->with('error', 'Tim ini belum disetujui oleh admin, sehingga belum dapat menerima anggota.');
+            return back()->with('error', 'Tim ini belum disetujui oleh admin, sehingga belum dapat mengelola atau menerima anggota.');
         }
 
         if ($validated['status'] === 'diterima') {

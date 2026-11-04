@@ -8,6 +8,7 @@ use App\Enums\TipePeserta;
 use App\Http\Requests\Admin\StoreLombaRequest;
 use App\Http\Requests\Admin\UpdateLombaRequest;
 use App\Models\Admin;
+use App\Models\AnggotaTim;
 use App\Models\Dosen;
 use App\Models\Lomba;
 use App\Models\Mahasiswa;
@@ -15,6 +16,7 @@ use App\Models\ProgresBabak;
 use App\Models\Tim;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 
@@ -417,10 +419,29 @@ class AdminController extends Controller
                 ->with('error', "Status tim \"{$tim->nama_tim}\" sudah {$label}, tidak ada perubahan yang dilakukan.");
         }
 
-        $tim->update([
-            'status_tim' => $status,
-            'id_admin' => $adminId,
-        ]);
+        DB::transaction(function () use ($tim, $status, $adminId) {
+            $tim->update([
+                'status_tim' => $status,
+                'id_admin' => $adminId,
+            ]);
+
+            if ($status === 'disetujui') {
+                // Mahasiswa yang mengajukan otomatis ditetapkan sebagai Ketua Tim resmi
+                AnggotaTim::updateOrCreate(
+                    ['id_tim' => $tim->id_tim, 'nim' => $tim->nim],
+                    [
+                        'status_gabung' => 'diterima',
+                        'peran' => 'Ketua Tim',
+                        'file_cv' => $tim->file_cv,
+                    ]
+                );
+            } elseif ($status === 'ditolak') {
+                // Pengajuan ditolak: mahasiswa tidak menjadi Ketua Tim
+                AnggotaTim::where('id_tim', $tim->id_tim)
+                    ->where('nim', $tim->nim)
+                    ->update(['status_gabung' => 'ditolak']);
+            }
+        });
 
         $ketuaNama = $tim->ketua ? $tim->ketua->nama : 'Ketua Tim';
         $pesan = $status === 'disetujui'

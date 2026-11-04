@@ -34,6 +34,32 @@ class Tim extends Model
     protected static array $ketuaDisetujuiCache = [];
 
     /**
+     * Invalidate cache memoization ketika data model Tim berubah.
+     */
+    protected static function booted(): void
+    {
+        static::saved(function (Tim $tim): void {
+            static::clearKetuaDisetujuiCache($tim->nim);
+        });
+
+        static::deleted(function (Tim $tim): void {
+            static::clearKetuaDisetujuiCache($tim->nim);
+        });
+    }
+
+    /**
+     * Hapus cache ketuaDisetujui untuk NIM tertentu atau seluruhnya.
+     */
+    public static function clearKetuaDisetujuiCache(?string $nim = null): void
+    {
+        if ($nim === null) {
+            static::$ketuaDisetujuiCache = [];
+        } else {
+            unset(static::$ketuaDisetujuiCache[$nim]);
+        }
+    }
+
+    /**
      * Cek apakah NIM yang diberikan adalah ketua tim yang sudah disetujui.
      * Hanya relevan untuk mahasiswa. Hasilnya di-memoize per request.
      */

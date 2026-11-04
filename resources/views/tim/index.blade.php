@@ -324,6 +324,149 @@
     @endif
 
     {{-- ========================================================================= --}}
+    {{-- BAGIAN: PENGAJUAN PEMBENTUKAN TIM SAYA (CALON KETUA TIM)                  --}}
+    {{-- ========================================================================= --}}
+    @if(($authUser['role'] ?? '') === 'mahasiswa' && isset($pengajuanKetua) && $pengajuanKetua->isNotEmpty())
+        <div class="user-applications-card" style="border-left: 4px solid var(--primary);">
+            <div class="user-applications-header">
+                <div>
+                    <div style="font-size: 0.72rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">
+                        <i class="bi bi-shield-check"></i> Status Pengajuan Calon Ketua Tim
+                    </div>
+                    <h3 style="font-size: 1.18rem; font-weight: 800; color: var(--primary-dark); margin: 0; display: flex; align-items: center; gap: 8px;">
+                        <span>Pengajuan Pembentukan Tim Saya</span>
+                        <span class="badge badge-primary" style="font-size: 0.72rem; padding: 2px 8px;">
+                            {{ $pengajuanKetua->count() }} Pengajuan
+                        </span>
+                    </h3>
+                    <p style="font-size: 0.82rem; color: var(--text-muted); margin: 3px 0 0 0;">
+                        Pantau status persetujuan pembentukan tim dari Admin sebelum resmi menjadi Ketua Tim.
+                    </p>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px;">
+                @foreach($pengajuanKetua as $pk)
+                    @php
+                        $status = $pk->status_tim;
+                        $statusClass = match($status) {
+                            'disetujui' => 'status-diterima',
+                            'ditolak' => 'status-ditolak',
+                            default => 'status-menunggu',
+                        };
+                        $badgeClass = match($status) {
+                            'disetujui' => 'application-badge-diterima',
+                            'ditolak' => 'application-badge-ditolak',
+                            default => 'application-badge-menunggu',
+                        };
+                        $badgeIcon = match($status) {
+                            'disetujui' => 'bi-check-circle-fill',
+                            'ditolak' => 'bi-x-circle-fill',
+                            default => 'bi-clock-history',
+                        };
+                        $statusLabel = match($status) {
+                            'disetujui' => 'Disetujui',
+                            'ditolak' => 'Ditolak',
+                            default => 'Menunggu Persetujuan Admin',
+                        };
+                        $noteClass = match($status) {
+                            'disetujui' => 'note-diterima',
+                            'ditolak' => 'note-ditolak',
+                            default => 'note-menunggu',
+                        };
+                        $noteIcon = match($status) {
+                            'disetujui' => 'bi-check-circle-fill',
+                            'ditolak' => 'bi-exclamation-circle-fill',
+                            default => 'bi-hourglass-split',
+                        };
+                        $statusNote = match($status) {
+                            'disetujui' => 'Pengajuan pembentukan tim telah disetujui Admin. Anda resmi menjadi Ketua Tim.',
+                            'ditolak' => 'Pengajuan pembentukan tim ditolak oleh Admin. Anda tidak berstatus sebagai Ketua Tim.',
+                            default => 'Pengajuan pembentukan tim sedang menunggu persetujuan Admin sebelum tim resmi aktif.',
+                        };
+                        $lombaObj = $pk->lomba;
+                    @endphp
+                    <div class="application-item {{ $statusClass }}">
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 8px;">
+                                <div>
+                                    <div style="font-weight: 800; color: var(--primary-dark); font-size: 1rem; line-height: 1.3;">
+                                        {{ $pk->nama_tim }}
+                                    </div>
+                                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+                                        <i class="bi bi-award"></i> {{ $lombaObj->nama_lomba ?? 'Kompetisi JTI' }}
+                                    </div>
+                                </div>
+                                <span class="badge {{ $badgeClass }}" style="font-size: 0.74rem; padding: 4px 10px; white-space: nowrap;">
+                                    <i class="bi {{ $badgeIcon }}"></i> {{ $statusLabel }}
+                                </span>
+                            </div>
+
+                            <div style="display: flex; flex-wrap: wrap; gap: 10px; font-size: 0.78rem; color: var(--text-muted); margin-bottom: 10px;">
+                                <span>
+                                    <i class="bi bi-person-badge" style="color: var(--primary);"></i>
+                                    Peran: <strong>Ketua Tim (Pemohon)</strong>
+                                </span>
+                                <span>&bull;</span>
+                                <span>
+                                    <i class="bi bi-people" style="color: var(--primary);"></i>
+                                    Kuota: <strong>{{ $pk->kuota_anggota }} Orang</strong>
+                                </span>
+                                @if($pk->created_at)
+                                    <span>&bull;</span>
+                                    <span>
+                                        <i class="bi bi-calendar3"></i>
+                                        Diajukan: <strong>{{ $pk->created_at->format('d M Y, H:i') }}</strong>
+                                    </span>
+                                @endif
+                            </div>
+
+                            <div class="application-note-box {{ $noteClass }}">
+                                <i class="bi {{ $noteIcon }}" style="font-size: 0.95rem;"></i>
+                                <span>{{ $statusNote }}</span>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed var(--border); padding-top: 10px; gap: 8px; flex-wrap: wrap;">
+                            <div>
+                                @if($pk->file_cv)
+                                    <a href="{{ route('tim.cv', ['type' => 'ketua', 'id' => $pk->id_tim]) }}"
+                                       target="_blank"
+                                       class="btn btn-secondary btn-sm"
+                                       style="font-size: 0.74rem; padding: 4px 10px;"
+                                       title="Lihat Berkas CV yang Anda Lampirkan">
+                                        <i class="bi bi-file-earmark-pdf"></i> Lihat CV Saya
+                                    </a>
+                                @endif
+                            </div>
+
+                            <div style="display: flex; gap: 6px;">
+                                @if($status === 'disetujui')
+                                    <a href="{{ route('bimbingan.index', ['tim_id' => $pk->id_tim]) }}"
+                                       class="btn btn-outline-primary btn-sm"
+                                       style="font-size: 0.74rem; font-weight: 700; padding: 4px 10px;">
+                                        <i class="bi bi-person-video3"></i> Buka Bimbingan Tim &rarr;
+                                    </a>
+                                @elseif($status === 'menunggu_persetujuan')
+                                    <span style="font-size: 0.75rem; color: var(--text-muted); font-style: italic;">
+                                        <i class="bi bi-hourglass-split"></i> Menunggu review admin
+                                    </span>
+                                @elseif($status === 'ditolak')
+                                    <a href="{{ route('tim.create') }}"
+                                       class="btn btn-primary btn-sm"
+                                       style="font-size: 0.74rem; font-weight: 700; padding: 4px 10px;">
+                                        <i class="bi bi-plus-circle"></i> Ajukan Tim Lain
+                                    </a>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
+    {{-- ========================================================================= --}}
     {{-- BAGIAN: PENGAJUAN GABUNG TIM SAYA                                         --}}
     {{-- ========================================================================= --}}
     @if(($authUser['role'] ?? '') === 'mahasiswa')
