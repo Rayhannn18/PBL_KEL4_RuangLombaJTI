@@ -866,8 +866,8 @@
                             <div style="font-size: 0.78rem; color: var(--text-muted);">Rekam jejak evaluasi dan konsultasi bersama dosen</div>
                         </div>
 
-                        @if($pengajuan && $pengajuan->status === 'disetujui')
-                            <button type="button" class="btn btn-primary btn-sm" onclick="openModalLogbook()">
+                        @if($pengajuan && $pengajuan->status === 'disetujui' && ($isKetua ?? ($selectedTim->nim === $authUser['id'])))
+                            <button type="button" class="btn btn-primary btn-sm" onclick="openModalLogbook({{ $pengajuan->id_pengajuan }})">
                                 <i class="bi bi-plus-lg"></i> Isi Logbook Baru
                             </button>
                         @endif
@@ -894,7 +894,11 @@
                             @if($logbooks->isEmpty())
                                 <div style="text-align: center; padding: 30px; color: var(--text-muted); font-size: 0.88rem;">
                                     <i class="bi bi-journal-x" style="font-size: 1.8rem; opacity: 0.5; display: block; margin-bottom: 6px;"></i>
-                                    Belum ada catatan logbook bimbingan. Klik tombol <strong>"Isi Logbook Baru"</strong> di atas setelah Anda berkonsultasi dengan dosen pembimbing.
+                                    @if($isKetua ?? ($selectedTim->nim === $authUser['id']))
+                                        Belum ada catatan logbook bimbingan. Klik tombol <strong>"Isi Logbook Baru"</strong> di atas setelah Anda berkonsultasi dengan dosen pembimbing.
+                                    @else
+                                        Belum ada catatan logbook bimbingan dari tim Anda. Logbook akan dicatat oleh Ketua Tim atau Dosen Pembimbing.
+                                    @endif
                                 </div>
                             @else
                                 <div class="timeline-wrap">
@@ -942,7 +946,7 @@
                                                     </div>
                                                 @endif
 
-                                                @if($log->status_validasi === 'revisi')
+                                                @if($log->status_validasi === 'revisi' && ($isKetua ?? ($selectedTim->nim === $authUser['id'])))
                                                     <div style="margin-top: 8px; display: flex; justify-content: flex-end;">
                                                         <button type="button" class="btn btn-warning btn-sm" style="font-size: 0.78rem; padding: 3px 10px;" onclick="openModalEditLogbook({{ $log->id_logbook }}, '{{ $log->tanggal ? $log->tanggal->format('Y-m-d') : '' }}', '{{ addslashes($log->materi) }}', '{{ addslashes($log->tindak_lanjut ?? '') }}')">
                                                             <i class="bi bi-pencil-square"></i> Perbaiki Logbook
@@ -1349,13 +1353,18 @@
                                 <!-- Bagian Logbook Mahasiswa Bimbingan -->
                                 @if($item->status === 'disetujui')
                                     <div style="border-top: 1px solid var(--border); padding-top: 12px; margin-top: 10px;">
-                                        <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 8px;">
-                                            LOGBOOK MAHASISWA ({{ $item->logbook->count() }} Sesi Tercatat):
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+                                            <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">
+                                                LOGBOOK BIMBINGAN ({{ $item->logbook->count() }} Sesi Tercatat):
+                                            </div>
+                                            <button type="button" class="btn btn-outline-primary btn-sm" style="font-size: 0.75rem; padding: 3px 10px;" onclick="openModalLogbook({{ $item->id_pengajuan }}, '{{ addslashes($item->tim->nama_tim) }}')">
+                                                <i class="bi bi-journal-plus"></i> Isi Logbook Bimbingan
+                                            </button>
                                         </div>
 
                                         @if($item->logbook->isEmpty())
                                             <div style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">
-                                                Mahasiswa belum mengisi catatan logbook bimbingan.
+                                                Belum ada catatan logbook bimbingan untuk tim ini. Anda atau Ketua Tim dapat mengisi logbook konsultasi.
                                             </div>
                                         @else
                                             <div style="display: flex; flex-direction: column; gap: 8px;">
@@ -1547,9 +1556,10 @@
 
     {{-- ========================================================================= --}}
     {{-- MODAL 2: Form Tambah Logbook Aktivitas Bimbingan                          --}}
+    {{-- Hanya untuk Ketua Tim Mahasiswa atau Dosen Pembimbing                     --}}
     {{-- ========================================================================= --}}
-    @if(isset($pengajuan) && $pengajuan && $pengajuan->status === 'disetujui')
-        <div id="modalLogbook" class="modal-backdrop-custom">
+    @if(($role === 'mahasiswa' && isset($pengajuan) && $pengajuan && $pengajuan->status === 'disetujui' && ($isKetua ?? ($selectedTim->nim === $authUser['id']))) || $role === 'dosen')
+        <div id="modalLogbook" class="modal-backdrop-custom" style="display: none;">
             <div class="modal-box">
                 <div class="modal-header-custom">
                     <div style="font-weight: 800; font-size: 1.05rem; color: var(--primary-dark);">
@@ -1559,7 +1569,7 @@
                 </div>
                 <form action="{{ route('bimbingan.logbook.store') }}" method="POST">
                     @csrf
-                    <input type="hidden" name="id_pengajuan" value="{{ $pengajuan->id_pengajuan }}">
+                    <input type="hidden" name="id_pengajuan" id="inputLogbookIdPengajuan" value="{{ $pengajuan->id_pengajuan ?? '' }}">
 
                     <div class="modal-body-custom">
                         <div class="form-group" style="margin-bottom: 14px;">
@@ -1586,8 +1596,12 @@
                 </form>
             </div>
         </div>
+    @endif
 
-        {{-- MODAL 2B: Form Edit / Perbaiki Logbook Bimbingan                         --}}
+    {{-- ========================================================================= --}}
+    {{-- MODAL 2B: Form Edit / Perbaiki Logbook Bimbingan                         --}}
+    {{-- ========================================================================= --}}
+    @if(($role === 'mahasiswa' && isset($pengajuan) && $pengajuan && $pengajuan->status === 'disetujui' && ($isKetua ?? ($selectedTim->nim === $authUser['id']))) || $role === 'dosen')
         <div id="modalEditLogbook" class="modal-backdrop-custom" style="display: none;">
             <div class="modal-box">
                 <div class="modal-header-custom">
@@ -1625,8 +1639,12 @@
                 </form>
             </div>
         </div>
+    @endif
 
-        {{-- MODAL 2C: Form Tambah Laporan Progres Babak Mahasiswa                     --}}
+    {{-- ========================================================================= --}}
+    {{-- MODAL 2C: Form Tambah Laporan Progres Babak Mahasiswa                     --}}
+    {{-- ========================================================================= --}}
+    @if(isset($pengajuan) && $pengajuan && $pengajuan->status === 'disetujui')
         <div id="modalTambahProgres" class="modal-backdrop-custom" style="display: none;">
             <div class="modal-box">
                 <div class="modal-header-custom">
@@ -1792,8 +1810,12 @@
         if (modal) modal.style.display = 'none';
     }
 
-    function openModalLogbook() {
+    function openModalLogbook(idPengajuan) {
         const modal = document.getElementById('modalLogbook');
+        const inputId = document.getElementById('inputLogbookIdPengajuan');
+        if (idPengajuan && inputId) {
+            inputId.value = idPengajuan;
+        }
         if (modal) modal.style.display = 'flex';
     }
 

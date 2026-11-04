@@ -226,7 +226,7 @@ class BimbinganTest extends TestCase
             'id_lomba' => $lomba->id_lomba,
             'nim' => $mahasiswa->nim,
             'kuota_anggota' => 3,
-            'status' => 'disetujui',
+            'status_tim' => 'disetujui',
         ]);
 
         $this->actingAsMahasiswa($mahasiswa);
@@ -271,7 +271,7 @@ class BimbinganTest extends TestCase
             'id_lomba' => $lomba->id_lomba,
             'nim' => $ketua->nim,
             'kuota_anggota' => 3,
-            'status' => 'disetujui',
+            'status_tim' => 'disetujui',
         ]);
 
         AnggotaTim::create([

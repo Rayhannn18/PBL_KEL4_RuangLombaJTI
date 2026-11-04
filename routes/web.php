@@ -80,6 +80,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/bimbingan/ajukan', [BimbinganController::class, 'ajukan'])->name('bimbingan.ajukan');
     Route::post('/bimbingan/logbook', [BimbinganController::class, 'storeLogbook'])->name('bimbingan.logbook.store');
     Route::put('/bimbingan/logbook/{id}', [BimbinganController::class, 'updateLogbook'])->name('bimbingan.logbook.update');
+    Route::delete('/bimbingan/logbook/{id}', [BimbinganController::class, 'destroyLogbook'])->name('bimbingan.logbook.destroy');
     Route::post('/bimbingan/logbook/{id}/validasi', [BimbinganController::class, 'validasiLogbook'])->middleware('dosen')->name('bimbingan.logbook.validasi');
     Route::post('/bimbingan/progres', [BimbinganController::class, 'storeProgres'])->name('bimbingan.progres.store');
     Route::post('/bimbingan/progres/{id}/respon', [BimbinganController::class, 'responProgresBabak'])->middleware('dosen')->name('bimbingan.progres.respon');

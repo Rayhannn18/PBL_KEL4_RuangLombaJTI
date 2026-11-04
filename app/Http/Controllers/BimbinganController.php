@@ -317,7 +317,10 @@ class BimbinganController extends Controller
     }
 
     /**
-     * Mahasiswa Menambahkan Catatan Logbook Bimbingan
+     * Menambahkan Catatan Logbook Bimbingan
+     * Hak Akses:
+     * - Mahasiswa: HANYA Ketua Tim yang berhak mengisi logbook. Anggota tim selain ketua bersifat read-only.
+     * - Dosen Pembimbing: Berhak mengisi logbook untuk tim yang dibimbingnya.
      */
     public function storeLogbook(Request $request)
     {
@@ -329,8 +332,8 @@ class BimbinganController extends Controller
         ]);
 
         $authUser = $this->authUser();
-        if (! $authUser || $authUser['role'] !== 'mahasiswa') {
-            return back()->with('error', 'Hanya anggota tim mahasiswa yang dapat menambahkan logbook bimbingan.');
+        if (! $authUser) {
+            return back()->with('error', 'Silakan masuk ke akun Anda terlebih dahulu.');
         }
 
         $pengajuan = PengajuanBimbingan::with(['tim.anggotaDiterima'])->findOrFail($validated['id_pengajuan']);
@@ -339,11 +342,30 @@ class BimbinganController extends Controller
             return back()->with('error', 'Logbook hanya dapat ditambahkan setelah bimbingan resmi disetujui oleh Dosen Pembimbing.');
         }
 
-        $isMember = ($pengajuan->tim->nim === $authUser['id']) ||
-            $pengajuan->tim->anggotaDiterima->contains('nim', $authUser['id']);
+        // Pengecekan Otorisasi:
+        if ($authUser['role'] === 'mahasiswa') {
+            $isKetua = ($pengajuan->tim->nim === $authUser['id']);
+            $isAnggota = $pengajuan->tim->anggotaDiterima->contains('nim', $authUser['id']);
 
-        if (! $isMember) {
-            return back()->with('error', 'Anda bukan anggota resmi dari tim ini.');
+            if (! $isKetua) {
+                if ($isAnggota) {
+                    return back()->with('error', 'Akses ditolak. Anggota tim hanya memiliki hak akses baca (read-only) pada logbook bimbingan.');
+                }
+
+                return back()->with('error', 'Anda bukan anggota resmi dari tim ini.');
+            }
+
+            $statusValidasi = 'menunggu';
+            $catatanDosen = null;
+        } elseif ($authUser['role'] === 'dosen') {
+            if ($pengajuan->nidn !== $authUser['id']) {
+                return back()->with('error', 'Anda hanya dapat menambahkan logbook untuk tim yang Anda bimbing.');
+            }
+
+            $statusValidasi = 'disetujui';
+            $catatanDosen = 'Dicatat langsung oleh Dosen Pembimbing.';
+        } else {
+            return back()->with('error', 'Hanya Ketua Tim atau Dosen Pembimbing yang memiliki wewenang untuk mengisi logbook.');
         }
 
         Logbook::create([
@@ -351,7 +373,8 @@ class BimbinganController extends Controller
             'tanggal' => $validated['tanggal'],
             'materi' => $validated['materi'],
             'tindak_lanjut' => $validated['tindak_lanjut'] ?? '-',
-            'status_validasi' => 'menunggu',
+            'status_validasi' => $statusValidasi,
+            'catatan_dosen' => $catatanDosen,
         ]);
 
         return back()->with('success', 'Catatan logbook bimbingan berhasil dicatat!');
@@ -385,38 +408,106 @@ class BimbinganController extends Controller
     }
 
     /**
-     * Mahasiswa Memperbarui Entri Logbook yang Memerlukan Revisi
+     * Memperbarui Entri Logbook yang Memerlukan Revisi
+     * Hak Akses:
+     * - Mahasiswa: HANYA Ketua Tim yang dapat memperbarui logbook.
+     *   Anggota tim selain ketua bersifat read-only dan dilarang mengubah logbook.
+     * - Dosen Pembimbing: Berhak memperbarui logbook dari tim yang dibimbingnya.
      */
     public function updateLogbook(UpdateLogbookRequest $request, $id)
     {
         $validated = $request->validated();
 
         $authUser = $this->authUser();
-        if (! $authUser || $authUser['role'] !== 'mahasiswa') {
-            return back()->with('error', 'Hanya anggota tim mahasiswa yang dapat memperbarui logbook bimbingan.');
+        if (! $authUser) {
+            return back()->with('error', 'Silakan masuk ke akun Anda terlebih dahulu.');
         }
 
         $logbook = Logbook::with(['pengajuan.tim.anggotaDiterima'])->findOrFail($id);
 
-        $isMember = ($logbook->pengajuan->tim->nim === $authUser['id']) ||
-            $logbook->pengajuan->tim->anggotaDiterima->contains('nim', $authUser['id']);
+        if ($authUser['role'] === 'mahasiswa') {
+            $isKetua = ($logbook->pengajuan->tim->nim === $authUser['id']);
+            $isAnggota = $logbook->pengajuan->tim->anggotaDiterima->contains('nim', $authUser['id']);
 
-        if (! $isMember) {
-            return back()->with('error', 'Anda bukan anggota resmi dari tim ini.');
+            if (! $isKetua) {
+                if ($isAnggota) {
+                    return back()->with('error', 'Akses ditolak. Anggota tim hanya memiliki hak akses baca (read-only) dan tidak dapat mengubah logbook.');
+                }
+
+                return back()->with('error', 'Anda bukan anggota resmi dari tim ini.');
+            }
+
+            if ($logbook->status_validasi === 'disetujui') {
+                return back()->with('error', 'Logbook yang sudah disetujui oleh Dosen Pembimbing tidak dapat diubah.');
+            }
+
+            $logbook->update([
+                'tanggal' => $validated['tanggal'],
+                'materi' => $validated['materi'],
+                'tindak_lanjut' => $validated['tindak_lanjut'] ?? '-',
+                'status_validasi' => 'menunggu',
+            ]);
+        } elseif ($authUser['role'] === 'dosen') {
+            if ($logbook->pengajuan->nidn !== $authUser['id']) {
+                return back()->with('error', 'Anda hanya dapat memperbarui logbook untuk tim yang Anda bimbing.');
+            }
+
+            $logbook->update([
+                'tanggal' => $validated['tanggal'],
+                'materi' => $validated['materi'],
+                'tindak_lanjut' => $validated['tindak_lanjut'] ?? '-',
+            ]);
+        } else {
+            return back()->with('error', 'Hanya Ketua Tim atau Dosen Pembimbing yang berhak mengedit logbook.');
         }
-
-        if ($logbook->status_validasi === 'disetujui') {
-            return back()->with('error', 'Logbook yang sudah disetujui oleh Dosen Pembimbing tidak dapat diubah.');
-        }
-
-        $logbook->update([
-            'tanggal' => $validated['tanggal'],
-            'materi' => $validated['materi'],
-            'tindak_lanjut' => $validated['tindak_lanjut'] ?? '-',
-            'status_validasi' => 'menunggu',
-        ]);
 
         return back()->with('success', 'Catatan logbook berhasil diperbarui dan diajukan ulang untuk validasi dosen.');
+    }
+
+    /**
+     * Menghapus Entri Logbook
+     * Hak Akses:
+     * - Mahasiswa: HANYA Ketua Tim yang dapat menghapus logbook (jika belum disetujui).
+     *   Anggota tim selain ketua tidak dapat menghapus logbook.
+     * - Dosen Pembimbing: Berhak menghapus logbook dari tim yang dibimbingnya.
+     */
+    public function destroyLogbook($id)
+    {
+        $authUser = $this->authUser();
+        if (! $authUser) {
+            return back()->with('error', 'Silakan masuk ke akun Anda terlebih dahulu.');
+        }
+
+        $logbook = Logbook::with(['pengajuan.tim.anggotaDiterima'])->findOrFail($id);
+
+        if ($authUser['role'] === 'mahasiswa') {
+            $isKetua = ($logbook->pengajuan->tim->nim === $authUser['id']);
+            $isAnggota = $logbook->pengajuan->tim->anggotaDiterima->contains('nim', $authUser['id']);
+
+            if (! $isKetua) {
+                if ($isAnggota) {
+                    return back()->with('error', 'Akses ditolak. Anggota tim hanya memiliki hak akses baca (read-only) dan tidak dapat menghapus logbook.');
+                }
+
+                return back()->with('error', 'Anda bukan anggota resmi dari tim ini.');
+            }
+
+            if ($logbook->status_validasi === 'disetujui') {
+                return back()->with('error', 'Logbook yang sudah disetujui oleh Dosen Pembimbing tidak dapat dihapus.');
+            }
+
+            $logbook->delete();
+        } elseif ($authUser['role'] === 'dosen') {
+            if ($logbook->pengajuan->nidn !== $authUser['id']) {
+                return back()->with('error', 'Anda hanya dapat menghapus logbook untuk tim yang Anda bimbing.');
+            }
+
+            $logbook->delete();
+        } else {
+            return back()->with('error', 'Hanya Ketua Tim atau Dosen Pembimbing yang berhak menghapus logbook.');
+        }
+
+        return back()->with('success', 'Catatan logbook berhasil dihapus.');
     }
 
     /**

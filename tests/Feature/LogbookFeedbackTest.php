@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\UserRole;
+use App\Models\AnggotaTim;
 use App\Models\Dosen;
 use App\Models\Logbook;
 use App\Models\Lomba;
@@ -79,7 +80,14 @@ class LogbookFeedbackTest extends TestCase
 
     private function createBimbinganWithLogbook(Dosen $dosen, array $logbookData = []): array
     {
-        $ketua = Mahasiswa::first();
+        $ketua = Mahasiswa::create([
+            'nim' => '24410706'.rand(1000, 9999),
+            'nama' => 'Ketua Test '.uniqid(),
+            'email_kampus' => 'ketua_'.uniqid().'@student.polinema.ac.id',
+            'password' => Hash::make('password123'),
+            'prodi' => 'D-IV Teknik Informatika',
+            'angkatan' => 2024,
+        ]);
         $lomba = Lomba::first();
 
         $tim = Tim::create([
@@ -87,7 +95,14 @@ class LogbookFeedbackTest extends TestCase
             'id_lomba' => $lomba->id_lomba,
             'nim' => $ketua->nim,
             'kuota_anggota' => 3,
-            'status' => 'disetujui',
+            'status_tim' => 'disetujui',
+        ]);
+
+        AnggotaTim::create([
+            'id_tim' => $tim->id_tim,
+            'nim' => $ketua->nim,
+            'status_gabung' => 'diterima',
+            'peran' => 'Ketua Tim',
         ]);
 
         $pengajuan = PengajuanBimbingan::create([
