@@ -214,11 +214,13 @@ class TimController extends Controller
             return redirect()->route('login')->with('error', 'Hanya mahasiswa yang dapat membentuk tim kompetisi.');
         }
 
+        $cvFile = $request->file('cv');
+
         // Tangani jika ada kesalahan upload file dari level PHP / server sebelum validasi
-        if ($request->hasFile('cv') && ! $request->file('cv')->isValid()) {
-            $uploadError = $request->file('cv')->getError();
+        if ($cvFile && ! $cvFile->isValid()) {
+            $uploadError = $cvFile->getError();
             $errorMessage = match ($uploadError) {
-                UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => 'Ukuran file CV melebihi batas maksimal server (2 MB).',
+                UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => 'Ukuran file CV melebihi batas upload server PHP (2 MB). Pastikan ukuran riil file tidak melebihi 2.097.152 bytes (2 MB) atau kompres file PDF Anda.',
                 UPLOAD_ERR_PARTIAL => 'File CV hanya terunggah sebagian. Silakan coba unggah kembali.',
                 UPLOAD_ERR_NO_FILE => 'Tidak ada file CV yang terunggah.',
                 UPLOAD_ERR_NO_TMP_DIR => 'Direktori temporary upload server tidak ditemukan (UPLOAD_ERR_NO_TMP_DIR).',
@@ -265,6 +267,7 @@ class TimController extends Controller
 
         if ($pengajuanAktif) {
             $statusLabel = $pengajuanAktif->status_tim === 'disetujui' ? 'sudah disetujui' : 'sedang menunggu persetujuan admin';
+
             return back()->withInput()->withErrors([
                 'id_lomba' => "Anda sudah memiliki tim \"{$pengajuanAktif->nama_tim}\" untuk lomba ini yang {$statusLabel}. Satu mahasiswa hanya dapat memimpin satu tim per lomba.",
             ]);
@@ -303,7 +306,7 @@ class TimController extends Controller
             Cache::flush();
 
             return redirect()->route('tim.index')
-                ->with('success', "Pengajuan tim \"{$tim->nama_tim}\" untuk lomba \"{$lomba->nama_lomba}\" berhasil dikirim dan sedang menunggu persetujuan admin. Badge Ketua Tim akan aktif setelah pengajuan disetujui.");
+                ->with('success', "Pengajuan tim \"{$tim->nama_tim}\" untuk lomba \"{$lomba->nama_lomba}\" berhasil dikirim dan sedang menunggu persetujuan admin.");
         } catch (\Throwable $e) {
             if ($cvPath && Storage::disk('public')->exists($cvPath)) {
                 Storage::disk('public')->delete($cvPath);
@@ -374,11 +377,13 @@ class TimController extends Controller
             return back()->with('error', 'Hanya mahasiswa yang dapat mengajukan diri bergabung ke dalam tim.');
         }
 
+        $cvFile = $request->file('cv');
+
         // Tangani jika ada kesalahan upload file dari level PHP / server sebelum validasi
-        if ($request->hasFile('cv') && ! $request->file('cv')->isValid()) {
-            $uploadError = $request->file('cv')->getError();
+        if ($cvFile && ! $cvFile->isValid()) {
+            $uploadError = $cvFile->getError();
             $errorMessage = match ($uploadError) {
-                UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => 'Ukuran file CV melebihi batas maksimal server (2 MB).',
+                UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => 'Ukuran file CV melebihi batas upload server PHP (2 MB). Pastikan ukuran riil file tidak melebihi 2.097.152 bytes (2 MB) atau kompres file PDF Anda.',
                 UPLOAD_ERR_PARTIAL => 'File CV hanya terunggah sebagian. Silakan coba unggah kembali.',
                 UPLOAD_ERR_NO_FILE => 'Tidak ada file CV yang terunggah.',
                 UPLOAD_ERR_NO_TMP_DIR => 'Direktori temporary upload server tidak ditemukan (UPLOAD_ERR_NO_TMP_DIR).',
