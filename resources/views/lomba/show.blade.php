@@ -164,9 +164,6 @@
 
                 <div style="display: flex; align-items: center; gap: 18px; font-size: 0.9rem; color: var(--text-muted); margin-bottom: 24px; flex-wrap: wrap;">
                     <span><i class="bi bi-building"></i> {{ $lomba->penyelenggara }}</span>
-                    @if($lomba->pengaju)
-                        <span><i class="bi bi-person-check"></i> Diajukan oleh: {{ $lomba->pengaju->nama }}</span>
-                    @endif
                 </div>
 
                 <!-- Deskripsi Lomba -->
