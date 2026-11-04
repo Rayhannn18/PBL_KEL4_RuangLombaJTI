@@ -30,6 +30,22 @@ class UpdateLombaRequest extends FormRequest
                 'biaya' => $raw === '' ? 0 : (int) $raw,
             ]);
         }
+
+        if (! $this->hasFile('poster') && $this->hasFile('pamflet')) {
+            $this->files->set('poster', $this->file('pamflet'));
+        }
+
+        if (! $this->hasFile('buku_pedoman') && $this->hasFile('guidebook')) {
+            $this->files->set('buku_pedoman', $this->file('guidebook'));
+        }
+
+        if ($this->has('hapus_pamflet') && ! $this->has('hapus_poster')) {
+            $this->merge(['hapus_poster' => $this->input('hapus_pamflet')]);
+        }
+
+        if ($this->has('hapus_guidebook') && ! $this->has('hapus_buku_pedoman')) {
+            $this->merge(['hapus_buku_pedoman' => $this->input('hapus_guidebook')]);
+        }
     }
 
     /**
@@ -53,8 +69,10 @@ class UpdateLombaRequest extends FormRequest
             'deskripsi' => ['required', 'string'],
             'persyaratan' => ['required', 'string'],
             'benefit' => ['required', 'string'],
-            'poster' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:2048'],
-            'buku_pedoman' => ['nullable', 'file', 'mimes:pdf,doc,docx', 'max:10240'],
+            'poster' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
+            'buku_pedoman' => ['nullable', 'file', 'mimes:pdf', 'max:10240'],
+            'hapus_poster' => ['nullable', 'boolean'],
+            'hapus_buku_pedoman' => ['nullable', 'boolean'],
         ];
     }
 
@@ -81,12 +99,12 @@ class UpdateLombaRequest extends FormRequest
             'deskripsi.required' => 'Deskripsi kompetisi wajib diisi.',
             'persyaratan.required' => 'Persyaratan & ketentuan delegasi wajib diisi.',
             'benefit.required' => 'Benefit & penghargaan wajib diisi.',
-            'poster.image' => 'Poster harus berupa file gambar.',
-            'poster.mimes' => 'Format file poster harus berupa PNG, JPG, atau JPEG.',
-            'poster.max' => 'Ukuran file poster maksimal 2 MB.',
-            'buku_pedoman.file' => 'Buku pedoman harus berupa file dokumen yang valid.',
-            'buku_pedoman.mimes' => 'Format file buku pedoman harus berupa PDF, DOC, atau DOCX.',
-            'buku_pedoman.max' => 'Ukuran file buku pedoman maksimal 10 MB.',
+            'poster.image' => 'Pamflet lomba harus berupa file gambar.',
+            'poster.mimes' => 'Format file pamflet harus berupa JPG, JPEG, atau PNG.',
+            'poster.max' => 'Ukuran file pamflet maksimal 2 MB.',
+            'buku_pedoman.file' => 'Buku panduan harus berupa file dokumen yang valid.',
+            'buku_pedoman.mimes' => 'Format file buku panduan harus berupa PDF.',
+            'buku_pedoman.max' => 'Ukuran file buku panduan maksimal 10 MB.',
         ];
     }
 }

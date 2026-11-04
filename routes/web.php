@@ -26,6 +26,8 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
     Route::put('/lomba/{id}', [AdminController::class, 'updateLomba'])->name('lomba.update');
     Route::post('/lomba/{id}/verifikasi', [AdminController::class, 'verifikasiLomba'])->name('lomba.verifikasi');
     Route::delete('/lomba/{id}', [AdminController::class, 'destroyLomba'])->name('lomba.destroy');
+    Route::delete('/lomba/{id}/poster', [AdminController::class, 'destroyPoster'])->name('lomba.destroy_poster');
+    Route::delete('/lomba/{id}/pedoman', [AdminController::class, 'destroyPedoman'])->name('lomba.destroy_pedoman');
 
     // 2. Menyetujui / Menolak Ketua Tim
     Route::post('/tim/{id}/verifikasi', [AdminController::class, 'verifikasiTim'])->name('tim.verifikasi');
@@ -46,6 +48,7 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
 Route::get('/lomba', [LombaController::class, 'index'])->name('lomba.index');
 Route::get('/lomba/{id}', [LombaController::class, 'show'])->name('lomba.show')->whereNumber('id');
 Route::get('/lomba/{id}/pedoman', [LombaController::class, 'downloadPedoman'])->name('lomba.pedoman.download')->whereNumber('id');
+Route::get('/lomba/{id}/pedoman/view', [LombaController::class, 'viewPedoman'])->name('lomba.pedoman.view')->whereNumber('id');
 
 // Autentikasi
 Route::middleware('guest')->group(function () {

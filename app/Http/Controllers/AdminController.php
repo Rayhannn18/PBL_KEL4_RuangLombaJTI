@@ -320,6 +320,13 @@ class AdminController extends Controller
                 Storage::disk('public')->delete($lomba->poster_path);
             }
             $updateData['poster_path'] = $request->file('poster')->store('lomba/poster', 'public');
+            $updateData['poster'] = null;
+        } elseif ($request->boolean('hapus_poster')) {
+            if ($lomba->poster_path && Storage::disk('public')->exists($lomba->poster_path)) {
+                Storage::disk('public')->delete($lomba->poster_path);
+            }
+            $updateData['poster_path'] = null;
+            $updateData['poster'] = null;
         }
 
         if ($request->hasFile('buku_pedoman')) {
@@ -327,6 +334,11 @@ class AdminController extends Controller
                 Storage::disk('public')->delete($lomba->buku_pedoman_path);
             }
             $updateData['buku_pedoman_path'] = $request->file('buku_pedoman')->store('lomba/pedoman', 'public');
+        } elseif ($request->boolean('hapus_buku_pedoman')) {
+            if ($lomba->buku_pedoman_path && Storage::disk('public')->exists($lomba->buku_pedoman_path)) {
+                Storage::disk('public')->delete($lomba->buku_pedoman_path);
+            }
+            $updateData['buku_pedoman_path'] = null;
         }
 
         $lomba->update($updateData);
@@ -335,6 +347,49 @@ class AdminController extends Controller
 
         return redirect()->route('admin.index', ['tab' => 'lomba'])
             ->with('success', 'Data lomba "'.$lomba->nama_lomba.'" berhasil diperbarui!');
+    }
+
+    /**
+     * Hapus Berkas Pamflet Lomba
+     */
+    public function destroyPoster($id)
+    {
+        $lomba = Lomba::findOrFail($id);
+
+        if ($lomba->poster_path && Storage::disk('public')->exists($lomba->poster_path)) {
+            Storage::disk('public')->delete($lomba->poster_path);
+        }
+
+        $lomba->update([
+            'poster_path' => null,
+            'poster' => null,
+        ]);
+
+        $this->clearCache();
+
+        return redirect()->route('admin.index', ['tab' => 'lomba'])
+            ->with('success', 'Pamflet lomba "'.$lomba->nama_lomba.'" berhasil dihapus.');
+    }
+
+    /**
+     * Hapus Berkas Buku Panduan Lomba
+     */
+    public function destroyPedoman($id)
+    {
+        $lomba = Lomba::findOrFail($id);
+
+        if ($lomba->buku_pedoman_path && Storage::disk('public')->exists($lomba->buku_pedoman_path)) {
+            Storage::disk('public')->delete($lomba->buku_pedoman_path);
+        }
+
+        $lomba->update([
+            'buku_pedoman_path' => null,
+        ]);
+
+        $this->clearCache();
+
+        return redirect()->route('admin.index', ['tab' => 'lomba'])
+            ->with('success', 'Buku panduan lomba "'.$lomba->nama_lomba.'" berhasil dihapus.');
     }
 
     /**

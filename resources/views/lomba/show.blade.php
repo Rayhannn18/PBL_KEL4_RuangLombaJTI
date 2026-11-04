@@ -107,8 +107,16 @@
         <div>
             <div class="detail-card">
                 @if($lomba->poster_url)
-                    <div style="margin-bottom: 20px; border-radius: var(--radius-sm); overflow: hidden; background: #F8FAFC; border: 1px solid var(--border); text-align: center; padding: 12px;">
-                        <img src="{{ $lomba->poster_url }}" alt="Poster {{ $lomba->nama_lomba }}" style="max-height: 400px; max-width: 100%; border-radius: var(--radius-sm); object-fit: contain;">
+                    <div style="margin-bottom: 24px; border-radius: var(--radius-md); overflow: hidden; background: #F8FAFC; border: 1px solid var(--border); text-align: center; padding: 14px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 0 4px; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">
+                            <span><i class="bi bi-image" style="color: var(--primary);"></i> Pamflet Resmi Lomba</span>
+                            <a href="{{ $lomba->poster_url }}" target="_blank" rel="noopener noreferrer" style="color: var(--primary); font-weight: 600; text-transform: none; font-size: 0.78rem;">
+                                <i class="bi bi-arrows-fullscreen"></i> Perbesar Gambar
+                            </a>
+                        </div>
+                        <img src="{{ $lomba->poster_url }}"
+                             alt="Pamflet {{ $lomba->nama_lomba }}"
+                             style="max-height: 480px; max-width: 100%; height: auto; border-radius: var(--radius-sm); object-fit: contain; box-shadow: var(--shadow-sm);">
                     </div>
                 @endif
 
@@ -197,6 +205,49 @@
                         </div>
                     </div>
                 @endif
+
+                <!-- Bagian: Buku Panduan Lomba (Guidebook) -->
+                <div style="margin-bottom: 10px;">
+                    <h3 class="section-title">
+                        <i class="bi bi-journal-bookmark-fill" style="color: var(--primary);"></i> Buku Panduan Lomba
+                    </h3>
+
+                    @if($lomba->buku_pedoman_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($lomba->buku_pedoman_path))
+                        <div style="background: #F8FAFC; border: 1.5px solid #E2E8F0; border-radius: var(--radius-md); padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
+                            <div style="display: flex; align-items: center; gap: 14px;">
+                                <div style="width: 44px; height: 44px; border-radius: 10px; background: #FEE2E2; color: #DC2626; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0;">
+                                    <i class="bi bi-file-earmark-pdf-fill"></i>
+                                </div>
+                                <div>
+                                    <div style="font-weight: 700; color: var(--primary-dark); font-size: 0.95rem;">
+                                        Guidebook Resmi: {{ $lomba->nama_lomba }}
+                                    </div>
+                                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">
+                                        Format Dokumen: PDF &bull; Panduan teknis ketentuan lomba, jadwal, dan kriteria penilaian
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                <a href="{{ route('lomba.pedoman.view', $lomba->id_lomba) }}"
+                                   target="_blank"
+                                   class="btn btn-outline-primary btn-sm"
+                                   style="font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+                                    <i class="bi bi-eye-fill"></i> Lihat PDF
+                                </a>
+                                <a href="{{ route('lomba.pedoman.download', $lomba->id_lomba) }}"
+                                   class="btn btn-primary btn-sm"
+                                   style="font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+                                    <i class="bi bi-download"></i> Unduh PDF
+                                </a>
+                            </div>
+                        </div>
+                    @else
+                        <div style="background: #F8FAFC; border: 1px dashed var(--border); border-radius: var(--radius-sm); padding: 16px 18px; color: var(--text-muted); font-size: 0.88rem; display: flex; align-items: center; gap: 10px;">
+                            <i class="bi bi-info-circle-fill" style="color: #64748B; font-size: 1.15rem;"></i>
+                            <span>Buku panduan lomba (guidebook) belum tersedia untuk kompetisi ini. Silakan kunjungi tautan pendaftaran atau hubungi panitia penyelenggara.</span>
+                        </div>
+                    @endif
+                </div>
             </div>
 
             <!-- Tim Delegasi JTI yang Mengikuti Lomba Ini -->
@@ -287,27 +338,36 @@
                         <span class="info-label">Mode Pelaksanaan</span>
                         <span class="info-value">{{ $lomba->mode_pelaksanaan_label ?? ($lomba->mode_pelaksanaan ?? 'Online') }}</span>
                     </li>
-                    @if($lomba->buku_pedoman_path)
-                        <li class="info-item">
-                            <span class="info-label">Buku Pedoman</span>
-                            <span class="info-value">
-                                <a href="{{ route('lomba.pedoman.download', $lomba->id_lomba) }}" target="_blank" style="color: var(--primary); font-weight: 600; text-decoration: underline; font-size: 0.82rem;">
-                                    <i class="bi bi-file-earmark-arrow-down-fill"></i> Unduh File
+                    <li class="info-item">
+                        <span class="info-label">Buku Panduan</span>
+                        <span class="info-value">
+                            @if($lomba->buku_pedoman_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($lomba->buku_pedoman_path))
+                                <a href="{{ route('lomba.pedoman.download', $lomba->id_lomba) }}" style="color: var(--primary); font-weight: 600; text-decoration: underline; font-size: 0.82rem;">
+                                    <i class="bi bi-file-earmark-pdf-fill" style="color: #DC2626;"></i> Unduh PDF
                                 </a>
-                            </span>
-                        </li>
-                    @endif
+                            @else
+                                <span style="color: var(--text-muted); font-weight: 500; font-size: 0.82rem;">Belum tersedia</span>
+                            @endif
+                        </span>
+                    </li>
                 </ul>
 
                 <!-- Tombol Aksi Utama -->
                 <div style="margin-top: 22px; display: flex; flex-direction: column; gap: 10px;">
-                    @if($lomba->buku_pedoman_path)
-                        <a href="{{ route('lomba.pedoman.download', $lomba->id_lomba) }}"
-                           target="_blank"
-                           class="btn btn-outline-secondary"
-                           style="width: 100%; font-weight: 700;">
-                            <i class="bi bi-file-earmark-arrow-down-fill" style="color: #0284C7;"></i> Unduh Buku Pedoman
-                        </a>
+                    @if($lomba->buku_pedoman_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($lomba->buku_pedoman_path))
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                            <a href="{{ route('lomba.pedoman.view', $lomba->id_lomba) }}"
+                               target="_blank"
+                               class="btn btn-outline-secondary"
+                               style="width: 100%; font-weight: 700; font-size: 0.82rem; text-align: center;">
+                                <i class="bi bi-eye-fill"></i> Lihat PDF
+                            </a>
+                            <a href="{{ route('lomba.pedoman.download', $lomba->id_lomba) }}"
+                               class="btn btn-outline-secondary"
+                               style="width: 100%; font-weight: 700; font-size: 0.82rem; text-align: center;">
+                                <i class="bi bi-download"></i> Unduh PDF
+                            </a>
+                        </div>
                     @endif
 
                     @if($lomba->tautan_daftar)

@@ -1410,18 +1410,18 @@
                     <textarea name="benefit" class="form-control" rows="2" required placeholder="Uang pembinaan, sertifikat nasional, konversi sks..."></textarea>
                 </div>
 
-                <!-- Input Berkas Poster & Buku Pedoman -->
+                <!-- Input Berkas Pamflet & Buku Panduan -->
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px;">
                     <div class="form-group" style="margin-bottom: 0;">
-                        <label class="form-label">Poster Lomba <span style="color: var(--danger);">*</span> <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(PNG, JPG, JPEG maks 2MB)</span></label>
-                        <input type="file" name="poster" id="tambah_lomba_poster" class="form-control" accept=".png,.jpg,.jpeg,image/png,image/jpeg" required onchange="previewPosterFile(this, 'tambah_poster_preview', 'tambah_poster_preview_img')">
+                        <label class="form-label">Pamflet Lomba <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(JPG, JPEG, PNG maks 2MB, opsional)</span></label>
+                        <input type="file" name="poster" id="tambah_lomba_poster" class="form-control" accept=".jpg,.jpeg,.png,image/jpeg,image/png" onchange="previewPosterFile(this, 'tambah_poster_preview', 'tambah_poster_preview_img')">
                         <div id="tambah_poster_preview" style="display: none; margin-top: 8px; border: 1px dashed var(--border); border-radius: var(--radius-sm); padding: 6px; text-align: center; background: #F8FAFC;">
-                            <img id="tambah_poster_preview_img" src="" alt="Pratinjau Poster" style="max-height: 120px; max-width: 100%; border-radius: 4px; object-fit: contain;">
+                            <img id="tambah_poster_preview_img" src="" alt="Pratinjau Pamflet" style="max-height: 120px; max-width: 100%; border-radius: 4px; object-fit: contain;">
                         </div>
                     </div>
                     <div class="form-group" style="margin-bottom: 0;">
-                        <label class="form-label">Buku Pedoman <span style="color: var(--danger);">*</span> <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(PDF, DOC, DOCX maks 10MB)</span></label>
-                        <input type="file" name="buku_pedoman" id="tambah_lomba_pedoman" class="form-control" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required onchange="previewPedomanFile(this, 'tambah_pedoman_info', 'tambah_pedoman_filename')">
+                        <label class="form-label">Buku Panduan (Guidebook) <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(PDF maks 10MB, opsional)</span></label>
+                        <input type="file" name="buku_pedoman" id="tambah_lomba_pedoman" class="form-control" accept=".pdf,application/pdf" onchange="previewPedomanFile(this, 'tambah_pedoman_info', 'tambah_pedoman_filename')">
                         <div id="tambah_pedoman_info" style="display: none; margin-top: 8px; font-size: 0.8rem; color: #0369A1; background: #E0F2FE; border-radius: var(--radius-sm); padding: 6px 10px;">
                             <i class="bi bi-file-earmark-check-fill"></i> <span id="tambah_pedoman_filename"></span>
                         </div>
@@ -1543,23 +1543,23 @@
                     <textarea name="benefit" id="edit_lomba_benefit" class="form-control" rows="2" required></textarea>
                 </div>
 
-                <!-- Input Berkas Poster & Buku Pedoman Edit -->
+                <!-- Input Berkas Pamflet & Buku Panduan Edit -->
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px;">
                     <div class="form-group" style="margin-bottom: 0;">
-                        <label class="form-label">Poster Lomba <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(PNG/JPG/JPEG maks 2MB, kosongkan jika tak diubah)</span></label>
-                        <input type="file" name="poster" id="edit_lomba_poster" class="form-control" accept=".png,.jpg,.jpeg,image/png,image/jpeg" onchange="previewPosterFile(this, 'edit_poster_preview', 'edit_poster_preview_img')">
+                        <label class="form-label">Pamflet Lomba <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(JPG, JPEG, PNG maks 2MB, kosongkan jika tak diubah)</span></label>
+                        <input type="file" name="poster" id="edit_lomba_poster" class="form-control" accept=".jpg,.jpeg,.png,image/jpeg,image/png" onchange="previewPosterFile(this, 'edit_poster_preview', 'edit_poster_preview_img')">
                         <div id="edit_poster_preview" style="display: none; margin-top: 8px; border: 1px dashed var(--border); border-radius: var(--radius-sm); padding: 6px; text-align: center; background: #F8FAFC;">
-                            <img id="edit_poster_preview_img" src="" alt="Pratinjau Poster" style="max-height: 120px; max-width: 100%; border-radius: 4px; object-fit: contain;">
+                            <img id="edit_poster_preview_img" src="" alt="Pratinjau Pamflet" style="max-height: 120px; max-width: 100%; border-radius: 4px; object-fit: contain;">
                         </div>
-                        <div id="edit_poster_current" style="display: none; margin-top: 6px; font-size: 0.75rem; color: var(--text-muted);"></div>
+                        <div id="edit_poster_current" style="display: none; margin-top: 6px;"></div>
                     </div>
                     <div class="form-group" style="margin-bottom: 0;">
-                        <label class="form-label">Buku Pedoman <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(PDF/DOC/DOCX maks 10MB, kosongkan jika tak diubah)</span></label>
-                        <input type="file" name="buku_pedoman" id="edit_lomba_pedoman" class="form-control" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onchange="previewPedomanFile(this, 'edit_pedoman_info', 'edit_pedoman_filename')">
+                        <label class="form-label">Buku Panduan (Guidebook) <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(PDF maks 10MB, kosongkan jika tak diubah)</span></label>
+                        <input type="file" name="buku_pedoman" id="edit_lomba_pedoman" class="form-control" accept=".pdf,application/pdf" onchange="previewPedomanFile(this, 'edit_pedoman_info', 'edit_pedoman_filename')">
                         <div id="edit_pedoman_info" style="display: none; margin-top: 8px; font-size: 0.8rem; color: #0369A1; background: #E0F2FE; border-radius: var(--radius-sm); padding: 6px 10px;">
                             <i class="bi bi-file-earmark-check-fill"></i> <span id="edit_pedoman_filename"></span>
                         </div>
-                        <div id="edit_pedoman_current" style="display: none; margin-top: 6px; font-size: 0.75rem; color: var(--text-muted);"></div>
+                        <div id="edit_pedoman_current" style="display: none; margin-top: 6px;"></div>
                     </div>
                 </div>
             </div>
@@ -1927,15 +1927,21 @@
 
         const posterHtml = item.poster_url ? `
             <div style="text-align: center; margin-bottom: 16px; background: #F8FAFC; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px;">
-                <img src="${item.poster_url}" alt="Poster ${item.nama_lomba}" style="max-height: 220px; max-width: 100%; border-radius: var(--radius-sm); object-fit: contain;">
+                <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">
+                    <i class="bi bi-image"></i> Pamflet Lomba
+                </div>
+                <img src="${item.poster_url}" alt="Pamflet ${item.nama_lomba}" style="max-height: 240px; max-width: 100%; border-radius: var(--radius-sm); object-fit: contain;">
             </div>
         ` : '';
 
         const pedomanBtn = (item.buku_pedoman_path || item.buku_pedoman_url) ? `
-            <a href="/lomba/${item.id_lomba}/pedoman" target="_blank" class="btn btn-outline-secondary btn-sm" style="margin-left: 8px;">
-                <i class="bi bi-file-earmark-arrow-down-fill"></i> Unduh Buku Pedoman
+            <a href="/lomba/${item.id_lomba}/pedoman/view" target="_blank" class="btn btn-outline-primary btn-sm" style="margin-left: 8px;">
+                <i class="bi bi-eye"></i> Lihat PDF Panduan
             </a>
-        ` : '';
+            <a href="/lomba/${item.id_lomba}/pedoman" target="_blank" class="btn btn-outline-secondary btn-sm" style="margin-left: 4px;">
+                <i class="bi bi-download"></i> Unduh Panduan
+            </a>
+        ` : '<span style="font-size: 0.8rem; color: var(--text-muted); margin-left: 8px;">(Panduan belum tersedia)</span>';
 
         const content = `
             ${posterHtml}
@@ -2014,17 +2020,39 @@
 
         const currentPosterEl = document.getElementById('edit_poster_current');
         if (item.poster_url) {
-            currentPosterEl.innerHTML = '<span style="color: #059669;"><i class="bi bi-check-circle-fill"></i> Poster terunggah</span> (<a href="' + item.poster_url + '" target="_blank" style="text-decoration: underline; color: var(--primary);">Lihat poster</a>)';
+            currentPosterEl.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: space-between; background: #F1F5F9; border: 1px solid #CBD5E1; border-radius: 6px; padding: 6px 10px; font-size: 0.75rem;">
+                    <div>
+                        <span style="color: #059669; font-weight: 600;"><i class="bi bi-check-circle-fill"></i> Pamflet terunggah</span>
+                        (<a href="${item.poster_url}" target="_blank" style="text-decoration: underline; color: var(--primary);">Lihat</a>)
+                    </div>
+                    <label style="margin: 0; color: #DC2626; font-size: 0.74rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                        <input type="checkbox" name="hapus_poster" value="1" id="edit_hapus_poster"> Hapus Pamflet
+                    </label>
+                </div>
+            `;
             currentPosterEl.style.display = 'block';
         } else {
+            currentPosterEl.innerHTML = '';
             currentPosterEl.style.display = 'none';
         }
 
         const currentPedomanEl = document.getElementById('edit_pedoman_current');
         if (item.buku_pedoman_path || item.buku_pedoman_url) {
-            currentPedomanEl.innerHTML = '<span style="color: #059669;"><i class="bi bi-file-earmark-check-fill"></i> Pedoman terunggah</span> (<a href="/lomba/' + item.id_lomba + '/pedoman" target="_blank" style="text-decoration: underline; color: var(--primary);">Unduh berkas</a>)';
+            currentPedomanEl.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: space-between; background: #F1F5F9; border: 1px solid #CBD5E1; border-radius: 6px; padding: 6px 10px; font-size: 0.75rem;">
+                    <div>
+                        <span style="color: #059669; font-weight: 600;"><i class="bi bi-file-earmark-check-fill"></i> Panduan terunggah</span>
+                        (<a href="/lomba/${item.id_lomba}/pedoman/view" target="_blank" style="text-decoration: underline; color: var(--primary);">Lihat PDF</a>)
+                    </div>
+                    <label style="margin: 0; color: #DC2626; font-size: 0.74rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                        <input type="checkbox" name="hapus_buku_pedoman" value="1" id="edit_hapus_buku_pedoman"> Hapus Panduan
+                    </label>
+                </div>
+            `;
             currentPedomanEl.style.display = 'block';
         } else {
+            currentPedomanEl.innerHTML = '';
             currentPedomanEl.style.display = 'none';
         }
 

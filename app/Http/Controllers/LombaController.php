@@ -183,6 +183,25 @@ class LombaController extends Controller
     }
 
     /**
+     * Tampilkan berkas Buku Panduan Lomba (Guidebook PDF) secara inline di browser
+     */
+    public function viewPedoman($id)
+    {
+        $lomba = Lomba::findOrFail($id);
+
+        if (! $lomba->buku_pedoman_path || ! Storage::disk('public')->exists($lomba->buku_pedoman_path)) {
+            return back()->with('error', 'Buku panduan resmi belum tersedia untuk kompetisi ini.');
+        }
+
+        $path = Storage::disk('public')->path($lomba->buku_pedoman_path);
+
+        return response()->file($path, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="Buku_Panduan_'.Str::slug($lomba->nama_lomba).'.pdf"',
+        ]);
+    }
+
+    /**
      * Unduh berkas Buku Pedoman Lomba
      */
     public function downloadPedoman($id)
@@ -190,11 +209,11 @@ class LombaController extends Controller
         $lomba = Lomba::findOrFail($id);
 
         if (! $lomba->buku_pedoman_path || ! Storage::disk('public')->exists($lomba->buku_pedoman_path)) {
-            return back()->with('error', 'Buku pedoman resmi belum tersedia untuk kompetisi ini.');
+            return back()->with('error', 'Buku panduan resmi belum tersedia untuk kompetisi ini.');
         }
 
         $extension = pathinfo($lomba->buku_pedoman_path, PATHINFO_EXTENSION) ?: 'pdf';
-        $filename = 'Buku_Pedoman_'.Str::slug($lomba->nama_lomba).'.'.$extension;
+        $filename = 'Buku_Panduan_'.Str::slug($lomba->nama_lomba).'.'.$extension;
 
         return Storage::disk('public')->download($lomba->buku_pedoman_path, $filename);
     }
