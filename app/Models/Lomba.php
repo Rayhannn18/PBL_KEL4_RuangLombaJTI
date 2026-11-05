@@ -203,8 +203,14 @@ class Lomba extends Model
 
     public function getPosterUrlAttribute(): ?string
     {
-        if ($this->poster_path && Storage::disk('public')->exists($this->poster_path)) {
-            return Storage::disk('public')->url($this->poster_path);
+        if ($this->poster_path) {
+            $path = ltrim($this->poster_path, '/');
+            if (str_starts_with($path, 'storage/')) {
+                $path = substr($path, 8);
+            }
+            if (Storage::disk('public')->exists($path)) {
+                return asset('storage/'.$path);
+            }
         }
 
         if ($this->poster) {
@@ -212,7 +218,13 @@ class Lomba extends Model
                 return $this->poster;
             }
             if (Storage::disk('public')->exists('lomba/poster/'.$this->poster)) {
-                return Storage::disk('public')->url('lomba/poster/'.$this->poster);
+                return asset('storage/lomba/poster/'.$this->poster);
+            }
+            if (Storage::disk('public')->exists($this->poster)) {
+                return asset('storage/'.$this->poster);
+            }
+            if (file_exists(public_path('images/poster/'.$this->poster))) {
+                return asset('images/poster/'.$this->poster);
             }
         }
 
@@ -221,8 +233,14 @@ class Lomba extends Model
 
     public function getBukuPedomanUrlAttribute(): ?string
     {
-        if ($this->buku_pedoman_path && Storage::disk('public')->exists($this->buku_pedoman_path)) {
-            return Storage::disk('public')->url($this->buku_pedoman_path);
+        if ($this->buku_pedoman_path) {
+            $path = ltrim($this->buku_pedoman_path, '/');
+            if (str_starts_with($path, 'storage/')) {
+                $path = substr($path, 8);
+            }
+            if (Storage::disk('public')->exists($path)) {
+                return asset('storage/'.$path);
+            }
         }
 
         return null;

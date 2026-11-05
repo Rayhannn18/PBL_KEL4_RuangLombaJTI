@@ -116,7 +116,19 @@
                         </div>
                         <img src="{{ $lomba->poster_url }}"
                              alt="Pamflet {{ $lomba->nama_lomba }}"
-                             style="max-height: 480px; max-width: 100%; height: auto; border-radius: var(--radius-sm); object-fit: contain; box-shadow: var(--shadow-sm);">
+                             style="max-height: 480px; max-width: 100%; height: auto; border-radius: var(--radius-sm); object-fit: contain; box-shadow: var(--shadow-sm);"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <div style="display: none; padding: 24px 16px; background: linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 100%); border: 1px dashed var(--border); border-radius: var(--radius-sm);">
+                            <i class="bi bi-image" style="font-size: 2.2rem; color: #94A3B8; display: block; margin-bottom: 6px;"></i>
+                            <div style="font-size: 0.85rem; font-weight: 700; color: var(--primary-dark);">Pamflet Tidak Dapat Dimuat</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">File gambar pamflet belum dapat dimuat dari server.</div>
+                        </div>
+                    </div>
+                @else
+                    <div style="margin-bottom: 24px; border-radius: var(--radius-md); overflow: hidden; background: linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 100%); border: 1px dashed var(--border); text-align: center; padding: 24px 16px;">
+                        <i class="bi bi-image" style="font-size: 2.2rem; color: #94A3B8; display: block; margin-bottom: 6px;"></i>
+                        <div style="font-size: 0.85rem; font-weight: 700; color: var(--primary-dark);">Pamflet Belum Diunggah</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">Penyelenggara belum mengunggah poster resmi untuk kompetisi ini.</div>
                     </div>
                 @endif
 

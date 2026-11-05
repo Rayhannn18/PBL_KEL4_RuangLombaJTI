@@ -60,8 +60,8 @@ class StoreLombaRequest extends FormRequest
             'deskripsi' => ['required', 'string'],
             'persyaratan' => ['required', 'string'],
             'benefit' => ['required', 'string'],
-            'poster' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
-            'buku_pedoman' => ['nullable', 'file', 'mimes:pdf', 'max:10240'],
+            'poster' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
+            'buku_pedoman' => ['required', 'file', 'mimes:pdf', 'max:10240'],
         ];
     }
 
@@ -87,9 +87,11 @@ class StoreLombaRequest extends FormRequest
             'deskripsi.required' => 'Deskripsi kompetisi wajib diisi.',
             'persyaratan.required' => 'Persyaratan & ketentuan delegasi wajib diisi.',
             'benefit.required' => 'Benefit & penghargaan wajib diisi.',
+            'poster.required' => 'Pamflet lomba wajib diunggah.',
             'poster.image' => 'Pamflet lomba harus berupa file gambar.',
             'poster.mimes' => 'Format file pamflet harus berupa JPG, JPEG, atau PNG.',
             'poster.max' => 'Ukuran file pamflet maksimal 2 MB.',
+            'buku_pedoman.required' => 'Buku panduan (guidebook) wajib diunggah.',
             'buku_pedoman.file' => 'Buku panduan harus berupa file dokumen yang valid.',
             'buku_pedoman.mimes' => 'Format file buku panduan harus berupa PDF.',
             'buku_pedoman.max' => 'Ukuran file buku panduan maksimal 10 MB.',

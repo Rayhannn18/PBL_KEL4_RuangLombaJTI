@@ -109,9 +109,9 @@ class PamfletDanBukuPanduanLombaTest extends TestCase
     }
 
     /**
-     * 3. Admin dapat menambah lomba tanpa mengunggah file (opsional).
+     * 3. Admin wajib mengunggah file Pamflet dan Buku Panduan saat menambah lomba (required).
      */
-    public function test_admin_dapat_menambah_lomba_tanpa_pamflet_dan_panduan(): void
+    public function test_admin_wajib_mengunggah_pamflet_dan_panduan_saat_tambah_lomba(): void
     {
         Storage::fake('public');
         $this->loginAdmin();
@@ -131,12 +131,8 @@ class PamfletDanBukuPanduanLombaTest extends TestCase
             'benefit' => 'Benefit lomba tanpa berkas.',
         ]);
 
-        $response->assertRedirect(route('admin.index', ['tab' => 'lomba']));
-
-        $lomba = Lomba::where('nama_lomba', 'Lomba Polos Tanpa File')->first();
-        $this->assertNotNull($lomba);
-        $this->assertNull($lomba->poster_path);
-        $this->assertNull($lomba->buku_pedoman_path);
+        $response->assertSessionHasErrors(['poster', 'buku_pedoman']);
+        $this->assertDatabaseMissing('lomba', ['nama_lomba' => 'Lomba Polos Tanpa File']);
     }
 
     /**

@@ -540,11 +540,20 @@
                             @endif
                         </div>
 
-                        @if($lomba->poster_url)
-                            <a href="{{ route('lomba.show', $lomba->id_lomba) }}" style="display: block; margin-bottom: 12px; border-radius: var(--radius-sm); overflow: hidden; background: #F1F5F9; max-height: 140px; text-align: center;">
-                                <img src="{{ $lomba->poster_url }}" alt="Poster {{ $lomba->nama_lomba }}" style="width: 100%; height: 140px; object-fit: cover; display: block;" loading="lazy">
-                            </a>
-                        @endif
+                        <a href="{{ route('lomba.show', $lomba->id_lomba) }}" style="display: block; margin-bottom: 12px; border-radius: var(--radius-sm); overflow: hidden; background: #F1F5F9; height: 140px; text-align: center; text-decoration: none; position: relative;">
+                            @if($lomba->poster_url)
+                                <img src="{{ $lomba->poster_url }}" alt="Poster {{ $lomba->nama_lomba }}" style="width: 100%; height: 140px; object-fit: cover; display: block;" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div style="display: none; width: 100%; height: 140px; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 100%); color: var(--text-muted); border: 1px dashed var(--border); border-radius: var(--radius-sm);">
+                                    <i class="bi bi-trophy" style="font-size: 2rem; color: #94A3B8; margin-bottom: 4px;"></i>
+                                    <span style="font-size: 0.74rem; font-weight: 600; color: var(--text-muted);">Pamflet Kompetisi</span>
+                                </div>
+                            @else
+                                <div style="display: flex; width: 100%; height: 140px; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 100%); color: var(--text-muted); border: 1px dashed var(--border); border-radius: var(--radius-sm);">
+                                    <i class="bi bi-trophy" style="font-size: 2rem; color: #94A3B8; margin-bottom: 4px;"></i>
+                                    <span style="font-size: 0.74rem; font-weight: 600; color: var(--text-muted);">Pamflet Kompetisi</span>
+                                </div>
+                            @endif
+                        </a>
 
                         <!-- Judul & Penyelenggara -->
                         <h2 class="lomba-title">

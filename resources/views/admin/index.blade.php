@@ -846,11 +846,22 @@
                             <td style="font-weight: 700; color: #94A3B8;">#{{ $item->id_lomba }}</td>
                             <td>
                                 <div style="font-weight: 700; color: var(--primary-dark);">{{ $item->nama_lomba }}</div>
-                                @if(!empty($item->tautan_daftar))
-                                    <a href="{{ $item->tautan_daftar }}" target="_blank" style="font-size: 0.72rem; color: #2563EB; display: inline-flex; align-items: center; gap: 3px; margin-top: 3px;">
-                                        <i class="bi bi-box-arrow-up-right"></i> Tautan Pendaftaran
-                                    </a>
-                                @endif
+                                <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 3px;">
+                                    @if($item->poster_url)
+                                        <span class="badge" style="font-size: 0.68rem; background: #ECFDF5; color: #059669; border: 1px solid #A7F3D0;">
+                                            <i class="bi bi-image"></i> Ada Pamflet
+                                        </span>
+                                    @else
+                                        <span class="badge" style="font-size: 0.68rem; background: #F8FAFC; color: #94A3B8; border: 1px solid #E2E8F0;">
+                                            <i class="bi bi-image"></i> Tanpa Pamflet
+                                        </span>
+                                    @endif
+                                    @if(!empty($item->tautan_daftar))
+                                        <a href="{{ $item->tautan_daftar }}" target="_blank" style="font-size: 0.72rem; color: #2563EB; display: inline-flex; align-items: center; gap: 3px;">
+                                            <i class="bi bi-box-arrow-up-right"></i> Tautan Pendaftaran
+                                        </a>
+                                    @endif
+                                </div>
                             </td>
                             <td>
                                 <div style="font-weight: 600;">{{ $item->kategori }}</div>
@@ -1424,15 +1435,15 @@
                 <!-- Input Berkas Pamflet & Buku Panduan -->
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px;">
                     <div class="form-group" style="margin-bottom: 0;">
-                        <label class="form-label">Pamflet Lomba <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(JPG, JPEG, PNG maks 2MB, opsional)</span></label>
-                        <input type="file" name="poster" id="tambah_lomba_poster" class="form-control" accept=".jpg,.jpeg,.png,image/jpeg,image/png" onchange="previewPosterFile(this, 'tambah_poster_preview', 'tambah_poster_preview_img')">
+                        <label class="form-label">Pamflet Lomba <span style="color: var(--danger);">*</span> <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(JPG, JPEG, PNG maks 2MB)</span></label>
+                        <input type="file" name="poster" id="tambah_lomba_poster" class="form-control" required accept=".jpg,.jpeg,.png,image/jpeg,image/png" onchange="previewPosterFile(this, 'tambah_poster_preview', 'tambah_poster_preview_img')">
                         <div id="tambah_poster_preview" style="display: none; margin-top: 8px; border: 1px dashed var(--border); border-radius: var(--radius-sm); padding: 6px; text-align: center; background: #F8FAFC;">
                             <img id="tambah_poster_preview_img" src="" alt="Pratinjau Pamflet" style="max-height: 120px; max-width: 100%; border-radius: 4px; object-fit: contain;">
                         </div>
                     </div>
                     <div class="form-group" style="margin-bottom: 0;">
-                        <label class="form-label">Buku Panduan (Guidebook) <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(PDF maks 10MB, opsional)</span></label>
-                        <input type="file" name="buku_pedoman" id="tambah_lomba_pedoman" class="form-control" accept=".pdf,application/pdf" onchange="previewPedomanFile(this, 'tambah_pedoman_info', 'tambah_pedoman_filename')">
+                        <label class="form-label">Buku Panduan (Guidebook) <span style="color: var(--danger);">*</span> <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(PDF maks 10MB)</span></label>
+                        <input type="file" name="buku_pedoman" id="tambah_lomba_pedoman" class="form-control" required accept=".pdf,application/pdf" onchange="previewPedomanFile(this, 'tambah_pedoman_info', 'tambah_pedoman_filename')">
                         <div id="tambah_pedoman_info" style="display: none; margin-top: 8px; font-size: 0.8rem; color: #0369A1; background: #E0F2FE; border-radius: var(--radius-sm); padding: 6px 10px;">
                             <i class="bi bi-file-earmark-check-fill"></i> <span id="tambah_pedoman_filename"></span>
                         </div>
@@ -1935,9 +1946,18 @@
                 <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">
                     <i class="bi bi-image"></i> Pamflet Lomba
                 </div>
-                <img src="${item.poster_url}" alt="Pamflet ${item.nama_lomba}" style="max-height: 240px; max-width: 100%; border-radius: var(--radius-sm); object-fit: contain;">
+                <img src="${item.poster_url}" alt="Pamflet ${item.nama_lomba}" style="max-height: 240px; max-width: 100%; border-radius: var(--radius-sm); object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div style="display: none; padding: 16px; color: var(--text-muted); font-size: 0.8rem; border: 1px dashed var(--border); border-radius: var(--radius-sm); background: #fff;">
+                    <i class="bi bi-image" style="font-size: 1.5rem; display: block; margin-bottom: 4px; color: #94A3B8;"></i>
+                    Pamflet tidak dapat dimuat dari server
+                </div>
             </div>
-        ` : '';
+        ` : `
+            <div style="text-align: center; margin-bottom: 16px; background: linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 100%); border: 1px dashed var(--border); border-radius: var(--radius-sm); padding: 16px; color: var(--text-muted); font-size: 0.8rem;">
+                <i class="bi bi-image" style="font-size: 1.5rem; display: block; margin-bottom: 4px; color: #94A3B8;"></i>
+                Pamflet belum diunggah
+            </div>
+        `;
 
         const pedomanBtn = (item.buku_pedoman_path || item.buku_pedoman_url) ? `
             <a href="/lomba/${item.id_lomba}/pedoman/view" target="_blank" class="btn btn-outline-primary btn-sm" style="margin-left: 8px;">
