@@ -87,7 +87,7 @@ class ProgresBabakDosenTest extends TestCase
             'id_lomba' => $lomba->id_lomba,
             'nim' => $ketua->nim,
             'kuota_anggota' => 3,
-            'status' => 'disetujui',
+            'status_tim' => 'disetujui',
         ]);
 
         $pengajuan = PengajuanBimbingan::create([
@@ -157,6 +157,35 @@ class ProgresBabakDosenTest extends TestCase
 
         $response->assertRedirect();
         $response->assertSessionHas('error', 'Anda bukan anggota resmi dari tim ini.');
+    }
+
+    /**
+     * Anggota tim biasa (bukan Ketua Tim) ditolak saat melaporkan progres babak
+     */
+    public function test_anggota_biasa_ditolak_melaporkan_progres_babak(): void
+    {
+        $dosen = Dosen::first();
+        [$pengajuan, , $ketua] = $this->createBimbinganWithProgres($dosen);
+
+        $anggota = Mahasiswa::where('nim', '!=', $ketua->nim)->first();
+        \App\Models\AnggotaTim::create([
+            'id_tim' => $pengajuan->id_tim,
+            'nim' => $anggota->nim,
+            'status_gabung' => 'diterima',
+            'peran' => 'Anggota Tim',
+        ]);
+
+        $this->actingAsMahasiswa($anggota);
+
+        $response = $this->post(route('bimbingan.progres.store'), [
+            'id_pengajuan' => $pengajuan->id_pengajuan,
+            'babak' => 'Babak Final',
+            'tanggal_update' => now()->format('Y-m-d'),
+            'hasil_akhir' => 'Juara 1',
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('error', 'Akses ditolak. Hanya Ketua Tim dengan status resmi yang berhak melaporkan progres babak kompetisi.');
     }
 
     /**

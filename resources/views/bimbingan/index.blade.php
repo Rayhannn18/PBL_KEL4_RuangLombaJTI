@@ -972,17 +972,23 @@
                                 </div>
                                 <div style="font-size: 0.78rem; color: var(--text-muted);">Tahapan kompetisi yang ditempuh tim bimbingan</div>
                             </div>
-                            <div>
-                                <button type="button" class="btn btn-primary btn-sm" onclick="openModalTambahProgres()">
-                                    <i class="bi bi-plus-lg"></i> Lapor Progres Babak
-                                </button>
-                            </div>
+                            @if($isKetua ?? ($selectedTim->nim === $authUser['id'] && \App\Models\Tim::ketuaDisetujui($authUser['id'])))
+                                <div>
+                                    <button type="button" class="btn btn-primary btn-sm" onclick="openModalTambahProgres()">
+                                        <i class="bi bi-plus-lg"></i> Lapor Progres Babak
+                                    </button>
+                                </div>
+                            @endif
                         </div>
                         <div class="card-body">
                             @if($pengajuan->progresBabak->isEmpty())
                                 <div style="text-align: center; padding: 25px 20px; color: var(--text-muted); font-size: 0.85rem;">
                                     <i class="bi bi-flag" style="font-size: 1.8rem; opacity: 0.5; display: block; margin-bottom: 6px;"></i>
-                                    Belum ada laporan progres babak kompetisi. Klik tombol <strong>"Lapor Progres Babak"</strong> di atas setiap kali tim Anda menyelesaikan tahapan lomba.
+                                    @if($isKetua ?? ($selectedTim->nim === $authUser['id'] && \App\Models\Tim::ketuaDisetujui($authUser['id'])))
+                                        Belum ada laporan progres babak kompetisi. Klik tombol <strong>"Lapor Progres Babak"</strong> di atas setiap kali tim Anda menyelesaikan tahapan lomba.
+                                    @else
+                                        Belum ada laporan progres babak kompetisi dari tim Anda. Progres babak hanya dapat dilaporkan oleh Ketua Tim resmi.
+                                    @endif
                                 </div>
                             @else
                                 <div style="display: flex; flex-direction: column; gap: 10px;">
@@ -1643,8 +1649,9 @@
 
     {{-- ========================================================================= --}}
     {{-- MODAL 2C: Form Tambah Laporan Progres Babak Mahasiswa                     --}}
+    {{-- Hanya untuk Ketua Tim Mahasiswa Resmi (memiliki badge Ketua Tim)          --}}
     {{-- ========================================================================= --}}
-    @if(isset($pengajuan) && $pengajuan && $pengajuan->status === 'disetujui')
+    @if(isset($pengajuan) && $pengajuan && $pengajuan->status === 'disetujui' && ($isKetua ?? ($selectedTim->nim === $authUser['id'] && \App\Models\Tim::ketuaDisetujui($authUser['id']))))
         <div id="modalTambahProgres" class="modal-backdrop-custom" style="display: none;">
             <div class="modal-box">
                 <div class="modal-header-custom">

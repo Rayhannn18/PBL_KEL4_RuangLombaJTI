@@ -152,7 +152,7 @@ class BimbinganController extends Controller
                 })->values();
             }
 
-            $isKetua = ($selectedTim->nim === $authUser['id']);
+            $isKetua = ($selectedTim->nim === $authUser['id'] && Tim::ketuaDisetujui($authUser['id']));
 
             return view('bimbingan.index', [
                 'authUser' => $authUser,
@@ -536,10 +536,14 @@ class BimbinganController extends Controller
             return back()->with('error', 'Laporan progres babak hanya dapat diajukan setelah bimbingan resmi disetujui oleh Dosen Pembimbing.');
         }
 
-        $isMember = ($pengajuan->tim->nim === $authUser['id']) ||
-            $pengajuan->tim->anggotaDiterima->contains('nim', $authUser['id']);
+        $isKetua = ($pengajuan->tim->nim === $authUser['id'] && Tim::ketuaDisetujui($authUser['id']));
+        $isAnggota = $pengajuan->tim->anggotaDiterima->contains('nim', $authUser['id']);
 
-        if (! $isMember) {
+        if (! $isKetua) {
+            if ($isAnggota) {
+                return back()->with('error', 'Akses ditolak. Hanya Ketua Tim dengan status resmi yang berhak melaporkan progres babak kompetisi.');
+            }
+
             return back()->with('error', 'Anda bukan anggota resmi dari tim ini.');
         }
 
