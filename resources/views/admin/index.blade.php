@@ -1155,8 +1155,9 @@
         </div>
 
         <!-- Tabel Dosen -->
-        <div class="table-container">
-            <table class="custom-table">
+        <div class="table-container" style="overflow: visible;">
+            <div style="overflow-x: auto; border-radius: var(--radius-md);">
+            <table class="custom-table" style="min-width: 900px;">
                 <thead>
                     <tr>
                         <th style="width: 140px;">NIP</th>
@@ -1198,7 +1199,7 @@
                                     </span>
                                 @endif
                             </td>
-                            <td style="text-align: right;">
+                            <td style="text-align: right; padding-right: 16px; white-space: nowrap;">
                                 <div style="display: inline-flex; gap: 4px;">
                                     <button type="button" class="btn btn-secondary btn-sm" title="Ubah Data Dosen" onclick="editDosen({{ json_encode($d) }})">
                                         <i class="bi bi-pencil"></i>
@@ -1223,6 +1224,7 @@
                     @endforelse
                 </tbody>
             </table>
+            </div>
         </div>
     @endif
 
