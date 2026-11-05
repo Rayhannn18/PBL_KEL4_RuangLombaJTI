@@ -19,9 +19,15 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class AdminController extends Controller
 {
+    public const PRODI_OPTIONS = [
+        'D-IV Sistem Informasi Bisnis',
+        'D-IV Teknik Informatika',
+    ];
+
     /**
      * Halaman Utama Panel Administrator RuangLombaJTI
      * Berdasarkan Activity Diagram:
@@ -187,11 +193,7 @@ class AdminController extends Controller
         }
 
         // Opsi Program Studi & Kategori Lomba Standar
-        $prodiOptions = [
-            'D-IV Sistem Informasi Bisnis',
-            'D-IV Teknik Informatika',
-            'D-III Manajemen Informatika',
-        ];
+        $prodiOptions = self::PRODI_OPTIONS;
 
         $kategoriLombaOptions = [
             'Software Development',
@@ -634,8 +636,10 @@ class AdminController extends Controller
             'nama' => 'required|string|max:150',
             'email_kampus' => 'required|email|max:150|unique:mahasiswa,email_kampus',
             'password' => 'required|string|min:6',
-            'prodi' => 'required|string|max:100',
+            'prodi' => ['required', 'string', Rule::in(self::PRODI_OPTIONS)],
             'angkatan' => 'required|integer|min:2020|max:2027',
+        ], [
+            'prodi.in' => 'Program studi harus berupa D-IV Sistem Informasi Bisnis atau D-IV Teknik Informatika.',
         ]);
 
         Mahasiswa::create([
@@ -663,9 +667,11 @@ class AdminController extends Controller
         $validated = $request->validate([
             'nama' => 'required|string|max:150',
             'email_kampus' => 'required|email|max:150|unique:mahasiswa,email_kampus,'.$nim.',nim',
-            'prodi' => 'required|string|max:100',
+            'prodi' => ['required', 'string', Rule::in(self::PRODI_OPTIONS)],
             'angkatan' => 'required|integer|min:2020|max:2027',
             'password' => 'nullable|string|min:6',
+        ], [
+            'prodi.in' => 'Program studi harus berupa D-IV Sistem Informasi Bisnis atau D-IV Teknik Informatika.',
         ]);
 
         $updateData = [

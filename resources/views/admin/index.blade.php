@@ -1735,7 +1735,7 @@
                     <label class="form-label">Program Studi <span style="color: var(--danger);">*</span></label>
                     <select name="prodi" class="form-select" required>
                         @foreach($prodiOptions as $p)
-                            <option value="{{ $p }}">{{ $p }}</option>
+                            <option value="{{ $p }}" {{ old('prodi', 'D-IV Sistem Informasi Bisnis') === $p ? 'selected' : '' }}>{{ $p }}</option>
                         @endforeach
                     </select>
                 </div>

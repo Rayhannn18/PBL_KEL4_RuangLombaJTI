@@ -375,4 +375,24 @@ class AdminTest extends TestCase
         $responseDelete->assertRedirect(route('admin.index', ['tab' => 'mahasiswa']));
         $this->assertDatabaseMissing('mahasiswa', ['nim' => '244107068888']);
     }
+
+    /**
+     * Admin cannot create mahasiswa with D-III Manajemen Informatika
+     */
+    public function test_admin_cannot_create_mahasiswa_with_d3_manajemen_informatika(): void
+    {
+        $this->loginAdmin();
+
+        $response = $this->post('/admin/mahasiswa', [
+            'nim' => '244107067777',
+            'nama' => 'Mahasiswa D3 Invalid',
+            'email_kampus' => 'mhs.d3@student.polinema.ac.id',
+            'password' => 'password123',
+            'prodi' => 'D-III Manajemen Informatika',
+            'angkatan' => 2024,
+        ]);
+
+        $response->assertSessionHasErrors('prodi');
+        $this->assertDatabaseMissing('mahasiswa', ['nim' => '244107067777']);
+    }
 }
