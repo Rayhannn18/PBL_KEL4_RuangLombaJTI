@@ -30,6 +30,15 @@ class Dosen extends Model
         'password',
     ];
 
+    /**
+     * Accessor: $dosen->nip mengembalikan nilai kolom nidn.
+     * Berguna untuk tampilan yang memakai istilah "NIP".
+     */
+    public function getNipAttribute(): ?string
+    {
+        return $this->attributes['nidn'] ?? null;
+    }
+
     public function pengajuanBimbingan()
     {
         return $this->hasMany(PengajuanBimbingan::class, 'nidn', 'nidn');
@@ -49,6 +58,8 @@ class Dosen extends Model
                 ? $this->pengajuanBimbingan->where('status', 'disetujui')->count()
                 : $this->bimbinganAktif()->count());
 
-        return max(0, $this->kuota_bimbingan - $aktifCount);
+        $kuota = $this->kuota_bimbingan ?? 0;
+
+        return max(0, $kuota - $aktifCount);
     }
 }

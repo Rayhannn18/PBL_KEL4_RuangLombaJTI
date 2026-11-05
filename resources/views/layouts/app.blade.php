@@ -575,40 +575,42 @@
     <!-- Main Body Container -->
     <main>
         <div class="container">
-            <!-- Flash Message Alert -->
-            @if(session('success'))
-                <div class="alert alert-success">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <i class="bi bi-check-circle-fill" style="font-size: 1.2rem;"></i>
-                        <span>{{ session('success') }}</span>
+            {{-- Flash Message Alert: dilewati bila child view menangani alert-nya sendiri --}}
+            @unless(View::hasSection('hide_layout_alerts'))
+                @if(session('success'))
+                    <div class="alert alert-success">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <i class="bi bi-check-circle-fill" style="font-size: 1.2rem;"></i>
+                            <span>{{ session('success') }}</span>
+                        </div>
+                        <button class="alert-close" onclick="this.parentElement.remove()">&times;</button>
                     </div>
-                    <button class="alert-close" onclick="this.parentElement.remove()">&times;</button>
-                </div>
-            @endif
+                @endif
 
-            @if(session('error'))
-                <div class="alert alert-danger">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <i class="bi bi-exclamation-triangle-fill" style="font-size: 1.2rem;"></i>
-                        <span>{{ session('error') }}</span>
+                @if(session('error'))
+                    <div class="alert alert-danger">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <i class="bi bi-exclamation-triangle-fill" style="font-size: 1.2rem;"></i>
+                            <span>{{ session('error') }}</span>
+                        </div>
+                        <button class="alert-close" onclick="this.parentElement.remove()">&times;</button>
                     </div>
-                    <button class="alert-close" onclick="this.parentElement.remove()">&times;</button>
-                </div>
-            @endif
+                @endif
 
-            @if($errors->any())
-                <div class="alert alert-danger">
-                    <div>
-                        <div style="font-weight: 700; margin-bottom: 5px;"><i class="bi bi-x-circle-fill"></i> Terdapat kesalahan input:</div>
-                        <ul style="padding-left: 20px; font-size: 0.85rem;">
-                            @foreach($errors->all() as $err)
-                                <li>{{ $err }}</li>
-                            @endforeach
-                        </ul>
+                @if($errors->any())
+                    <div class="alert alert-danger">
+                        <div>
+                            <div style="font-weight: 700; margin-bottom: 5px;"><i class="bi bi-x-circle-fill"></i> Terdapat kesalahan input:</div>
+                            <ul style="padding-left: 20px; font-size: 0.85rem;">
+                                @foreach($errors->all() as $err)
+                                    <li>{{ $err }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                        <button class="alert-close" onclick="this.parentElement.remove()">&times;</button>
                     </div>
-                    <button class="alert-close" onclick="this.parentElement.remove()">&times;</button>
-                </div>
-            @endif
+                @endif
+            @endunless
 
             @yield('content')
         </div>

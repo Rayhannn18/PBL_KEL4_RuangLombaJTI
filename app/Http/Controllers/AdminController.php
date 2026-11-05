@@ -530,31 +530,45 @@ class AdminController extends Controller
 
     /**
      * Tambah Dosen Baru
+     * Form menggunakan field "nip" (18 digit angka), disimpan ke kolom "nidn".
      */
     public function storeDosen(Request $request)
     {
         $validated = $request->validate([
-            'nidn' => 'required|string|max:20|unique:dosen,nidn',
+            'nip' => 'required|string|size:18|regex:/^[0-9]{18}$/|unique:dosen,nidn',
             'nama' => 'required|string|max:150',
             'email_kampus' => 'required|email|max:150|unique:dosen,email_kampus',
             'password' => 'required|string|min:6',
             'bidang_keahlian' => 'required|string|max:255',
-            'kuota_bimbingan' => 'required|integer|min:1|max:20',
+        ], [
+            'nip.required' => 'NIP wajib diisi.',
+            'nip.size' => 'NIP harus terdiri dari tepat 18 digit angka.',
+            'nip.regex' => 'NIP harus berupa 18 digit angka tanpa huruf atau spasi.',
+            'nip.unique' => 'NIP tersebut sudah terdaftar di sistem.',
+            'nama.required' => 'Nama lengkap dan gelar wajib diisi.',
+            'nama.max' => 'Nama lengkap dan gelar maksimal 150 karakter.',
+            'email_kampus.required' => 'Email Kampus Dosen wajib diisi.',
+            'email_kampus.email' => 'Format Email Kampus Dosen tidak valid.',
+            'email_kampus.max' => 'Email Kampus Dosen maksimal 150 karakter.',
+            'email_kampus.unique' => 'Email Kampus Dosen sudah terdaftar di sistem.',
+            'password.required' => 'Kata sandi awal wajib diisi.',
+            'password.min' => 'Kata sandi awal minimal 6 karakter.',
+            'bidang_keahlian.required' => 'Bidang keahlian wajib diisi.',
+            'bidang_keahlian.max' => 'Bidang keahlian maksimal 255 karakter.',
         ]);
 
         Dosen::create([
-            'nidn' => $validated['nidn'],
+            'nidn' => $validated['nip'],
             'nama' => $validated['nama'],
             'email_kampus' => $validated['email_kampus'],
             'password' => Hash::make($validated['password']),
             'bidang_keahlian' => $validated['bidang_keahlian'],
-            'kuota_bimbingan' => $validated['kuota_bimbingan'],
         ]);
 
         $this->clearCache();
 
         return redirect()->route('admin.index', ['tab' => 'dosen'])
-            ->with('success', 'Dosen baru '.$validated['nama'].' (NIDN: '.$validated['nidn'].') berhasil ditambahkan!');
+            ->with('success', 'Dosen baru '.$validated['nama'].' (NIP: '.$validated['nip'].') berhasil ditambahkan!');
     }
 
     /**

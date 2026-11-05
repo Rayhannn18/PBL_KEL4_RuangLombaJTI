@@ -296,24 +296,23 @@ class AdminTest extends TestCase
     {
         $this->loginAdmin();
 
-        // Create
+        // Create — menggunakan field "nip" (18 digit) sesuai form baru
         $response = $this->post('/admin/dosen', [
-            'nidn' => '0099887766',
+            'nip' => '009988776600112233',
             'nama' => 'Dosen Baru S.Kom., M.T.',
             'email_kampus' => 'dosen.baru@polinema.ac.id',
             'password' => 'password123',
             'bidang_keahlian' => 'Cloud Computing',
-            'kuota_bimbingan' => 6,
         ]);
 
         $response->assertRedirect(route('admin.index', ['tab' => 'dosen']));
         $this->assertDatabaseHas('dosen', [
-            'nidn' => '0099887766',
+            'nidn' => '009988776600112233',
             'nama' => 'Dosen Baru S.Kom., M.T.',
         ]);
 
         // Update
-        $responseUpdate = $this->put('/admin/dosen/0099887766', [
+        $responseUpdate = $this->put('/admin/dosen/009988776600112233', [
             'nama' => 'Dosen Baru S.Kom., M.T., Ph.D.',
             'email_kampus' => 'dosen.baru@polinema.ac.id',
             'bidang_keahlian' => 'Cloud & DevOps Engineering',
@@ -322,15 +321,15 @@ class AdminTest extends TestCase
 
         $responseUpdate->assertRedirect(route('admin.index', ['tab' => 'dosen']));
         $this->assertDatabaseHas('dosen', [
-            'nidn' => '0099887766',
+            'nidn' => '009988776600112233',
             'nama' => 'Dosen Baru S.Kom., M.T., Ph.D.',
             'kuota_bimbingan' => 8,
         ]);
 
         // Delete
-        $responseDelete = $this->delete('/admin/dosen/0099887766');
+        $responseDelete = $this->delete('/admin/dosen/009988776600112233');
         $responseDelete->assertRedirect(route('admin.index', ['tab' => 'dosen']));
-        $this->assertDatabaseMissing('dosen', ['nidn' => '0099887766']);
+        $this->assertDatabaseMissing('dosen', ['nidn' => '009988776600112233']);
     }
 
     /**

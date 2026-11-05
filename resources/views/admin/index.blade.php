@@ -2,6 +2,9 @@
 
 @section('title', 'Panel Administrator Kemahasiswaan JTI')
 
+{{-- Admin view sudah punya alert sendiri di bawah banner; skip alert di layout --}}
+@section('hide_layout_alerts', true)
+
 @push('styles')
 <style>
     /* Styling Khusus Panel Admin */
@@ -1127,7 +1130,7 @@
             <div style="display: flex; gap: 10px; align-items: center;">
                 <form action="{{ route('admin.index') }}" method="GET" style="display: flex; gap: 8px; margin: 0;">
                     <input type="hidden" name="tab" value="dosen">
-                    <input type="text" name="dosen_search" class="form-control" style="width: 240px; padding: 7px 12px; font-size: 0.85rem;" placeholder="Cari NIDN / Nama / Keahlian..." value="{{ $dosenSearch }}">
+                    <input type="text" name="dosen_search" class="form-control" style="width: 240px; padding: 7px 12px; font-size: 0.85rem;" placeholder="Cari NIP / Nama / Keahlian..." value="{{ $dosenSearch }}">
                     <button type="submit" class="btn btn-secondary btn-sm"><i class="bi bi-search"></i></button>
                     @if(!empty($dosenSearch))
                         <a href="{{ route('admin.index', ['tab' => 'dosen']) }}" class="btn btn-secondary btn-sm" title="Reset pencarian"><i class="bi bi-x"></i></a>
@@ -1145,7 +1148,7 @@
             <table class="custom-table">
                 <thead>
                     <tr>
-                        <th style="width: 140px;">NIDN</th>
+                        <th style="width: 140px;">NIP</th>
                         <th>Nama Dosen & Gelar</th>
                         <th>Email Kampus</th>
                         <th>Bidang Keahlian</th>
@@ -1157,7 +1160,7 @@
                 <tbody>
                     @forelse($dosenList as $d)
                         <tr>
-                            <td style="font-weight: 700; color: var(--primary);">{{ $d->nidn }}</td>
+                            <td style="font-weight: 700; color: var(--primary);">{{ $d->nip ?? $d->nidn }}</td>
                             <td>
                                 <div style="font-weight: 700; color: var(--primary-dark);">{{ $d->nama }}</div>
                             </td>
@@ -1168,13 +1171,21 @@
                                 <span class="badge badge-purple" style="font-size: 0.78rem;">{{ $d->bidang_keahlian }}</span>
                             </td>
                             <td>
-                                <span style="font-weight: 700; color: var(--primary-dark);">{{ $d->kuota_bimbingan }}</span>
-                                <span style="font-size: 0.75rem; color: var(--text-muted);">tim</span>
+                                <span style="font-weight: 700; color: var(--primary-dark);">{{ $d->kuota_bimbingan ?? '-' }}</span>
+                                @if($d->kuota_bimbingan !== null)
+                                    <span style="font-size: 0.75rem; color: var(--text-muted);">tim</span>
+                                @endif
                             </td>
                             <td>
-                                <span class="badge {{ $d->bimbingan_aktif_count >= $d->kuota_bimbingan ? 'badge-danger' : 'badge-success' }}">
-                                    {{ $d->bimbingan_aktif_count ?? 0 }} Tim Aktif
-                                </span>
+                                @if($d->kuota_bimbingan !== null)
+                                    <span class="badge {{ $d->bimbingan_aktif_count >= $d->kuota_bimbingan ? 'badge-danger' : 'badge-success' }}">
+                                        {{ $d->bimbingan_aktif_count ?? 0 }} Tim Aktif
+                                    </span>
+                                @else
+                                    <span class="badge badge-success">
+                                        {{ $d->bimbingan_aktif_count ?? 0 }} Tim Aktif
+                                    </span>
+                                @endif
                             </td>
                             <td style="text-align: right;">
                                 <div style="display: inline-flex; gap: 4px;">
@@ -1601,15 +1612,9 @@
         <form action="{{ route('admin.dosen.store') }}" method="POST">
             @csrf
             <div class="modal-body">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
-                    <div class="form-group">
-                        <label class="form-label">NIDN <span style="color: var(--danger);">*</span></label>
-                        <input type="text" name="nidn" class="form-control" required placeholder="Contoh: 0012058509">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Kuota Bimbingan <span style="color: var(--danger);">*</span></label>
-                        <input type="number" name="kuota_bimbingan" class="form-control" required value="5" min="1" max="20">
-                    </div>
+                <div class="form-group">
+                    <label class="form-label">NIP <span style="color: var(--danger);">*</span></label>
+                    <input type="text" name="nip" id="tambah_dosen_nip" class="form-control" required placeholder="Contoh: 198501012010121001" maxlength="18" inputmode="numeric">
                 </div>
 
                 <div class="form-group">
@@ -1619,7 +1624,7 @@
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
                     <div class="form-group">
-                        <label class="form-label">Email Kampus <span style="color: var(--danger);">*</span></label>
+                        <label class="form-label">Email Kampus Dosen <span style="color: var(--danger);">*</span></label>
                         <input type="email" name="email_kampus" class="form-control" required placeholder="budi.santoso@polinema.ac.id">
                     </div>
                     <div class="form-group">
