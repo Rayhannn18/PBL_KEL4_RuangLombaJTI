@@ -12,6 +12,29 @@ class Lomba extends Model
 {
     use HasFactory;
 
+    public const KATEGORI_OPTIONS = [
+        'Software Development',
+        'Web Development',
+        'Mobile Application',
+        'UI/UX Design',
+        'Data Science & AI',
+        'Cyber Security',
+        'Competitive Programming',
+        'Karya Tulis Ilmiah',
+        'Bisnis TIK / Startup',
+        'Game Development',
+    ];
+
+    /**
+     * Dapatkan daftar kategori lomba standar.
+     *
+     * @return array<int, string>
+     */
+    public static function kategoriOptions(): array
+    {
+        return self::KATEGORI_OPTIONS;
+    }
+
     protected $table = 'lomba';
 
     protected $primaryKey = 'id_lomba';

@@ -398,7 +398,7 @@
                 <div class="filter-field">
                     <label for="filter-kategori"><i class="bi bi-tags"></i> Kategori Minat</label>
                     <select name="kategori" id="filter-kategori" class="filter-select" onchange="this.form.submit()">
-                        <option value="semua" {{ request('kategori') == 'semua' || !request('kategori') ? 'selected' : '' }}>Semua Kategori</option>
+                        <option value="" {{ !request('kategori') || request('kategori') == 'semua' ? 'selected' : '' }}>Semua Kategori</option>
                         @foreach($kategoriOptions as $kat)
                             <option value="{{ $kat }}" {{ request('kategori') == $kat ? 'selected' : '' }}>{{ $kat }}</option>
                         @endforeach

@@ -194,19 +194,7 @@ class AdminController extends Controller
 
         // Opsi Program Studi & Kategori Lomba Standar
         $prodiOptions = self::PRODI_OPTIONS;
-
-        $kategoriLombaOptions = [
-            'Software Development',
-            'Web Development',
-            'Mobile Application',
-            'UI/UX Design',
-            'Data Science & AI',
-            'Cyber Security',
-            'Competitive Programming',
-            'Karya Tulis Ilmiah',
-            'Bisnis TIK / Startup',
-            'Game Development',
-        ];
+        $kategoriLombaOptions = Lomba::kategoriOptions();
 
         $tingkatOptions = TingkatLomba::options();
         $tipePesertaOptions = TipePeserta::options();

@@ -110,14 +110,8 @@ class LombaController extends Controller
             ->paginate(9)
             ->withQueryString();
 
-        // Opsi Kategori untuk dropdown filter
-        $kategoriOptions = Lomba::terverifikasi()
-            ->select('kategori')
-            ->distinct()
-            ->orderBy('kategori')
-            ->pluck('kategori')
-            ->filter()
-            ->values();
+        // Opsi Kategori untuk dropdown filter (sinkron dengan backend admin)
+        $kategoriOptions = Lomba::kategoriOptions();
 
         // Total Lomba untuk informasi header
         $totalAktif = Lomba::terverifikasi()->where('tenggat', '>=', $today)->count();
