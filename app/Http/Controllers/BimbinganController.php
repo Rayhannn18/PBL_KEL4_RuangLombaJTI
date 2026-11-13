@@ -329,6 +329,10 @@ class BimbinganController extends Controller
             'tanggal' => 'required|date',
             'materi' => 'required|string|max:1000',
             'tindak_lanjut' => 'nullable|string|max:1000',
+            'link_dokumentasi' => 'nullable|url:https|max:500',
+        ], [
+            'link_dokumentasi.url' => 'Link dokumentasi harus berupa URL valid yang diawali https:// (contoh: link Google Drive).',
+            'link_dokumentasi.max' => 'Link dokumentasi maksimal 500 karakter.',
         ]);
 
         $authUser = $this->authUser();
@@ -373,6 +377,7 @@ class BimbinganController extends Controller
             'tanggal' => $validated['tanggal'],
             'materi' => $validated['materi'],
             'tindak_lanjut' => $validated['tindak_lanjut'] ?? '-',
+            'link_dokumentasi' => $validated['link_dokumentasi'] ?? null,
             'status_validasi' => $statusValidasi,
             'catatan_dosen' => $catatanDosen,
         ]);
@@ -449,6 +454,7 @@ class BimbinganController extends Controller
                 'tanggal' => $validated['tanggal'],
                 'materi' => $validated['materi'],
                 'tindak_lanjut' => $validated['tindak_lanjut'] ?? '-',
+                'link_dokumentasi' => $validated['link_dokumentasi'] ?? null,
                 'status_validasi' => 'menunggu',
             ]);
         } elseif ($authUser['role'] === 'dosen') {
@@ -460,6 +466,7 @@ class BimbinganController extends Controller
                 'tanggal' => $validated['tanggal'],
                 'materi' => $validated['materi'],
                 'tindak_lanjut' => $validated['tindak_lanjut'] ?? '-',
+                'link_dokumentasi' => $validated['link_dokumentasi'] ?? null,
             ]);
         } else {
             return back()->with('error', 'Hanya Ketua Tim atau Dosen Pembimbing yang berhak mengedit logbook.');

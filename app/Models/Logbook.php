@@ -18,6 +18,7 @@ class Logbook extends Model
         'tanggal',
         'materi',
         'tindak_lanjut',
+        'link_dokumentasi',
         'status_validasi',
         'catatan_dosen',
     ];

@@ -26,6 +26,7 @@ class UpdateLogbookRequest extends FormRequest
             'tanggal' => ['required', 'date'],
             'materi' => ['required', 'string', 'max:1000'],
             'tindak_lanjut' => ['nullable', 'string', 'max:1000'],
+            'link_dokumentasi' => ['nullable', 'url:https', 'max:500'],
         ];
     }
 
@@ -42,6 +43,8 @@ class UpdateLogbookRequest extends FormRequest
             'materi.required' => 'Materi bahasan konsultasi wajib diisi.',
             'materi.max' => 'Materi bahasan maksimal 1000 karakter.',
             'tindak_lanjut.max' => 'Rencana tindak lanjut maksimal 1000 karakter.',
+            'link_dokumentasi.url' => 'Link dokumentasi harus berupa URL valid yang diawali https:// (contoh: link Google Drive).',
+            'link_dokumentasi.max' => 'Link dokumentasi maksimal 500 karakter.',
         ];
     }
 }

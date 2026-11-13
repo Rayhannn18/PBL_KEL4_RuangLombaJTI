@@ -939,6 +939,14 @@
                                                     </div>
                                                 @endif
 
+                                                @if($log->link_dokumentasi)
+                                                    <div style="margin-top: 8px;">
+                                                        <a href="{{ $log->link_dokumentasi }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm" style="font-size: 0.75rem; padding: 3px 10px;">
+                                                            <i class="bi bi-google"></i> Lihat Dokumentasi (Google Drive)
+                                                        </a>
+                                                    </div>
+                                                @endif
+
                                                 @if($log->catatan_dosen)
                                                     <div style="margin-top: 8px; font-size: 0.8rem; background: {{ $log->status_validasi === 'revisi' ? '#FEF2F2' : '#F0FDF4' }}; border-left: 3px solid {{ $log->status_validasi === 'revisi' ? '#EF4444' : '#22C55E' }}; padding: 8px 12px; border-radius: 4px; color: {{ $log->status_validasi === 'revisi' ? '#991B1B' : '#166534' }};">
                                                         <i class="bi {{ $log->status_validasi === 'revisi' ? 'bi-exclamation-circle-fill' : 'bi-chat-left-quote-fill' }}"></i>
@@ -948,7 +956,7 @@
 
                                                 @if($log->status_validasi === 'revisi' && ($isKetua ?? ($selectedTim->nim === $authUser['id'])))
                                                     <div style="margin-top: 8px; display: flex; justify-content: flex-end;">
-                                                        <button type="button" class="btn btn-warning btn-sm" style="font-size: 0.78rem; padding: 3px 10px;" onclick="openModalEditLogbook({{ $log->id_logbook }}, '{{ $log->tanggal ? $log->tanggal->format('Y-m-d') : '' }}', '{{ addslashes($log->materi) }}', '{{ addslashes($log->tindak_lanjut ?? '') }}')">
+                                                        <button type="button" class="btn btn-warning btn-sm" style="font-size: 0.78rem; padding: 3px 10px;" onclick="openModalEditLogbook({{ $log->id_logbook }}, '{{ $log->tanggal ? $log->tanggal->format('Y-m-d') : '' }}', '{{ addslashes($log->materi) }}', '{{ addslashes($log->tindak_lanjut ?? '') }}', '{{ addslashes($log->link_dokumentasi ?? '') }}')">
                                                             <i class="bi bi-pencil-square"></i> Perbaiki Logbook
                                                         </button>
                                                     </div>
@@ -1397,6 +1405,14 @@
                                                                 </div>
                                                             @endif
 
+                                                            @if($lb->link_dokumentasi)
+                                                                <div style="margin-top: 6px;">
+                                                                    <a href="{{ $lb->link_dokumentasi }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm" style="font-size: 0.75rem; padding: 3px 10px;">
+                                                                        <i class="bi bi-google"></i> Lihat Dokumentasi (Google Drive)
+                                                                    </a>
+                                                                </div>
+                                                            @endif
+
                                                             @if($lb->catatan_dosen)
                                                                 <div style="margin-top: 8px; font-size: 0.78rem; background: #FEF2F2; border-left: 3px solid #EF4444; padding: 6px 10px; border-radius: 4px; color: #991B1B;">
                                                                     <strong>Catatan/Feedback Anda:</strong> "{{ $lb->catatan_dosen }}"
@@ -1588,9 +1604,17 @@
                             <textarea name="materi" rows="3" class="form-control" placeholder="Contoh: Konsultasi arsitektur sistem, pemilihan database, atau review prototype UI/UX..." required></textarea>
                         </div>
 
-                        <div class="form-group" style="margin-bottom: 0;">
+                        <div class="form-group" style="margin-bottom: 14px;">
                             <label class="form-label">Arahan & Tindak Lanjut dari Dosen</label>
                             <textarea name="tindak_lanjut" rows="2" class="form-control" placeholder="Contoh: Menyempurnakan diagram sequence dan menyiapkan demo video MVP..."></textarea>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label"><i class="bi bi-google"></i> Link Dokumentasi (Google Drive)</label>
+                            <input type="url" name="link_dokumentasi" class="form-control" maxlength="500" pattern="https://.*" placeholder="https://drive.google.com/drive/folders/...">
+                            <small style="display: block; margin-top: 4px; font-size: 0.75rem; color: var(--text-muted);">
+                                Opsional. Unggah foto/berkas bimbingan ke Google Drive, lalu tempel link-nya di sini (pastikan akses link: "Siapa saja yang memiliki link").
+                            </small>
                         </div>
                     </div>
                     <div class="modal-footer-custom">
@@ -1631,9 +1655,17 @@
                             <textarea name="materi" id="editLogbookMateri" rows="3" class="form-control" required maxlength="1000"></textarea>
                         </div>
 
-                        <div class="form-group" style="margin-bottom: 0;">
+                        <div class="form-group" style="margin-bottom: 14px;">
                             <label class="form-label">Arahan & Tindak Lanjut dari Dosen</label>
                             <textarea name="tindak_lanjut" id="editLogbookTindakLanjut" rows="2" class="form-control" maxlength="1000"></textarea>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label"><i class="bi bi-google"></i> Link Dokumentasi (Google Drive)</label>
+                            <input type="url" name="link_dokumentasi" id="editLogbookLinkDokumentasi" class="form-control" maxlength="500" pattern="https://.*" placeholder="https://drive.google.com/drive/folders/...">
+                            <small style="display: block; margin-top: 4px; font-size: 0.75rem; color: var(--text-muted);">
+                                Opsional. Kosongkan untuk menghapus link dokumentasi.
+                            </small>
                         </div>
                     </div>
                     <div class="modal-footer-custom">
@@ -1869,18 +1901,20 @@
         if (modal) modal.style.display = 'none';
     }
 
-    function openModalEditLogbook(idLogbook, tanggal, materi, tindakLanjut) {
+    function openModalEditLogbook(idLogbook, tanggal, materi, tindakLanjut, linkDokumentasi) {
         const modal = document.getElementById('modalEditLogbook');
         const form = document.getElementById('formEditLogbook');
         const inputTanggal = document.getElementById('editLogbookTanggal');
         const inputMateri = document.getElementById('editLogbookMateri');
         const inputTindak = document.getElementById('editLogbookTindakLanjut');
+        const inputLink = document.getElementById('editLogbookLinkDokumentasi');
 
         if (modal && form) {
             form.action = `/bimbingan/logbook/${idLogbook}`;
             if (inputTanggal) inputTanggal.value = tanggal || '';
             if (inputMateri) inputMateri.value = materi || '';
             if (inputTindak) inputTindak.value = tindakLanjut || '';
+            if (inputLink) inputLink.value = linkDokumentasi || '';
             modal.style.display = 'flex';
         }
     }
