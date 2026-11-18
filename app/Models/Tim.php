@@ -155,6 +155,81 @@ class Tim extends Model
         return $this->belongsTo(Admin::class, 'id_admin', 'id_admin');
     }
 
+    public function rabPengajuan()
+    {
+        return $this->hasMany(RabPengajuan::class, 'tim_id', 'id_tim');
+    }
+
+    /**
+     * Cek apakah NIM mahasiswa yang diberikan adalah Ketua Tim atau Anggota Tim yang diterima.
+     */
+    public function isAnggotaAtauKetua(?string $nim): bool
+    {
+        if (! $nim) {
+            return false;
+        }
+
+        if ($this->nim === $nim) {
+            return true;
+        }
+
+        if ($this->relationLoaded('anggotaDiterima')) {
+            return $this->anggotaDiterima->contains('nim', $nim);
+        }
+
+        return $this->anggotaDiterima()->where('nim', $nim)->exists();
+    }
+
+    /**
+     * Dapatkan daftar kode babak ('semi_final', 'final') yang progresnya sudah divalidasi (disetujui) dosen.
+     * Mengenali progres babak berdasarkan nama babak atau hasil akhir (mis. "Lolos ke Semifinal" atau babak "Semifinal"/"Final").
+     *
+     * @return array<int, string>
+     */
+    public function babakRabTervalidasi(?PengajuanBimbingan $pengajuan = null): array
+    {
+        $bimbingan = $pengajuan
+            ?? ($this->relationLoaded('bimbinganDisetujui') ? $this->bimbinganDisetujui : $this->bimbinganDisetujui()->with('progresBabak')->first());
+
+        if (! $bimbingan || $bimbingan->status !== 'disetujui') {
+            return [];
+        }
+
+        $progresList = $bimbingan->relationLoaded('progresBabak')
+            ? $bimbingan->progresBabak
+            : $bimbingan->progresBabak()->get();
+
+        $disetujui = $progresList->where('status_setuju', 'disetujui');
+        $babakValid = [];
+
+        foreach ($disetujui as $prog) {
+            $teksBabak = strtolower(trim((string) $prog->babak));
+            $teksHasil = strtolower(trim((string) $prog->hasil_akhir));
+
+            // Cek indikasi lolos / berada di babak Semi Final
+            if (
+                str_contains($teksBabak, 'semi final') ||
+                str_contains($teksBabak, 'semifinal') ||
+                str_contains($teksBabak, 'semi-final') ||
+                str_contains($teksHasil, 'semi final') ||
+                str_contains($teksHasil, 'semifinal') ||
+                str_contains($teksHasil, 'semi-final')
+            ) {
+                $babakValid['semi_final'] = 'semi_final';
+            }
+
+            // Cek indikasi lolos / berada di babak Final (bukan semifinal)
+            $babakTanpaSemi = str_replace(['semi final', 'semifinal', 'semi-final'], '', $teksBabak);
+            $hasilTanpaSemi = str_replace(['semi final', 'semifinal', 'semi-final'], '', $teksHasil);
+
+            if (str_contains($babakTanpaSemi, 'final') || str_contains($hasilTanpaSemi, 'final')) {
+                $babakValid['final'] = 'final';
+            }
+        }
+
+        return array_values($babakValid);
+    }
+
     public function getSisaKuotaAnggotaAttribute()
     {
         $diterimaCount = $this->relationLoaded('anggotaDiterima')

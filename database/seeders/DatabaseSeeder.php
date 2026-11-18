@@ -10,6 +10,7 @@ use App\Models\Lomba;
 use App\Models\Mahasiswa;
 use App\Models\PengajuanBimbingan;
 use App\Models\ProgresBabak;
+use App\Models\SbmTarif;
 use App\Models\Tim;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
@@ -557,5 +558,108 @@ class DatabaseSeeder extends Seeder
             'hasil_akhir' => 'Juara 3 Business Pitching Maba',
             'status_setuju' => 'disetujui',
         ]);
+
+        // 9. Standar Biaya Masukan (SBM) TA 2026 - PMK Nomor 32 Tahun 2025
+        $this->seedSbmTarif();
+    }
+
+    /**
+     * Seed referensi tarif Standar Biaya Masukan (SBM).
+     * Disusun per tahun anggaran & provinsi agar mudah ditambah (38 provinsi) atau diganti per tahun anggaran.
+     */
+    public function seedSbmTarif(): void
+    {
+        $datasets = [
+            2026 => [
+                'sumber' => 'PMK 32/2025',
+                'nasional' => [
+                    [
+                        'kode' => 'transport_lokal',
+                        'uraian' => 'Satuan Biaya Transportasi Lokal (Dalam Kab/Kota PP)',
+                        'satuan' => 'Orang/Kali',
+                        'tarif' => 170000,
+                        'sifat' => 'dapat_dilampaui',
+                    ],
+                ],
+                // Format per provinsi: [uang_harian_luar_kota, uang_harian_dalam_kota, penginapan_tier_terendah, transport_terminal]
+                'provinsi' => [
+                    'Jawa Timur' => [
+                        'uang_harian_luar_kota' => 410000,
+                        'uang_harian_dalam_kota' => 160000,
+                        'penginapan' => 814000,
+                        'transport_terminal' => 225000,
+                    ],
+                ],
+            ],
+        ];
+
+        $metaKomponenProvinsi = [
+            'uang_harian_luar_kota' => [
+                'uraian' => 'Uang Harian Perjalanan Dinas Dalam Negeri (Luar Kota)',
+                'satuan' => 'OH',
+                'sifat' => 'batas_tertinggi',
+            ],
+            'uang_harian_dalam_kota' => [
+                'uraian' => 'Uang Harian Perjalanan Dinas Dalam Negeri (Dalam Kota > 8 Jam)',
+                'satuan' => 'OH',
+                'sifat' => 'batas_tertinggi',
+            ],
+            'penginapan' => [
+                'uraian' => 'Satuan Biaya Penginapan Perjalanan Dinas Dalam Negeri (Tier Terendah)',
+                'satuan' => 'OH',
+                'sifat' => 'batas_tertinggi',
+            ],
+            'transport_terminal' => [
+                'uraian' => 'Satuan Biaya Taksi / Transport ke Terminal/Stasiun/Bandara',
+                'satuan' => 'Orang/Kali',
+                'sifat' => 'dapat_dilampaui',
+            ],
+        ];
+
+        foreach ($datasets as $tahunAnggaran => $config) {
+            $sumber = $config['sumber'];
+
+            foreach ($config['nasional'] as $item) {
+                SbmTarif::updateOrCreate(
+                    [
+                        'kode' => $item['kode'],
+                        'provinsi' => null,
+                        'tahun_anggaran' => $tahunAnggaran,
+                    ],
+                    [
+                        'uraian' => $item['uraian'],
+                        'satuan' => $item['satuan'],
+                        'tarif' => $item['tarif'],
+                        'sifat' => $item['sifat'],
+                        'sumber' => $sumber,
+                    ]
+                );
+            }
+
+            foreach ($config['provinsi'] as $namaProvinsi => $tarifMap) {
+                foreach ($tarifMap as $kode => $nominal) {
+                    if (! isset($metaKomponenProvinsi[$kode])) {
+                        continue;
+                    }
+
+                    $meta = $metaKomponenProvinsi[$kode];
+
+                    SbmTarif::updateOrCreate(
+                        [
+                            'kode' => $kode,
+                            'provinsi' => $namaProvinsi,
+                            'tahun_anggaran' => $tahunAnggaran,
+                        ],
+                        [
+                            'uraian' => $meta['uraian'].' - '.$namaProvinsi,
+                            'satuan' => $meta['satuan'],
+                            'tarif' => $nominal,
+                            'sifat' => $meta['sifat'],
+                            'sumber' => $sumber,
+                        ]
+                    );
+                }
+            }
+        }
     }
 }

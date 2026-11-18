@@ -1038,6 +1038,220 @@
                     </div>
                 @endif
 
+                <!-- Kartu Pengajuan RAB (Rencana Anggaran Biaya) -->
+                @if($pengajuan && $pengajuan->status === 'disetujui')
+                    @php
+                        $rabItemsData = $rabList ?? collect();
+                        $babakValidRab = $babakRabTervalidasi ?? [];
+                        $existingBabakMap = $rabItemsData->keyBy('babak');
+                        // Babak yang masih bisa dibuat baru (sudah tervalidasi dosen dan belum ada RAB-nya)
+                        $babakTersediaBuatBaru = array_values(array_filter($babakValidRab, fn($b) => !$existingBabakMap->has($b)));
+                        $bisaAjukanRabBaru = !empty($babakValidRab) && !empty($babakTersediaBuatBaru);
+                        $semuaBabakValidSudahAdaRab = !empty($babakValidRab) && empty($babakTersediaBuatBaru);
+                    @endphp
+                    <div class="card">
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+                            <div style="flex: 1; min-width: 0;">
+                                <div class="card-title">
+                                    <i class="bi bi-cash-stack" style="color: var(--primary);"></i> Pengajuan RAB
+                                </div>
+                                <div style="font-size: 0.78rem; color: var(--text-muted);">
+                                    Rencana Anggaran Biaya sesuai SBM Keuangan TA 2026 (PMK Nomor 32 Tahun 2025)
+                                </div>
+                            </div>
+                            <div style="display: flex; flex-direction: column; align-items: flex-end; text-align: right; margin-left: auto; flex-shrink: 0;">
+                                <button type="button"
+                                        class="btn {{ $bisaAjukanRabBaru ? 'btn-primary' : 'btn-secondary' }} btn-sm"
+                                        @if($bisaAjukanRabBaru)
+                                            onclick="openModalRabCreate()"
+                                        @else
+                                            disabled
+                                            style="opacity: 0.65; cursor: not-allowed;"
+                                            title="{{ $semuaBabakValidSudahAdaRab ? 'RAB untuk babak yang tervalidasi sudah dibuat' : 'Tersedia setelah lolos semi final/final dan divalidasi dosen' }}"
+                                        @endif>
+                                    <i class="bi bi-plus-lg"></i> Ajukan RAB
+                                </button>
+                                @if(!$bisaAjukanRabBaru)
+                                    <div style="font-size: 0.72rem; color: {{ $semuaBabakValidSudahAdaRab ? 'var(--text-muted)' : '#B45309' }}; margin-top: 4px; max-width: 240px; text-align: right;">
+                                        @if($semuaBabakValidSudahAdaRab)
+                                            RAB untuk babak tervalidasi sudah dibuat
+                                        @else
+                                            <i class="bi bi-info-circle"></i> Tersedia setelah lolos semi final/final dan divalidasi dosen
+                                        @endif
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            @if($rabItemsData->isEmpty())
+                                <div style="text-align: center; padding: 25px 20px; color: var(--text-muted); font-size: 0.85rem;">
+                                    <i class="bi bi-receipt-cutoff" style="font-size: 1.8rem; opacity: 0.5; display: block; margin-bottom: 6px;"></i>
+                                    @if(!empty($babakValidRab))
+                                        Belum ada pengajuan RAB untuk tim Anda. Ketua Tim maupun Anggota Tim dapat menyusun dan mengajukan RAB dengan menekan tombol <strong>"+ Ajukan RAB"</strong> di atas.
+                                    @else
+                                        Pengajuan RAB belum tersedia. Laporkan progres babak <strong>Semi Final</strong> atau <strong>Final</strong> terlebih dahulu dan tunggu validasi Dosen Pembimbing.
+                                    @endif
+                                </div>
+                            @else
+                                <div style="display: flex; flex-direction: column; gap: 14px;">
+                                    @foreach($rabItemsData as $rab)
+                                        @php
+                                            $jmlHariRab = ($rab->tanggal_mulai && $rab->tanggal_selesai)
+                                                ? ($rab->tanggal_mulai->diffInDays($rab->tanggal_selesai) + 1)
+                                                : 1;
+                                            $rabJsonPayload = [
+                                                'id' => $rab->id,
+                                                'babak' => $rab->babak,
+                                                'tanggal_mulai' => $rab->tanggal_mulai ? $rab->tanggal_mulai->format('Y-m-d') : '',
+                                                'tanggal_selesai' => $rab->tanggal_selesai ? $rab->tanggal_selesai->format('Y-m-d') : '',
+                                                'kota_tujuan' => $rab->kota_tujuan,
+                                                'provinsi_tujuan' => $rab->provinsi_tujuan,
+                                                'jumlah_peserta' => $rab->jumlah_peserta,
+                                                'link_dokumen' => $rab->link_dokumen ?? '',
+                                                'status' => $rab->status,
+                                                'items' => $rab->items->map(fn($it) => [
+                                                    'kategori' => $it->kategori,
+                                                    'uraian' => $it->uraian,
+                                                    'satuan' => $it->satuan,
+                                                    'jumlah_orang' => (int) $it->jumlah_orang,
+                                                    'frekuensi' => (int) $it->frekuensi,
+                                                    'tarif_satuan' => (float) $it->tarif_satuan,
+                                                    'sifat' => $it->sifat,
+                                                    'subtotal' => (float) $it->subtotal,
+                                                    'alasan_melebihi' => $it->alasan_melebihi ?? '',
+                                                    'bukti_link' => $it->bukti_link ?? '',
+                                                ])->values()->all(),
+                                            ];
+                                        @endphp
+                                        <div style="padding: 14px 16px; background: #F8FAFC; border: 1px solid var(--border); border-radius: 10px;">
+                                            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
+                                                <div>
+                                                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                                        <span style="font-weight: 800; font-size: 0.95rem; color: var(--primary-dark);">
+                                                            RAB Babak {{ $rab->labelBabak() }}
+                                                        </span>
+                                                        @if($rab->status === 'disetujui')
+                                                            <span class="badge badge-success"><i class="bi bi-check-circle-fill"></i> Disetujui Dosen</span>
+                                                        @elseif($rab->status === 'perlu_revisi')
+                                                            <span class="badge badge-danger"><i class="bi bi-exclamation-triangle-fill"></i> Perlu Revisi</span>
+                                                        @elseif($rab->status === 'menunggu_validasi')
+                                                            <span class="badge badge-warning"><i class="bi bi-clock-history"></i> Menunggu Validasi Dosen</span>
+                                                        @else
+                                                            <span class="badge badge-gray"><i class="bi bi-file-earmark-text"></i> Draft</span>
+                                                        @endif
+                                                    </div>
+                                                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">
+                                                        <i class="bi bi-geo-alt-fill" style="color: var(--primary);"></i> {{ $rab->kota_tujuan }}, {{ $rab->provinsi_tujuan }}
+                                                        &bull;
+                                                        <i class="bi bi-calendar-range"></i>
+                                                        {{ $rab->tanggal_mulai ? $rab->tanggal_mulai->format('d M Y') : '-' }} s/d {{ $rab->tanggal_selesai ? $rab->tanggal_selesai->format('d M Y') : '-' }} ({{ $jmlHariRab }} Hari)
+                                                        &bull;
+                                                        <i class="bi bi-people-fill"></i> {{ $rab->jumlah_peserta }} Peserta
+                                                    </div>
+                                                </div>
+                                                <div style="text-align: right;">
+                                                    <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Total Anggaran</div>
+                                                    <div style="font-size: 1.05rem; font-weight: 800; color: var(--primary);">
+                                                        Rp {{ number_format((float) $rab->total_anggaran, 0, ',', '.') }}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Tabel Ringkas Komponen RAB -->
+                                            <div style="background: #fff; border: 1px solid var(--border); border-radius: 8px; overflow-x: auto; margin-bottom: 10px;">
+                                                <table style="width: 100%; border-collapse: collapse; font-size: 0.78rem;">
+                                                    <thead>
+                                                        <tr style="background: #F1F5F9; color: var(--text-muted); text-align: left;">
+                                                            <th style="padding: 7px 10px; border-bottom: 1px solid var(--border);">Komponen & Uraian</th>
+                                                            <th style="padding: 7px 10px; border-bottom: 1px solid var(--border); text-align: center;">Volume</th>
+                                                            <th style="padding: 7px 10px; border-bottom: 1px solid var(--border); text-align: right;">Tarif Satuan</th>
+                                                            <th style="padding: 7px 10px; border-bottom: 1px solid var(--border); text-align: right;">Subtotal</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach($rab->items as $rItem)
+                                                            @php
+                                                                $metaKat = \App\Models\RabItem::defaultMetaForKategori($rItem->kategori);
+                                                                $unitFrekLabel = match ($rItem->kategori) {
+                                                                    'uang_harian_luar_kota', 'uang_harian_dalam_kota' => 'Hari',
+                                                                    'penginapan' => 'Malam',
+                                                                    default => 'Kali',
+                                                                };
+                                                            @endphp
+                                                            <tr style="border-bottom: 1px solid #F1F5F9;">
+                                                                <td style="padding: 7px 10px;">
+                                                                    <div style="font-weight: 700; color: var(--primary-dark);">{{ $rItem->uraian }}</div>
+                                                                    <div style="font-size: 0.72rem; color: var(--text-muted);">
+                                                                        {{ $metaKat['label'] }}
+                                                                        @if($rItem->alasan_melebihi)
+                                                                            &bull; <span style="color: #B45309;">Alasan: "{{ $rItem->alasan_melebihi }}"</span>
+                                                                        @endif
+                                                                        @if($rItem->bukti_link)
+                                                                            &bull; <a href="{{ $rItem->bukti_link }}" target="_blank" rel="noopener noreferrer" style="color: var(--primary); font-weight: 600;"><i class="bi bi-link-45deg"></i> Bukti</a>
+                                                                        @endif
+                                                                    </div>
+                                                                </td>
+                                                                <td style="padding: 7px 10px; text-align: center; white-space: nowrap;">
+                                                                    {{ $rItem->jumlah_orang }} Org &times; {{ $rItem->frekuensi }} {{ $unitFrekLabel }}
+                                                                </td>
+                                                                <td style="padding: 7px 10px; text-align: right; white-space: nowrap;">
+                                                                    Rp {{ number_format((float) $rItem->tarif_satuan, 0, ',', '.') }}
+                                                                </td>
+                                                                <td style="padding: 7px 10px; text-align: right; font-weight: 700; white-space: nowrap;">
+                                                                    Rp {{ number_format((float) $rItem->subtotal, 0, ',', '.') }}
+                                                                </td>
+                                                            </tr>
+                                                        @endforeach
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                            @if($rab->catatan_dosen)
+                                                <div style="margin-bottom: 10px; font-size: 0.8rem; background: {{ $rab->status === 'perlu_revisi' ? '#FEF2F2' : '#F0FDF4' }}; border-left: 3px solid {{ $rab->status === 'perlu_revisi' ? '#EF4444' : '#22C55E' }}; padding: 8px 12px; border-radius: 4px; color: {{ $rab->status === 'perlu_revisi' ? '#991B1B' : '#166534' }};">
+                                                    <i class="bi {{ $rab->status === 'perlu_revisi' ? 'bi-exclamation-circle-fill' : 'bi-chat-left-quote-fill' }}"></i>
+                                                    <strong>Catatan Dosen Pembimbing:</strong> "{{ $rab->catatan_dosen }}"
+                                                </div>
+                                            @endif
+
+                                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 0.75rem; color: var(--text-muted);">
+                                                <div>
+                                                    Diisi terakhir oleh: <strong>{{ $rab->pengisiTerakhir->nama ?? $rab->diisi_terakhir_oleh ?? '-' }}</strong>
+                                                    @if($rab->status === 'disetujui' && $rab->divalidasi_pada)
+                                                        &bull; Divalidasi pada {{ $rab->divalidasi_pada->format('d M Y H:i') }}
+                                                    @endif
+                                                </div>
+                                                <div style="display: flex; align-items: center; gap: 8px;">
+                                                    @if($rab->link_dokumen)
+                                                        <a href="{{ $rab->link_dokumen }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm" style="font-size: 0.74rem; padding: 3px 10px;">
+                                                            <i class="bi bi-google"></i> Dokumen Pendukung
+                                                        </a>
+                                                    @endif
+
+                                                    {{-- Setelah status disetujui (atau menunggu_validasi), sembunyikan tombol edit dan kirim --}}
+                                                    @if($rab->isEditable())
+                                                        <button type="button"
+                                                                class="btn {{ $rab->status === 'perlu_revisi' ? 'btn-warning' : 'btn-primary' }} btn-sm"
+                                                                style="font-size: 0.75rem; padding: 4px 10px;"
+                                                                data-rab='@json($rabJsonPayload)'
+                                                                onclick="openModalRabEdit(this)">
+                                                            <i class="bi bi-pencil-square"></i>
+                                                            {{ $rab->status === 'perlu_revisi' ? 'Perbaiki & Kirim Ulang RAB' : 'Edit / Kirim RAB' }}
+                                                        </button>
+                                                    @elseif($rab->status === 'disetujui')
+                                                        <span style="font-size: 0.74rem; color: #059669; font-weight: 700;">
+                                                            <i class="bi bi-lock-fill"></i> RAB Terkunci (Disetujui)
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                @endif
+
             </div>
 
         </div>
@@ -1357,6 +1571,147 @@
                                                                 <span class="badge badge-success"><i class="bi bi-check-all"></i> Terverifikasi</span>
                                                             @endif
                                                         </div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endif
+
+                                <!-- Bagian Pengajuan RAB (Rencana Anggaran Biaya) Tim Bimbingan -->
+                                @if($item->status === 'disetujui')
+                                    @php
+                                        $rabTimList = $item->tim->rabPengajuan ?? collect();
+                                    @endphp
+                                    <div style="border-top: 1px solid var(--border); padding-top: 12px; margin-top: 10px;">
+                                        <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 8px;">
+                                            <i class="bi bi-cash-stack text-primary"></i> PENGAJUAN RAB / RENCANA ANGGARAN BIAYA ({{ $rabTimList->count() }} Diajukan):
+                                        </div>
+
+                                        @if($rabTimList->isEmpty())
+                                            <div style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">
+                                                Tim belum mengajukan Rencana Anggaran Biaya (RAB) untuk babak Semi Final maupun Final.
+                                            </div>
+                                        @else
+                                            <div style="display: flex; flex-direction: column; gap: 10px;">
+                                                @foreach($rabTimList as $rabDsn)
+                                                    @php
+                                                        $durasiHariDsn = ($rabDsn->tanggal_mulai && $rabDsn->tanggal_selesai)
+                                                            ? ($rabDsn->tanggal_mulai->diffInDays($rabDsn->tanggal_selesai) + 1)
+                                                            : 1;
+                                                    @endphp
+                                                    <div style="background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 12px 14px;">
+                                                        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
+                                                            <div>
+                                                                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                                                    <span style="font-size: 0.9rem; font-weight: 800; color: var(--primary-dark);">
+                                                                        RAB Babak {{ $rabDsn->labelBabak() }}
+                                                                    </span>
+                                                                    @if($rabDsn->status === 'disetujui')
+                                                                        <span class="badge badge-success" style="font-size: 0.7rem;"><i class="bi bi-check-all"></i> Disetujui</span>
+                                                                    @elseif($rabDsn->status === 'perlu_revisi')
+                                                                        <span class="badge badge-danger" style="font-size: 0.7rem;"><i class="bi bi-exclamation-triangle-fill"></i> Perlu Revisi</span>
+                                                                    @else
+                                                                        <span class="badge badge-warning" style="font-size: 0.7rem;"><i class="bi bi-clock-history"></i> Menunggu Validasi Anda</span>
+                                                                    @endif
+                                                                    <span class="badge badge-primary" style="font-size: 0.75rem;">
+                                                                        Total: Rp {{ number_format((float) $rabDsn->total_anggaran, 0, ',', '.') }}
+                                                                    </span>
+                                                                </div>
+                                                                <div style="font-size: 0.76rem; color: var(--text-muted); margin-top: 4px;">
+                                                                    <i class="bi bi-geo-alt-fill" style="color: var(--primary);"></i> {{ $rabDsn->kota_tujuan }}, {{ $rabDsn->provinsi_tujuan }}
+                                                                    &bull;
+                                                                    <i class="bi bi-calendar-range"></i>
+                                                                    {{ $rabDsn->tanggal_mulai ? $rabDsn->tanggal_mulai->format('d/m/Y') : '-' }} s/d {{ $rabDsn->tanggal_selesai ? $rabDsn->tanggal_selesai->format('d/m/Y') : '-' }} ({{ $durasiHariDsn }} Hari)
+                                                                    &bull;
+                                                                    <i class="bi bi-people-fill"></i> {{ $rabDsn->jumlah_peserta }} Peserta
+                                                                    &bull;
+                                                                    Diisi oleh: <strong>{{ $rabDsn->pengisiTerakhir->nama ?? $rabDsn->diisi_terakhir_oleh ?? '-' }}</strong>
+                                                                </div>
+                                                            </div>
+
+                                                            <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                                                                @if($rabDsn->link_dokumen)
+                                                                    <a href="{{ $rabDsn->link_dokumen }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm" style="padding: 4px 10px; font-size: 0.75rem;">
+                                                                        <i class="bi bi-google"></i> Dokumen Pendukung
+                                                                    </a>
+                                                                @endif
+
+                                                                @if($rabDsn->status !== 'disetujui')
+                                                                    <form action="{{ route('bimbingan.rab.respon', $rabDsn->id) }}" method="POST" style="margin: 0;">
+                                                                        @csrf
+                                                                        <input type="hidden" name="status" value="disetujui">
+                                                                        <button type="submit" class="btn btn-success btn-sm" style="padding: 4px 10px; font-size: 0.78rem;">
+                                                                            <i class="bi bi-check2-circle"></i> Validasi / Setujui
+                                                                        </button>
+                                                                    </form>
+
+                                                                    <button type="button"
+                                                                            class="btn btn-outline-danger btn-sm"
+                                                                            style="padding: 4px 10px; font-size: 0.78rem;"
+                                                                            onclick="openModalRevisiRab({{ $rabDsn->id }}, '{{ addslashes(($item->tim->nama_tim ?? 'Tim') . ' - Babak ' . $rabDsn->labelBabak()) }}')">
+                                                                        <i class="bi bi-pencil-square"></i> Minta Revisi
+                                                                    </button>
+                                                                @else
+                                                                    <span class="badge badge-success"><i class="bi bi-check-all"></i> Terverifikasi</span>
+                                                                @endif
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- Tabel Detail Rincian Item RAB untuk Dosen -->
+                                                        <div style="background: #F8FAFC; border: 1px solid var(--border); border-radius: 6px; overflow-x: auto;">
+                                                            <table style="width: 100%; border-collapse: collapse; font-size: 0.76rem;">
+                                                                <thead>
+                                                                    <tr style="background: #F1F5F9; color: var(--text-muted); text-align: left;">
+                                                                        <th style="padding: 6px 10px; border-bottom: 1px solid var(--border);">Kategori & Uraian Komponen</th>
+                                                                        <th style="padding: 6px 10px; border-bottom: 1px solid var(--border); text-align: center;">Volume</th>
+                                                                        <th style="padding: 6px 10px; border-bottom: 1px solid var(--border); text-align: right;">Tarif Satuan</th>
+                                                                        <th style="padding: 6px 10px; border-bottom: 1px solid var(--border); text-align: right;">Subtotal</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    @foreach($rabDsn->items as $dsnIt)
+                                                                        @php
+                                                                            $metaKatDsn = \App\Models\RabItem::defaultMetaForKategori($dsnIt->kategori);
+                                                                            $unitFrekDsn = match ($dsnIt->kategori) {
+                                                                                'uang_harian_luar_kota', 'uang_harian_dalam_kota' => 'Hari',
+                                                                                'penginapan' => 'Malam',
+                                                                                default => 'Kali',
+                                                                            };
+                                                                        @endphp
+                                                                        <tr style="border-bottom: 1px solid var(--border);">
+                                                                            <td style="padding: 6px 10px;">
+                                                                                <div style="font-weight: 700; color: var(--primary-dark);">{{ $dsnIt->uraian }}</div>
+                                                                                <div style="font-size: 0.7rem; color: var(--text-muted);">
+                                                                                    {{ $metaKatDsn['label'] }} ({{ $dsnIt->sifat }})
+                                                                                    @if($dsnIt->alasan_melebihi)
+                                                                                        &bull; <span style="color: #B45309; font-weight: 600;">Alasan Melebihi SBM: "{{ $dsnIt->alasan_melebihi }}"</span>
+                                                                                    @endif
+                                                                                    @if($dsnIt->bukti_link)
+                                                                                        &bull; <a href="{{ $dsnIt->bukti_link }}" target="_blank" rel="noopener noreferrer" style="color: var(--primary); font-weight: 600;"><i class="bi bi-link-45deg"></i> Lihat Bukti Riil</a>
+                                                                                    @endif
+                                                                                </div>
+                                                                            </td>
+                                                                            <td style="padding: 6px 10px; text-align: center; white-space: nowrap;">
+                                                                                {{ $dsnIt->jumlah_orang }} Org &times; {{ $dsnIt->frekuensi }} {{ $unitFrekDsn }}
+                                                                            </td>
+                                                                            <td style="padding: 6px 10px; text-align: right; white-space: nowrap;">
+                                                                                Rp {{ number_format((float) $dsnIt->tarif_satuan, 0, ',', '.') }}
+                                                                            </td>
+                                                                            <td style="padding: 6px 10px; text-align: right; font-weight: 700; white-space: nowrap;">
+                                                                                Rp {{ number_format((float) $dsnIt->subtotal, 0, ',', '.') }}
+                                                                            </td>
+                                                                        </tr>
+                                                                    @endforeach
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+
+                                                        @if($rabDsn->catatan_dosen)
+                                                            <div style="margin-top: 8px; font-size: 0.78rem; background: {{ $rabDsn->status === 'perlu_revisi' ? '#FEF2F2' : '#F0FDF4' }}; border-left: 3px solid {{ $rabDsn->status === 'perlu_revisi' ? '#EF4444' : '#22C55E' }}; padding: 6px 10px; border-radius: 4px; color: {{ $rabDsn->status === 'perlu_revisi' ? '#991B1B' : '#166534' }};">
+                                                                <strong>Catatan/Feedback Anda:</strong> "{{ $rabDsn->catatan_dosen }}"
+                                                            </div>
+                                                        @endif
                                                     </div>
                                                 @endforeach
                                             </div>
@@ -1724,6 +2079,151 @@
     @endif
 
     {{-- ========================================================================= --}}
+    {{-- MODAL 2D: Form Pengajuan / Edit RAB (Ketua & Anggota Tim Resmi)           --}}
+    {{-- ========================================================================= --}}
+    @if($role === 'mahasiswa' && isset($pengajuan) && $pengajuan && $pengajuan->status === 'disetujui' && isset($selectedTim))
+        <div id="modalRab" class="modal-backdrop-custom" style="display: none;">
+            <div class="modal-box" style="max-width: 920px; max-height: 92vh; display: flex; flex-direction: column;">
+                <div class="modal-header-custom">
+                    <div style="font-weight: 800; font-size: 1.05rem; color: var(--primary-dark);">
+                        <i class="bi bi-cash-stack" style="color: var(--primary);"></i>
+                        <span id="modalRabTitle">Form Pengajuan Rencana Anggaran Biaya (RAB)</span>
+                    </div>
+                    <button type="button" onclick="closeModalRab()" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+                </div>
+
+                <form id="formRab" action="{{ route('bimbingan.rab.store') }}" method="POST" style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
+                    @csrf
+                    <input type="hidden" name="tim_id" value="{{ $selectedTim->id_tim }}">
+                    <input type="hidden" name="aksi" id="rabInputAksi" value="draft">
+
+                    <div class="modal-body-custom" style="overflow-y: auto; flex: 1;">
+                        <!-- Banner Info SBM PMK 32/2025 -->
+                        <div style="background: #EFF6FF; border: 1px solid #BFDBFE; border-left: 4px solid var(--primary); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 18px; font-size: 0.82rem; color: #1E3A8A; line-height: 1.55;">
+                            <i class="bi bi-info-circle-fill" style="color: var(--primary); margin-right: 4px;"></i>
+                            Berikut adalah Rencana Anggaran Biaya (RAB) yang disusun sesuai Standar Biaya Masukan (SBM) Keuangan Tahun Anggaran 2026 (PMK Nomor 32 Tahun 2025). Tarif uang harian dan penginapan terisi otomatis sesuai provinsi tujuan dan tidak boleh melebihi batas tertinggi SBM.
+                        </div>
+
+                        <!-- Bagian Header Form -->
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 16px;">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label">Kompetisi / Lomba</label>
+                                <input type="text" class="form-control" value="{{ $selectedTim->lomba->nama_lomba ?? '-' }}" readonly style="background: #F1F5F9; font-weight: 600;">
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label">Babak Kompetisi *</label>
+                                <select name="babak" id="rabSelectBabak" class="form-select" required>
+                                    @php
+                                        $opsiBabakLabels = ['semi_final' => 'Semi Final', 'final' => 'Final'];
+                                    @endphp
+                                    @foreach($babakRabTervalidasi ?? [] as $kodeBabak)
+                                        <option value="{{ $kodeBabak }}">{{ $opsiBabakLabels[$kodeBabak] ?? $kodeBabak }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label">Jumlah Peserta (Anggota Tim)</label>
+                                <input type="number" id="rabJumlahPeserta" class="form-control" value="{{ $jumlahPesertaTim ?? 1 }}" readonly style="background: #F1F5F9; font-weight: 700;">
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 18px; background: #F8FAFC; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px;">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label">Tanggal Mulai *</label>
+                                <input type="date" name="tanggal_mulai" id="rabTanggalMulai" class="form-control" value="{{ date('Y-m-d') }}" required onchange="hitungDurasiHariRab()">
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label">Tanggal Selesai *</label>
+                                <input type="date" name="tanggal_selesai" id="rabTanggalSelesai" class="form-control" value="{{ date('Y-m-d') }}" required onchange="hitungDurasiHariRab()">
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label">Durasi Kegiatan</label>
+                                <input type="text" id="rabDurasiHariLabel" class="form-control" value="1 Hari" readonly style="background: #EFF6FF; color: var(--primary); font-weight: 700;">
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label">Kota Tujuan *</label>
+                                <input type="text" name="kota_tujuan" id="rabKotaTujuan" class="form-control" placeholder="Contoh: Surabaya" required maxlength="100">
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label">Provinsi Tujuan *</label>
+                                <select name="provinsi_tujuan" id="rabProvinsiTujuan" class="form-select" required onchange="onProvinsiRabChange()">
+                                    <option value="" disabled>-- Pilih Provinsi Tujuan --</option>
+                                    @foreach($provinsiSbmList ?? [] as $prov)
+                                        <option value="{{ $prov }}" {{ $prov === 'Jawa Timur' ? 'selected' : '' }}>{{ $prov }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Bagian Rincian Komponen Biaya -->
+                        <div style="margin-bottom: 16px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+                                <div>
+                                    <div style="font-weight: 800; font-size: 0.92rem; color: var(--primary-dark);">
+                                        <i class="bi bi-list-check" style="color: var(--primary);"></i> Rincian Komponen Biaya
+                                    </div>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted);">
+                                        Susun rincian kebutuhan anggaran keberangkatan tim per komponen
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="tambahBarisRabItem()">
+                                    <i class="bi bi-plus-lg"></i> Tambah Komponen
+                                </button>
+                            </div>
+
+                            <div id="rabItemsContainer" style="display: flex; flex-direction: column; gap: 10px;">
+                                <!-- Baris komponen dinamis dirender via JS -->
+                            </div>
+
+                            <!-- Total Keseluruhan di Bawah -->
+                            <div style="margin-top: 12px; background: linear-gradient(90deg, #F8FAFC 0%, #EFF6FF 100%); border: 1px solid #BFDBFE; border-radius: var(--radius-sm); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                                <div style="font-weight: 700; font-size: 0.88rem; color: var(--primary-dark);">
+                                    Total Anggaran Keseluruhan
+                                </div>
+                                <div id="rabGrandTotalDisplay" style="font-weight: 800; font-size: 1.2rem; color: var(--primary);">
+                                    Rp 0
+                                </div>
+                            </div>
+
+                            <!-- Catatan Kecil At Cost -->
+                            <div style="margin-top: 8px; font-size: 0.76rem; color: var(--text-muted); font-style: italic;">
+                                <i class="bi bi-exclamation-circle"></i> Komponen transportasi dan biaya pendaftaran dicatat sesuai bukti riil (at cost). Sertakan bukti pada kolom dokumen pendukung.
+                            </div>
+                        </div>
+
+                        <!-- Link Dokumen Pendukung (Google Drive) -->
+                        <div class="form-group" style="margin-bottom: 0; border-top: 1px solid var(--border); padding-top: 14px;">
+                            <label class="form-label"><i class="bi bi-google"></i> Link Dokumen Pendukung (Google Drive)</label>
+                            <input type="url" name="link_dokumen" id="rabLinkDokumen" class="form-control" maxlength="500" pattern="https://.*" placeholder="https://drive.google.com/drive/folders/...">
+                            <small style="display: block; margin-top: 4px; font-size: 0.74rem; color: var(--text-muted);">
+                                Unggah rincian bukti pendukung / LOA / invoice pendaftaran ke folder Google Drive dan pastikan akses publik dibuka.
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer-custom" style="justify-content: space-between; flex-wrap: wrap;">
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="closeModalRab()">Batal</button>
+                        <div style="display: flex; gap: 8px;">
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="submitFormRab('draft')">
+                                <i class="bi bi-save"></i> Simpan Draft
+                            </button>
+                            <button type="button" class="btn btn-primary btn-sm" onclick="submitFormRab('kirim')">
+                                <i class="bi bi-send-fill"></i> Kirim ke Dosen
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endif
+
+    {{-- ========================================================================= --}}
     {{-- MODAL 3: Form Penolakan Pengajuan Bimbingan dengan Catatan Alasan Dosen   --}}
     {{-- ========================================================================= --}}
     @if($role === 'dosen' || $role === 'admin')
@@ -1822,6 +2322,40 @@
                         <button type="button" class="btn btn-secondary btn-sm" onclick="closeModalTolakProgres()">Batal</button>
                         <button type="submit" class="btn btn-danger btn-sm">
                             <i class="bi bi-send-fill"></i> Kirim Penolakan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {{-- MODAL 6: Form Minta Revisi RAB Mahasiswa oleh Dosen                      --}}
+        <div id="modalRevisiRab" class="modal-backdrop-custom" style="display: none;">
+            <div class="modal-box">
+                <div class="modal-header-custom">
+                    <div style="font-weight: 800; font-size: 1.05rem; color: #991B1B;">
+                        <i class="bi bi-exclamation-triangle-fill" style="color: #DC2626;"></i> Minta Revisi Pengajuan RAB
+                    </div>
+                    <button type="button" onclick="closeModalRevisiRab()" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+                </div>
+                <form id="formRevisiRab" action="" method="POST">
+                    @csrf
+                    <input type="hidden" name="status" value="perlu_revisi">
+
+                    <div class="modal-body-custom">
+                        <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">
+                            Pengajuan RAB: <strong id="labelRabRevisi" style="color: var(--primary-dark);">-</strong>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Catatan Perbaikan / Revisi RAB (Wajib) *</label>
+                            <textarea name="catatan_dosen" id="catatanDosenRab" rows="4" class="form-control" placeholder="Tuliskan komponen anggaran yang perlu diperbaiki, bukti yang belum sesuai SBM, atau arahan penyesuaian..." maxlength="1000" required></textarea>
+                            <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; text-align: right;">Maksimal 1000 karakter</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer-custom">
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="closeModalRevisiRab()">Batal</button>
+                        <button type="submit" class="btn btn-danger btn-sm">
+                            <i class="bi bi-send-fill"></i> Kirim Catatan Revisi RAB
                         </button>
                     </div>
                 </form>
@@ -1953,6 +2487,25 @@
         if (modal) modal.style.display = 'none';
     }
 
+    function openModalRevisiRab(idRab, labelRab) {
+        const modal = document.getElementById('modalRevisiRab');
+        const form = document.getElementById('formRevisiRab');
+        const labelEl = document.getElementById('labelRabRevisi');
+        const textarea = document.getElementById('catatanDosenRab');
+
+        if (modal && form) {
+            form.action = `/bimbingan/rab/${idRab}/respon`;
+            if (labelEl) labelEl.textContent = labelRab;
+            if (textarea) textarea.value = '';
+            modal.style.display = 'flex';
+        }
+    }
+
+    function closeModalRevisiRab() {
+        const modal = document.getElementById('modalRevisiRab');
+        if (modal) modal.style.display = 'none';
+    }
+
     function pilihDosenAi(nidn) {
         const select = document.getElementById('dosenSelect') || document.getElementById('dosenSelectPengganti');
         if (select) {
@@ -1962,22 +2515,410 @@
         }
     }
 
+    // =========================================================================
+    // LOGIKA MODAL PENGAJUAN RAB (SBM TA 2026 - PMK 32/2025)
+    // =========================================================================
+    const SBM_TARIF_LIST = @json($sbmTarifList ?? []);
+    const BABAK_VALID_RAB = @json($babakRabTervalidasi ?? []);
+    const EXISTING_RAB_BABAK = @json(isset($rabList) ? $rabList->pluck('babak')->values() : []);
+    const DEFAULT_JUMLAH_PESERTA = {{ (int) ($jumlahPesertaTim ?? 1) }};
+
+    const KATEGORI_RAB_OPTIONS = [
+        { value: 'uang_harian_luar_kota', label: 'Uang Harian Luar Kota', satuan: 'OH', sifat: 'batas_tertinggi', freqLabel: 'Jml Hari *' },
+        { value: 'uang_harian_dalam_kota', label: 'Uang Harian Dalam Kota (> 8 Jam)', satuan: 'OH', sifat: 'batas_tertinggi', freqLabel: 'Jml Hari *' },
+        { value: 'penginapan', label: 'Penginapan (Tier Terendah)', satuan: 'OH', sifat: 'batas_tertinggi', freqLabel: 'Jml Malam *' },
+        { value: 'tiket_antar_kota', label: 'Tiket Perjalanan Antar Kota (PP)', satuan: 'Orang/Kali', sifat: 'at_cost', freqLabel: 'Jml Kali *' },
+        { value: 'transport_terminal', label: 'Transport ke Terminal/Stasiun/Bandara', satuan: 'Orang/Kali', sifat: 'dapat_dilampaui', freqLabel: 'Jml Kali *' },
+        { value: 'transport_lokal', label: 'Transport Lokal (Dalam Kab/Kota PP)', satuan: 'Orang/Kali', sifat: 'dapat_dilampaui', freqLabel: 'Jml Kali *' },
+        { value: 'biaya_pendaftaran', label: 'Biaya Pendaftaran Lomba', satuan: 'Paket', sifat: 'at_cost', freqLabel: 'Jml Kali *' },
+        { value: 'lain_lain', label: 'Lain-lain', satuan: 'Paket', sifat: 'at_cost', freqLabel: 'Jml Kali *' },
+    ];
+
+    let rabRowCounter = 0;
+
+    function cariTarifSbm(kategori, provinsi) {
+        const provLower = (provinsi || '').toLowerCase().trim();
+        let found = SBM_TARIF_LIST.find(item =>
+            item.kode === kategori &&
+            item.provinsi &&
+            item.provinsi.toLowerCase().trim() === provLower
+        );
+        if (!found) {
+            found = SBM_TARIF_LIST.find(item => item.kode === kategori && !item.provinsi);
+        }
+        return found || null;
+    }
+
+    function formatRupiah(angka) {
+        const n = Math.round(Number(angka) || 0);
+        return 'Rp ' + n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }
+
+    function hitungDurasiHariRab() {
+        const tMulai = document.getElementById('rabTanggalMulai')?.value;
+        const tSelesai = document.getElementById('rabTanggalSelesai')?.value;
+        const label = document.getElementById('rabDurasiHariLabel');
+        if (!label) return 1;
+
+        if (tMulai && tSelesai) {
+            const d1 = new Date(tMulai);
+            const d2 = new Date(tSelesai);
+            const diff = Math.floor((d2 - d1) / (1000 * 60 * 60 * 24)) + 1;
+            const hari = diff > 0 ? diff : 1;
+            label.value = hari + ' Hari';
+            return hari;
+        }
+        label.value = '1 Hari';
+        return 1;
+    }
+
+    function populateDropdownBabakRab(selectedBabak = null, isEdit = false) {
+        const select = document.getElementById('rabSelectBabak');
+        if (!select) return;
+        select.innerHTML = '';
+
+        const labels = { semi_final: 'Semi Final', final: 'Final' };
+        BABAK_VALID_RAB.forEach(kode => {
+            if (!isEdit && EXISTING_RAB_BABAK.includes(kode)) {
+                return;
+            }
+            const opt = document.createElement('option');
+            opt.value = kode;
+            opt.textContent = labels[kode] || kode;
+            if (selectedBabak && selectedBabak === kode) {
+                opt.selected = true;
+            }
+            select.appendChild(opt);
+        });
+    }
+
+    function tambahBarisRabItem(initialData = null) {
+        const container = document.getElementById('rabItemsContainer');
+        if (!container) return;
+
+        const idx = rabRowCounter++;
+        const provinsi = document.getElementById('rabProvinsiTujuan')?.value || 'Jawa Timur';
+        const durasiHari = hitungDurasiHariRab();
+
+        const katVal = initialData?.kategori || 'uang_harian_luar_kota';
+        const katMeta = KATEGORI_RAB_OPTIONS.find(k => k.value === katVal) || KATEGORI_RAB_OPTIONS[0];
+        const sbmRef = cariTarifSbm(katVal, provinsi);
+
+        const uraianVal = initialData?.uraian ?? katMeta.label;
+        const satuanVal = initialData?.satuan ?? (sbmRef?.satuan || katMeta.satuan);
+        const jmlOrangVal = initialData?.jumlah_orang ?? DEFAULT_JUMLAH_PESERTA;
+        const frekuensiVal = initialData?.frekuensi ?? durasiHari;
+        const tarifVal = initialData?.tarif_satuan ?? (sbmRef ? Number(sbmRef.tarif) : 0);
+        const alasanVal = initialData?.alasan_melebihi ?? '';
+        const buktiVal = initialData?.bukti_link ?? '';
+
+        const rowEl = document.createElement('div');
+        rowEl.className = 'rab-item-row';
+        rowEl.dataset.index = idx;
+        rowEl.style.cssText = 'background: #FFFFFF; border: 1px solid var(--border); border-radius: 8px; padding: 12px;';
+
+        let optionsHtml = '';
+        KATEGORI_RAB_OPTIONS.forEach(opt => {
+            const sel = opt.value === katVal ? 'selected' : '';
+            optionsHtml += `<option value="${opt.value}" ${sel}>${opt.label}</option>`;
+        });
+
+        rowEl.innerHTML = `
+            <div style="display: grid; grid-template-columns: 1.4fr 1.6fr 0.7fr 0.7fr 0.7fr 1.1fr 1.1fr auto; gap: 8px; align-items: end;">
+                <div>
+                    <label style="display:block; font-size:0.72rem; font-weight:700; color:var(--text-muted); margin-bottom:3px;">Kategori *</label>
+                    <select name="items[${idx}][kategori]" class="form-select rab-input-kategori" style="padding:7px 9px; font-size:0.8rem;" onchange="onKategoriBarisChange(this)" required>
+                        ${optionsHtml}
+                    </select>
+                </div>
+                <div>
+                    <label style="display:block; font-size:0.72rem; font-weight:700; color:var(--text-muted); margin-bottom:3px;">Uraian Komponen *</label>
+                    <input type="text" name="items[${idx}][uraian]" class="form-control rab-input-uraian" value="${uraianVal.replace(/"/g, '&quot;')}" style="padding:7px 9px; font-size:0.8rem;" required maxlength="255">
+                </div>
+                <div>
+                    <label style="display:block; font-size:0.72rem; font-weight:700; color:var(--text-muted); margin-bottom:3px;">Satuan</label>
+                    <input type="text" name="items[${idx}][satuan]" class="form-control rab-input-satuan" value="${satuanVal.replace(/"/g, '&quot;')}" style="padding:7px 9px; font-size:0.8rem; background:#F8FAFC;" required maxlength="30">
+                </div>
+                <div>
+                    <label style="display:block; font-size:0.72rem; font-weight:700; color:var(--text-muted); margin-bottom:3px;">Jml Org *</label>
+                    <input type="number" name="items[${idx}][jumlah_orang]" class="form-control rab-input-orang" value="${jmlOrangVal}" min="1" max="50" style="padding:7px 9px; font-size:0.8rem;" oninput="recalcBarisRab(this)" required>
+                </div>
+                <div>
+                    <label class="rab-label-frekuensi" style="display:block; font-size:0.72rem; font-weight:700; color:var(--text-muted); margin-bottom:3px;">${katMeta.freqLabel || 'Jml Hari *'}</label>
+                    <input type="number" name="items[${idx}][frekuensi]" class="form-control rab-input-frekuensi" value="${frekuensiVal}" min="1" max="365" style="padding:7px 9px; font-size:0.8rem;" oninput="recalcBarisRab(this)" required>
+                </div>
+                <div>
+                    <label style="display:block; font-size:0.72rem; font-weight:700; color:var(--text-muted); margin-bottom:3px;">Tarif Satuan (Rp) *</label>
+                    <input type="number" name="items[${idx}][tarif_satuan]" class="form-control rab-input-tarif" value="${tarifVal}" min="0" step="1" style="padding:7px 9px; font-size:0.8rem;" oninput="recalcBarisRab(this)" required>
+                </div>
+                <div>
+                    <label style="display:block; font-size:0.72rem; font-weight:700; color:var(--text-muted); margin-bottom:3px;">Subtotal</label>
+                    <input type="text" class="form-control rab-display-subtotal" value="Rp 0" readonly style="padding:7px 9px; font-size:0.8rem; background:#F1F5F9; font-weight:700; color:var(--primary-dark);">
+                </div>
+                <div>
+                    <button type="button" class="btn btn-danger btn-sm" style="padding:7px 10px;" onclick="hapusBarisRabItem(this)" title="Hapus Baris">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="rab-row-meta" style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; font-size: 0.74rem;">
+                <span class="rab-info-sbm" style="color: var(--text-muted);"></span>
+            </div>
+
+            <div class="rab-extra-fields" style="margin-top: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <div class="rab-wrap-alasan" style="display: none;">
+                    <label style="display:block; font-size:0.72rem; font-weight:700; color:#B45309; margin-bottom:3px;">
+                        <i class="bi bi-exclamation-triangle-fill"></i> Alasan Melebihi Tarif SBM (Wajib jika melebihi SBM) *
+                    </label>
+                    <input type="text" name="items[${idx}][alasan_melebihi]" class="form-control rab-input-alasan" value="${alasanVal.replace(/"/g, '&quot;')}" placeholder="Jelaskan alasan tarif melebihi standar SBM..." style="padding:6px 9px; font-size:0.78rem;">
+                </div>
+                <div class="rab-wrap-bukti" style="display: none;">
+                    <label style="display:block; font-size:0.72rem; font-weight:700; color:var(--primary); margin-bottom:3px;">
+                        <i class="bi bi-link-45deg"></i> Link Bukti Riil / At Cost (Wajib untuk komponen At Cost) *
+                    </label>
+                    <input type="url" name="items[${idx}][bukti_link]" class="form-control rab-input-bukti" value="${buktiVal.replace(/"/g, '&quot;')}" pattern="https://.*" placeholder="https://drive.google.com/..." style="padding:6px 9px; font-size:0.78rem;">
+                </div>
+            </div>
+        `;
+
+        container.appendChild(rowEl);
+        sinkronkanAturanBarisRab(rowEl, false);
+    }
+
+    function hapusBarisRabItem(btn) {
+        const container = document.getElementById('rabItemsContainer');
+        if (!container) return;
+        const rows = container.querySelectorAll('.rab-item-row');
+        if (rows.length <= 1) {
+            alert('Minimal harus terdapat 1 komponen biaya pada RAB.');
+            return;
+        }
+        const row = btn.closest('.rab-item-row');
+        if (row) row.remove();
+        recalcGrandTotalRab();
+    }
+
+    function onKategoriBarisChange(selectEl) {
+        const row = selectEl.closest('.rab-item-row');
+        if (!row) return;
+        sinkronkanAturanBarisRab(row, true);
+    }
+
+    function onProvinsiRabChange() {
+        const container = document.getElementById('rabItemsContainer');
+        if (!container) return;
+        container.querySelectorAll('.rab-item-row').forEach(row => {
+            const kat = row.querySelector('.rab-input-kategori')?.value;
+            const sbmRef = cariTarifSbm(kat, document.getElementById('rabProvinsiTujuan')?.value);
+            if (sbmRef && ['uang_harian_luar_kota', 'uang_harian_dalam_kota', 'penginapan', 'transport_terminal'].includes(kat)) {
+                const inputTarif = row.querySelector('.rab-input-tarif');
+                if (inputTarif) inputTarif.value = Number(sbmRef.tarif);
+            }
+            sinkronkanAturanBarisRab(row, false);
+        });
+    }
+
+    function sinkronkanAturanBarisRab(row, resetTarifAndUraian = false) {
+        const kat = row.querySelector('.rab-input-kategori')?.value || 'lain_lain';
+        const provinsi = document.getElementById('rabProvinsiTujuan')?.value || 'Jawa Timur';
+        const katMeta = KATEGORI_RAB_OPTIONS.find(k => k.value === kat) || KATEGORI_RAB_OPTIONS[0];
+        const sbmRef = cariTarifSbm(kat, provinsi);
+
+        const inputUraian = row.querySelector('.rab-input-uraian');
+        const inputSatuan = row.querySelector('.rab-input-satuan');
+        const inputTarif = row.querySelector('.rab-input-tarif');
+        const labelFrekuensi = row.querySelector('.rab-label-frekuensi');
+        const infoSbm = row.querySelector('.rab-info-sbm');
+        const wrapAlasan = row.querySelector('.rab-wrap-alasan');
+        const inputAlasan = row.querySelector('.rab-input-alasan');
+        const wrapBukti = row.querySelector('.rab-wrap-bukti');
+        const inputBukti = row.querySelector('.rab-input-bukti');
+
+        if (labelFrekuensi) {
+            labelFrekuensi.textContent = katMeta.freqLabel || 'Jml Kali *';
+        }
+
+        if (resetTarifAndUraian) {
+            if (inputUraian) inputUraian.value = katMeta.label;
+            if (inputSatuan) inputSatuan.value = sbmRef?.satuan || katMeta.satuan;
+            if (inputTarif) inputTarif.value = sbmRef ? Number(sbmRef.tarif) : 0;
+        }
+
+        // Atur batas maksimum & info SBM
+        if (katMeta.sifat === 'batas_tertinggi') {
+            const maxTarif = sbmRef ? Number(sbmRef.tarif) : 0;
+            if (inputTarif && maxTarif > 0) {
+                inputTarif.max = maxTarif;
+            }
+            if (infoSbm) {
+                infoSbm.innerHTML = sbmRef
+                    ? `<span class="badge badge-primary" style="font-size:0.68rem;">Batas Tertinggi SBM (${provinsi})</span> Maksimal: <strong>${formatRupiah(sbmRef.tarif)} / ${sbmRef.satuan}</strong>`
+                    : `<span class="badge badge-warning" style="font-size:0.68rem;">Batas Tertinggi SBM</span> Tarif provinsi belum ditemukan`;
+            }
+            if (wrapBukti) wrapBukti.style.display = 'none';
+            if (inputBukti) inputBukti.required = false;
+        } else if (katMeta.sifat === 'dapat_dilampaui') {
+            if (inputTarif) inputTarif.removeAttribute('max');
+            if (infoSbm) {
+                infoSbm.innerHTML = sbmRef
+                    ? `<span class="badge badge-warning" style="font-size:0.68rem;">Dapat Dilampaui (SBM)</span> Standar SBM: <strong>${formatRupiah(sbmRef.tarif)} / ${sbmRef.satuan}</strong> (Jika melebihi, wajib isi alasan)`
+                    : `<span class="badge badge-warning" style="font-size:0.68rem;">Dapat Dilampaui</span>`;
+            }
+            if (wrapBukti) wrapBukti.style.display = 'none';
+            if (inputBukti) inputBukti.required = false;
+        } else {
+            if (inputTarif) inputTarif.removeAttribute('max');
+            if (infoSbm) {
+                infoSbm.innerHTML = `<span class="badge badge-purple" style="font-size:0.68rem;">Riil / At Cost</span> Dicatat sesuai pengeluaran riil, wajib menyertakan link bukti.`;
+            }
+            if (wrapBukti) wrapBukti.style.display = 'block';
+            if (inputBukti) inputBukti.required = true;
+        }
+
+        recalcBarisRab(inputTarif);
+    }
+
+    function recalcBarisRab(el) {
+        const row = el?.closest('.rab-item-row');
+        if (!row) return;
+
+        const kat = row.querySelector('.rab-input-kategori')?.value || 'lain_lain';
+        const provinsi = document.getElementById('rabProvinsiTujuan')?.value || 'Jawa Timur';
+        const katMeta = KATEGORI_RAB_OPTIONS.find(k => k.value === kat) || KATEGORI_RAB_OPTIONS[0];
+        const sbmRef = cariTarifSbm(kat, provinsi);
+
+        const jmlOrang = Number(row.querySelector('.rab-input-orang')?.value || 0);
+        const frek = Number(row.querySelector('.rab-input-frekuensi')?.value || 0);
+        const tarifInput = row.querySelector('.rab-input-tarif');
+        const tarif = Number(tarifInput?.value || 0);
+
+        const wrapAlasan = row.querySelector('.rab-wrap-alasan');
+        const inputAlasan = row.querySelector('.rab-input-alasan');
+
+        // Tampilkan field alasan jika sifat dapat_dilampaui dan tarif > SBM
+        if (katMeta.sifat === 'dapat_dilampaui' && sbmRef && tarif > Number(sbmRef.tarif)) {
+            if (wrapAlasan) wrapAlasan.style.display = 'block';
+            if (inputAlasan) inputAlasan.required = true;
+        } else {
+            if (wrapAlasan) wrapAlasan.style.display = 'none';
+            if (inputAlasan) inputAlasan.required = false;
+        }
+
+        const subtotal = jmlOrang * frek * tarif;
+        const displaySubtotal = row.querySelector('.rab-display-subtotal');
+        if (displaySubtotal) {
+            displaySubtotal.value = formatRupiah(subtotal);
+        }
+
+        recalcGrandTotalRab();
+    }
+
+    function recalcGrandTotalRab() {
+        const container = document.getElementById('rabItemsContainer');
+        const grandDisplay = document.getElementById('rabGrandTotalDisplay');
+        if (!container || !grandDisplay) return;
+
+        let total = 0;
+        container.querySelectorAll('.rab-item-row').forEach(row => {
+            const jmlOrang = Number(row.querySelector('.rab-input-orang')?.value || 0);
+            const frek = Number(row.querySelector('.rab-input-frekuensi')?.value || 0);
+            const tarif = Number(row.querySelector('.rab-input-tarif')?.value || 0);
+            total += (jmlOrang * frek * tarif);
+        });
+
+        grandDisplay.textContent = formatRupiah(total);
+    }
+
+    function openModalRabCreate() {
+        const modal = document.getElementById('modalRab');
+        if (!modal) return;
+
+        document.getElementById('modalRabTitle').textContent = 'Ajukan Rencana Anggaran Biaya (RAB)';
+        populateDropdownBabakRab(null, false);
+
+        const container = document.getElementById('rabItemsContainer');
+        if (container) container.innerHTML = '';
+        rabRowCounter = 0;
+
+        document.getElementById('rabKotaTujuan').value = '';
+        document.getElementById('rabProvinsiTujuan').value = 'Jawa Timur';
+        document.getElementById('rabLinkDokumen').value = '';
+        hitungDurasiHariRab();
+
+        // Tambahkan baris default Uang Harian & Penginapan
+        tambahBarisRabItem({ kategori: 'uang_harian_luar_kota' });
+        tambahBarisRabItem({ kategori: 'penginapan' });
+
+        modal.style.display = 'flex';
+    }
+
+    function openModalRabEdit(btnEl) {
+        const modal = document.getElementById('modalRab');
+        if (!modal || !btnEl) return;
+
+        const data = JSON.parse(btnEl.getAttribute('data-rab') || '{}');
+        document.getElementById('modalRabTitle').textContent = 'Edit / Perbaiki RAB Babak ' + (data.babak === 'final' ? 'Final' : 'Semi Final');
+        populateDropdownBabakRab(data.babak, true);
+
+        if (data.tanggal_mulai) document.getElementById('rabTanggalMulai').value = data.tanggal_mulai;
+        if (data.tanggal_selesai) document.getElementById('rabTanggalSelesai').value = data.tanggal_selesai;
+        document.getElementById('rabKotaTujuan').value = data.kota_tujuan || '';
+        if (data.provinsi_tujuan) document.getElementById('rabProvinsiTujuan').value = data.provinsi_tujuan;
+        document.getElementById('rabLinkDokumen').value = data.link_dokumen || '';
+        hitungDurasiHariRab();
+
+        const container = document.getElementById('rabItemsContainer');
+        if (container) container.innerHTML = '';
+        rabRowCounter = 0;
+
+        if (Array.isArray(data.items) && data.items.length > 0) {
+            data.items.forEach(it => tambahBarisRabItem(it));
+        } else {
+            tambahBarisRabItem({ kategori: 'uang_harian_luar_kota' });
+        }
+
+        modal.style.display = 'flex';
+    }
+
+    function closeModalRab() {
+        const modal = document.getElementById('modalRab');
+        if (modal) modal.style.display = 'none';
+    }
+
+    function submitFormRab(aksi) {
+        const form = document.getElementById('formRab');
+        const inputAksi = document.getElementById('rabInputAksi');
+        if (!form || !inputAksi) return;
+
+        inputAksi.value = aksi;
+        if (typeof form.requestSubmit === 'function') {
+            form.requestSubmit();
+        } else {
+            form.submit();
+        }
+    }
+
     // Tutup modal jika klik di luar box
     window.addEventListener('click', function(e) {
         const modalDaftar = document.getElementById('modalDaftarTim');
         const modalLogbook = document.getElementById('modalLogbook');
         const modalEditLogbook = document.getElementById('modalEditLogbook');
         const modalTambahProgres = document.getElementById('modalTambahProgres');
+        const modalRab = document.getElementById('modalRab');
         const modalTolak = document.getElementById('modalTolakPengajuan');
         const modalRevisi = document.getElementById('modalRevisiLogbook');
         const modalTolakProgres = document.getElementById('modalTolakProgres');
+        const modalRevisiRab = document.getElementById('modalRevisiRab');
         if (e.target === modalDaftar) closeModalDaftarTim();
         if (e.target === modalLogbook) closeModalLogbook();
         if (e.target === modalEditLogbook) closeModalEditLogbook();
         if (e.target === modalTambahProgres) closeModalTambahProgres();
+        if (e.target === modalRab) closeModalRab();
         if (e.target === modalTolak) closeModalTolakPengajuan();
         if (e.target === modalRevisi) closeModalRevisiLogbook();
         if (e.target === modalTolakProgres) closeModalTolakProgres();
+        if (e.target === modalRevisiRab) closeModalRevisiRab();
     });
 </script>
 @endpush

@@ -826,8 +826,9 @@
         </div>
 
         <!-- Tabel Lomba -->
-        <div class="table-container">
-            <table class="custom-table">
+        <div class="table-container" style="overflow: visible;">
+            <div style="overflow-x: auto; border-radius: var(--radius-md);">
+            <table class="custom-table" style="min-width: 900px;">
                 <thead>
                     <tr>
                         <th style="width: 50px;">ID</th>
@@ -902,7 +903,7 @@
                                     <span style="font-size: 0.78rem; color: var(--text-muted);">-</span>
                                 @endif
                             </td>
-                            <td style="text-align: right;">
+                            <td style="text-align: right; padding-right: 16px; white-space: nowrap;">
                                 <div style="display: inline-flex; gap: 4px;">
                                     @if($item->status_verifikasi === 'menunggu')
                                         <!-- Tombol Aksi Kurasi Lomba Kredibel / Tolak -->
@@ -953,6 +954,7 @@
                     @endforelse
                 </tbody>
             </table>
+            </div>
         </div>
     @endif
 
@@ -992,8 +994,9 @@
         </div>
 
         <!-- Tabel Tim -->
-        <div class="table-container">
-            <table class="custom-table">
+        <div class="table-container" style="overflow: visible;">
+            <div style="overflow-x: auto; border-radius: var(--radius-md);">
+            <table class="custom-table" style="min-width: 900px;">
                 <thead>
                     <tr>
                         <th style="width: 50px;">ID</th>
@@ -1060,7 +1063,7 @@
                                     <span class="badge badge-danger"><i class="bi bi-x-circle-fill"></i> Ditolak</span>
                                 @endif
                             </td>
-                            <td style="text-align: right;">
+                            <td style="text-align: right; padding-right: 16px; white-space: nowrap;">
                                 <div style="display: inline-flex; gap: 4px;">
                                     @if($tim->status_tim === 'menunggu_persetujuan')
                                         <!-- Aksi Setujui / Tolak Ketua Tim -->
@@ -1120,6 +1123,7 @@
                     @endforelse
                 </tbody>
             </table>
+            </div>
         </div>
     @endif
 
@@ -1272,8 +1276,9 @@
         </div>
 
         <!-- Tabel Mahasiswa -->
-        <div class="table-container">
-            <table class="custom-table">
+        <div class="table-container" style="overflow: visible;">
+            <div style="overflow-x: auto; border-radius: var(--radius-md);">
+            <table class="custom-table" style="min-width: 900px;">
                 <thead>
                     <tr>
                         <th style="width: 150px;">NIM</th>
@@ -1305,7 +1310,7 @@
                                     <span>Anggota: <strong>{{ $mhs->keanggotaan_count ?? 0 }}</strong> tim</span>
                                 </div>
                             </td>
-                            <td style="text-align: right;">
+                            <td style="text-align: right; padding-right: 16px; white-space: nowrap;">
                                 <div style="display: inline-flex; gap: 4px;">
                                     <button type="button" class="btn btn-secondary btn-sm" title="Ubah Data Mahasiswa" onclick="editMahasiswa({{ json_encode($mhs) }})">
                                         <i class="bi bi-pencil"></i>
@@ -1330,6 +1335,7 @@
                     @endforelse
                 </tbody>
             </table>
+            </div>
         </div>
     @endif
 
