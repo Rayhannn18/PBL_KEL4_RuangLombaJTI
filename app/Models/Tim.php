@@ -237,6 +237,37 @@ class Tim extends Model
         return array_values($babakValid);
     }
 
+    /**
+     * Cek apakah kompetisi tim sudah selesai/terkunci:
+     * - sudah ada laporan Final kategori peringkat yang disetujui dosen, ATAU
+     * - sudah ada laporan pada babak apa pun dengan hasil "Tidak lolos" yang disetujui dosen.
+     */
+    public function isKompetisiSelesai(?PengajuanBimbingan $pengajuan = null): bool
+    {
+        $bimbingan = $pengajuan
+            ?? ($this->relationLoaded('bimbinganDisetujui') ? $this->bimbinganDisetujui : $this->bimbinganDisetujui()->with('progresBabak')->first());
+
+        if (! $bimbingan || $bimbingan->status !== 'disetujui') {
+            return false;
+        }
+
+        $progresList = $bimbingan->relationLoaded('progresBabak')
+            ? $bimbingan->progresBabak
+            : $bimbingan->progresBabak()->get();
+
+        foreach ($progresList->where('status_setuju', 'disetujui') as $prog) {
+            if ((string) $prog->hasil_akhir === 'Tidak lolos') {
+                return true;
+            }
+
+            if ($prog->babak === ProgresBabak::BABAK_FINAL && ProgresBabak::kategoriFinal($prog->hasil_akhir) === 'peringkat') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function getSisaKuotaAnggotaAttribute()
     {
         $diterimaCount = $this->relationLoaded('anggotaDiterima')

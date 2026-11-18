@@ -480,82 +480,89 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // 8. Progres Babak & Kemenangan / Prestasi
-        // Tim 1 (Angkatan 2024 - Sastra, Garuda Tech): Babak Final -> Juara 1 Nasional & Best Prototype!
+        // Tim 1 (Angkatan 2024 - Sastra, Garuda Tech): Babak Final -> Juara 1 & Penghargaan Khusus
         ProgresBabak::create([
             'id_pengajuan' => $pengajuan1->id_pengajuan,
-            'babak' => 'Penyisihan',
+            'babak' => ProgresBabak::BABAK_PENYISIHAN,
             'tanggal_update' => Carbon::now()->subDays(14),
-            'hasil_akhir' => 'Lolos ke Semifinal',
+            'hasil_akhir' => 'Lolos ke babak berikutnya',
             'status_setuju' => 'disetujui',
         ]);
 
         ProgresBabak::create([
             'id_pengajuan' => $pengajuan1->id_pengajuan,
-            'babak' => 'Final',
+            'babak' => ProgresBabak::BABAK_FINAL,
             'tanggal_update' => Carbon::now()->subDays(1),
-            'hasil_akhir' => 'Juara 1 Nasional',
+            'hasil_akhir' => 'Juara 1',
             'status_setuju' => 'disetujui',
         ]);
 
         ProgresBabak::create([
             'id_pengajuan' => $pengajuan1->id_pengajuan,
-            'babak' => 'Final Exhibition',
+            'babak' => ProgresBabak::BABAK_FINAL,
             'tanggal_update' => Carbon::now()->subDays(1),
-            'hasil_akhir' => 'Best Prototype & Implementation',
+            'hasil_akhir' => 'Penghargaan Khusus',
+            'keterangan_hasil' => 'Best Prototype & Implementation',
             'status_setuju' => 'disetujui',
         ]);
 
         // Tim 6 (Angkatan 2024 - Nadya, Apex Design): Babak Final -> Juara 2 UI/UX
         ProgresBabak::create([
             'id_pengajuan' => $pengajuan6->id_pengajuan,
-            'babak' => 'Final',
+            'babak' => ProgresBabak::BABAK_FINAL,
             'tanggal_update' => Carbon::now()->subDays(2),
-            'hasil_akhir' => 'Juara 2 Nasional UI/UX',
+            'hasil_akhir' => 'Juara 2',
+            'keterangan_hasil' => 'UI/UX',
             'status_setuju' => 'disetujui',
         ]);
 
-        // Tim 4 (Angkatan 2023 - Citra Dewi, Polinema Cyber Sentinel): Babak Final -> Juara 1 Nasional!
+        // Tim 4 (Angkatan 2023 - Citra Dewi, Polinema Cyber Sentinel): Babak Final -> Juara 1 CTF
         ProgresBabak::create([
             'id_pengajuan' => $pengajuan4->id_pengajuan,
-            'babak' => 'Final',
+            'babak' => ProgresBabak::BABAK_FINAL,
             'tanggal_update' => Carbon::now()->subDays(10),
-            'hasil_akhir' => 'Juara 1 Nasional CTF',
+            'hasil_akhir' => 'Juara 1',
+            'keterangan_hasil' => 'CTF',
             'status_setuju' => 'disetujui',
         ]);
 
         // Tim 2 (Angkatan 2023 - Ahmad Fajar, Algorise): Babak Final -> Juara 2 Software Engineering
         ProgresBabak::create([
             'id_pengajuan' => $pengajuan2->id_pengajuan,
-            'babak' => 'Final',
+            'babak' => ProgresBabak::BABAK_FINAL,
             'tanggal_update' => Carbon::now()->subDays(5),
-            'hasil_akhir' => 'Juara 2 Software Engineering',
+            'hasil_akhir' => 'Juara 2',
+            'keterangan_hasil' => 'Software Engineering',
             'status_setuju' => 'disetujui',
         ]);
 
-        // Tim 3 (Angkatan 2024/2025 - Gempita, Smart Sensor): Babak Final -> Juara Harapan 1
+        // Tim 3 (Angkatan 2024/2025 - Gempita, Smart Sensor): Babak Final -> Harapan/Favorit
         ProgresBabak::create([
             'id_pengajuan' => $pengajuan3->id_pengajuan,
-            'babak' => 'Final',
+            'babak' => ProgresBabak::BABAK_FINAL,
             'tanggal_update' => Carbon::now()->subDays(3),
-            'hasil_akhir' => 'Juara Harapan 1 Nasional IoT',
+            'hasil_akhir' => 'Harapan/Favorit',
+            'keterangan_hasil' => 'Juara Harapan 1 IoT',
             'status_setuju' => 'disetujui',
         ]);
 
-        // Tim 7 (Angkatan 2025 - Rania Putri, Data Vanguard): Babak Final -> Juara 2 Data Science
+        // Tim 7 (Angkatan 2025 - Rania Putri, Data Vanguard): Babak Final -> Juara 2 Data Analytics
         ProgresBabak::create([
             'id_pengajuan' => $pengajuan7->id_pengajuan,
-            'babak' => 'Final',
+            'babak' => ProgresBabak::BABAK_FINAL,
             'tanggal_update' => Carbon::now()->subDays(7),
-            'hasil_akhir' => 'Juara 2 Data Analytics',
+            'hasil_akhir' => 'Juara 2',
+            'keterangan_hasil' => 'Data Analytics',
             'status_setuju' => 'disetujui',
         ]);
 
-        // Tim 5 (Angkatan 2026 - Daffa Raihan, JTI Muda): Babak Final -> Juara 3 Kompetisi Ide
+        // Tim 5 (Angkatan 2026 - Daffa Raihan, JTI Muda): Babak Final -> Juara 3 Business Pitching Maba
         ProgresBabak::create([
             'id_pengajuan' => $pengajuan5->id_pengajuan,
-            'babak' => 'Final',
+            'babak' => ProgresBabak::BABAK_FINAL,
             'tanggal_update' => Carbon::now()->subDays(4),
-            'hasil_akhir' => 'Juara 3 Business Pitching Maba',
+            'hasil_akhir' => 'Juara 3',
+            'keterangan_hasil' => 'Business Pitching Maba',
             'status_setuju' => 'disetujui',
         ]);
 

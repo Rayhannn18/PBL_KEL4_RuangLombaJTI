@@ -13,6 +13,7 @@ use App\Models\Dosen;
 use App\Models\Logbook;
 use App\Models\Lomba;
 use App\Models\Mahasiswa;
+use App\Models\PrestasiMahasiswa;
 use App\Models\ProgresBabak;
 use App\Models\Tim;
 use Illuminate\Http\Request;
@@ -61,9 +62,7 @@ class AdminController extends Controller
 
                 'total_mahasiswa' => Mahasiswa::count(),
 
-                'total_prestasi' => ProgresBabak::where('status_setuju', 'disetujui')
-                    ->where('hasil_akhir', 'like', '%Juara%')
-                    ->count(),
+                'total_prestasi' => PrestasiMahasiswa::count(),
             ];
         });
 
@@ -156,10 +155,30 @@ class AdminController extends Controller
         $mhsSearch = $request->query('mhs_search', '');
         $mhsProdi = $request->query('mhs_prodi', 'semua');
         $mhsAngkatan = $request->query('mhs_angkatan', 'semua');
+        $mhsRole = $request->query('mhs_role', 'semua');
         $mahasiswaList = collect();
 
         if ($currentTab === 'mahasiswa') {
-            $mahasiswaQuery = Mahasiswa::withCount(['timKetua', 'keanggotaan'])
+            $mahasiswaQuery = Mahasiswa::withCount([
+                'timKetua',
+                'keanggotaan',
+                'timKetua as tim_ketua_disetujui_count' => function ($q) {
+                    $q->where('status_tim', 'disetujui');
+                },
+            ])
+                ->with([
+                    'timKetua.lomba',
+                    'timKetua.pengajuanBimbingan.progresBabak' => function ($q) {
+                        $q->where('status_setuju', 'disetujui')->orderByDesc('tanggal_update');
+                    },
+                    'keanggotaan' => function ($q) {
+                        $q->where('status_gabung', 'diterima');
+                    },
+                    'keanggotaan.tim.lomba',
+                    'keanggotaan.tim.pengajuanBimbingan.progresBabak' => function ($q) {
+                        $q->where('status_setuju', 'disetujui')->orderByDesc('tanggal_update');
+                    },
+                ])
                 ->orderBy('nim');
 
             if ($mhsProdi !== 'semua') {
@@ -170,6 +189,16 @@ class AdminController extends Controller
                 $mahasiswaQuery->where('angkatan', (int) $mhsAngkatan);
             }
 
+            if ($mhsRole === 'ketua_tim') {
+                $mahasiswaQuery->whereHas('timKetua', function ($q) {
+                    $q->where('status_tim', 'disetujui');
+                });
+            } elseif ($mhsRole === 'mahasiswa') {
+                $mahasiswaQuery->whereDoesntHave('timKetua', function ($q) {
+                    $q->where('status_tim', 'disetujui');
+                });
+            }
+
             if (! empty($mhsSearch)) {
                 $mahasiswaQuery->where(function ($q) use ($mhsSearch) {
                     $q->where('nama', 'like', '%'.$mhsSearch.'%')
@@ -178,7 +207,107 @@ class AdminController extends Controller
                 });
             }
 
-            $mahasiswaList = $mahasiswaQuery->get();
+            $hasPortofolioCol = Schema::hasColumn('mahasiswa', 'portofolio');
+
+            $mahasiswaList = $mahasiswaQuery->get()->map(function (Mahasiswa $mhs) use ($hasPortofolioCol) {
+                $isKetuaDisetujui = ((int) ($mhs->tim_ketua_disetujui_count ?? 0)) > 0;
+                $mhs->setAttribute('role_label', $isKetuaDisetujui ? 'Ketua Tim' : 'Mahasiswa');
+
+                // Normalisasi daftar portofolio (maksimal 3 tautan valid)
+                $rawPortofolio = $hasPortofolioCol
+                    ? $mhs->portofolio
+                    : session("profil_portofolio_{$mhs->nim}", []);
+
+                if (is_string($rawPortofolio)) {
+                    $rawPortofolio = json_decode($rawPortofolio, true) ?: [];
+                }
+
+                $portofolioItems = [];
+                if (is_array($rawPortofolio)) {
+                    foreach (array_slice($rawPortofolio, 0, 3) as $item) {
+                        if (is_array($item) && ! empty($item['url'])) {
+                            $portofolioItems[] = [
+                                'label' => trim((string) ($item['label'] ?? '')),
+                                'url' => trim((string) $item['url']),
+                            ];
+                        }
+                    }
+                }
+                $mhs->setAttribute('portofolio_items', $portofolioItems);
+
+                // Susun daftar tim yang diikuti (sebagai Ketua Tim atau Anggota diterima)
+                $timMap = [];
+                $timModelsDisetujui = [];
+
+                foreach ($mhs->timKetua as $tim) {
+                    $timMap[$tim->id_tim] = [
+                        'id_tim' => $tim->id_tim,
+                        'nama_tim' => $tim->nama_tim,
+                        'nama_lomba' => $tim->lomba?->nama_lomba ?? 'Kompetisi JTI',
+                        'tingkat_lomba' => $tim->lomba?->tingkat ?? '',
+                        'kategori_lomba' => $tim->lomba?->kategori ?? '',
+                        'peran' => 'Ketua',
+                        'detail_peran' => null,
+                        'status_tim' => $tim->status_tim,
+                    ];
+
+                    if ($tim->status_tim === 'disetujui') {
+                        $timModelsDisetujui[$tim->id_tim] = $tim;
+                    }
+                }
+
+                foreach ($mhs->keanggotaan as $keanggotaan) {
+                    $tim = $keanggotaan->tim;
+                    if (! $tim || isset($timMap[$tim->id_tim])) {
+                        continue;
+                    }
+
+                    $detailPeran = trim((string) ($keanggotaan->posisi_dilamar ?: $keanggotaan->peran));
+                    if (in_array(strtolower($detailPeran), ['', 'anggota', 'ketua tim', 'ketua'], true)) {
+                        $detailPeran = null;
+                    }
+
+                    $timMap[$tim->id_tim] = [
+                        'id_tim' => $tim->id_tim,
+                        'nama_tim' => $tim->nama_tim,
+                        'nama_lomba' => $tim->lomba?->nama_lomba ?? 'Kompetisi JTI',
+                        'tingkat_lomba' => $tim->lomba?->tingkat ?? '',
+                        'kategori_lomba' => $tim->lomba?->kategori ?? '',
+                        'peran' => 'Anggota',
+                        'detail_peran' => $detailPeran,
+                        'status_tim' => $tim->status_tim,
+                    ];
+
+                    if ($tim->status_tim === 'disetujui') {
+                        $timModelsDisetujui[$tim->id_tim] = $tim;
+                    }
+                }
+
+                $mhs->setAttribute('tim_diikuti_items', array_values($timMap));
+
+                // Susun daftar prestasi juara terverifikasi dari tim yang sudah disetujui
+                $prestasiItems = [];
+                foreach ($timModelsDisetujui as $tim) {
+                    foreach ($tim->pengajuanBimbingan as $pengajuan) {
+                        foreach ($pengajuan->progresBabak as $progres) {
+                            if ($progres->status_setuju === 'disetujui' && $progres->isJuara()) {
+                                $prestasiItems[] = [
+                                    'id_progres' => $progres->id_progres,
+                                    'hasil_akhir' => $progres->hasil_akhir,
+                                    'babak' => $progres->babak,
+                                    'nama_tim' => $tim->nama_tim,
+                                    'nama_lomba' => $tim->lomba?->nama_lomba ?? '-',
+                                    'tanggal_update' => $progres->tanggal_update ? $progres->tanggal_update->format('d M Y') : '-',
+                                ];
+                            }
+                        }
+                    }
+                }
+
+                $mhs->setAttribute('prestasi_items', $prestasiItems);
+
+                return $mhs;
+            });
         }
 
         // 6. Riwayat Prestasi Mahasiswa (Hanya dimuat jika overview)
@@ -218,6 +347,7 @@ class AdminController extends Controller
             'mhsSearch',
             'mhsProdi',
             'mhsAngkatan',
+            'mhsRole',
             'prestasiList',
             'prodiOptions',
             'kategoriLombaOptions',

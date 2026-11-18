@@ -103,7 +103,7 @@ class AuthController extends Controller
         }
 
         if (! $user || ! Hash::check($password, $user->password)) {
-            return back()->with('error', 'Login gagal! Email/NIM/NIDN atau kata sandi tidak sesuai.')->withInput();
+            return back()->with('error', 'Login gagal! Email/NIM/NIP atau kata sandi tidak sesuai.')->withInput();
         }
 
         // Simpan sesi autentikasi

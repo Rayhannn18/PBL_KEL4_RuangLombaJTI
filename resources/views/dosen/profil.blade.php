@@ -177,7 +177,7 @@
                         {{ $dosen->nama }}
                     </div>
                     <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
-                        NIDN / NIP: <strong>{{ $dosen->nidn }}</strong>
+                        NIP: <strong>{{ $dosen->nidn }}</strong>
                     </div>
                     <div style="font-size: 0.8rem; color: var(--text-muted);">
                         {{ $dosen->email_kampus }}

@@ -230,7 +230,7 @@
                 <div class="kpi-value">{{ $totalPrestasi }}</div>
                 <div class="kpi-label">Prestasi Juara</div>
                 <div class="kpi-sub">
-                    <i class="bi bi-award-fill"></i> Juara 1, 2, 3 & Harapan
+                    <i class="bi bi-award-fill"></i> Juara 1–3, Harapan &amp; Penghargaan Khusus
                 </div>
             </div>
         </div>
@@ -299,7 +299,7 @@
             <div class="card-header">
                 <div>
                     <div class="card-title"><i class="bi bi-bar-chart-line-fill" style="color: var(--primary);"></i> Partisipasi & Prestasi per Program Studi</div>
-                    <div style="font-size: 0.78rem; color: var(--text-muted);">Perbandingan keikutsertaan tim dan perolehan juara antara D-IV SIB vs D-IV TI</div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted);">Perbandingan jumlah mahasiswa berkompetisi dan mahasiswa berprestasi antara D-IV SIB vs D-IV TI</div>
                 </div>
                 <span class="badge badge-primary">SIM JTI</span>
             </div>
@@ -391,33 +391,43 @@
                                 <tr>
                                     <td>
                                         <div style="font-weight: 700; color: var(--primary-dark);">
-                                            {{ $prestasi->pengajuan->tim->nama_tim ?? '-' }}
+                                            {{ $prestasi->nama_tim ?? '-' }}
                                         </div>
                                         <div style="font-size: 0.78rem; color: var(--text-muted);">
-                                            {{ $prestasi->pengajuan->tim->lomba->nama_lomba ?? '-' }}
+                                            {{ $prestasi->nama_lomba ?? '-' }}
                                         </div>
-                                        <span class="badge badge-primary" style="font-size: 0.68rem; margin-top: 4px;">
-                                            {{ $prestasi->pengajuan->tim->ketua->prodi ?? 'JTI Polinema' }}
-                                        </span>
+                                        <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 4px;">
+                                            <span class="badge badge-primary" style="font-size: 0.68rem;">
+                                                {{ $prestasi->prodi_ketua ?? 'JTI Polinema' }}
+                                            </span>
+                                            <span style="font-size: 0.72rem; color: var(--text-muted);">
+                                                &bull; {{ $prestasi->jumlah_anggota }} anggota
+                                            </span>
+                                        </div>
                                     </td>
                                     <td>
                                         <div class="badge badge-warning" style="font-size: 0.8rem; padding: 6px 10px;">
-                                            <i class="bi bi-award-fill"></i> {{ $prestasi->hasil_akhir }}
+                                            <i class="bi bi-award-fill"></i> {{ $prestasi->hasil }}{{ !empty($prestasi->tingkat_lomba) ? ' '.$prestasi->tingkat_lomba : '' }}
                                         </div>
-                                        <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">
+                                        @if(!empty($prestasi->keterangan_hasil))
+                                            <div style="font-size: 0.74rem; color: var(--primary-dark); font-weight: 600; margin-top: 4px;">
+                                                {{ $prestasi->keterangan_hasil }}
+                                            </div>
+                                        @endif
+                                        <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 3px;">
                                             Babak: {{ $prestasi->babak }}
                                         </div>
                                     </td>
                                     <td>
                                         <div style="font-weight: 600; font-size: 0.85rem;">
-                                            {{ $prestasi->pengajuan->dosen->nama ?? '-' }}
+                                            {{ $prestasi->nama_dosen ?? '-' }}
                                         </div>
                                         <div style="font-size: 0.72rem; color: var(--text-muted);">
-                                            NIDN: {{ $prestasi->pengajuan->dosen->nidn ?? '-' }}
+                                            NIP: {{ $prestasi->nidn_dosen ?? '-' }}
                                         </div>
                                     </td>
                                     <td style="font-size: 0.8rem; color: var(--text-muted);">
-                                        {{ $prestasi->tanggal_update ? $prestasi->tanggal_update->format('d M Y') : '-' }}
+                                        {{ $prestasi->tanggal_capaian ? $prestasi->tanggal_capaian->format('d M Y') : '-' }}
                                     </td>
                                 </tr>
                             @empty
@@ -491,14 +501,14 @@
         const prodiLabels = ['D-IV Sistem Informasi Bisnis', 'D-IV Teknik Informatika'];
         const prodiJuaraData = [
             {{ $prestasiPerProdi['D-IV Sistem Informasi Bisnis'] ?? 0 }},
-            {{ $prestasiPerProdi['D-IV Teknik Informatika'] ?? 1 }}
+            {{ $prestasiPerProdi['D-IV Teknik Informatika'] ?? 0 }}
         ];
         const prodiTimData = [
-            {{ $prodiStats->firstWhere('prodi', 'D-IV Sistem Informasi Bisnis')->total_tim ?? 2 }},
-            {{ $prodiStats->firstWhere('prodi', 'D-IV Teknik Informatika')->total_tim ?? 2 }}
+            {{ $prodiStats->firstWhere('prodi', 'D-IV Sistem Informasi Bisnis')->total_mahasiswa ?? 0 }},
+            {{ $prodiStats->firstWhere('prodi', 'D-IV Teknik Informatika')->total_mahasiswa ?? 0 }}
         ];
 
-        // 1. Chart Prodi (Bar Chart: Prestasi vs Partisipasi)
+        // 1. Chart Prodi (Bar Chart: Prestasi vs Partisipasi per Mahasiswa)
         const ctxProdi = document.getElementById('chartProdi').getContext('2d');
         new Chart(ctxProdi, {
             type: 'bar',
@@ -506,13 +516,13 @@
                 labels: prodiLabels,
                 datasets: [
                     {
-                        label: 'Total Tim Berkompetisi',
+                        label: 'Mahasiswa Berkompetisi',
                         data: prodiTimData,
                         backgroundColor: '#3B82F6',
                         borderRadius: 6,
                     },
                     {
-                        label: 'Prestasi Juara Diraih',
+                        label: 'Mahasiswa Berprestasi',
                         data: prodiJuaraData,
                         backgroundColor: '#F59E0B',
                         borderRadius: 6,

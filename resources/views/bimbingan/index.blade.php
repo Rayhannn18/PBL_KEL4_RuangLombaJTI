@@ -976,7 +976,7 @@
                                     {{ $pengajuan->dosen->nama ?? '-' }}
                                 </h4>
                                 <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">
-                                    NIDN: {{ $pengajuan->nidn }} &bull; Diajukan pada: {{ $pengajuan->tgl_pengajuan ? $pengajuan->tgl_pengajuan->format('d M Y') : '-' }}
+                                    NIP: {{ $pengajuan->nidn }} &bull; Diajukan pada: {{ $pengajuan->tgl_pengajuan ? $pengajuan->tgl_pengajuan->format('d M Y') : '-' }}
                                 </div>
                                 <p style="font-size: 0.83rem; background: #F8FAFC; border: 1px solid var(--border); border-radius: 8px; padding: 10px; color: var(--text-main); margin: 0;">
                                     "{{ $pengajuan->catatan ?? 'Menunggu konfirmasi penerimaan bimbingan oleh dosen.' }}"
@@ -1040,7 +1040,7 @@
                                         {{ $pengajuan->dosen->nama }}
                                     </div>
                                     <div style="font-size: 0.78rem; color: var(--text-muted);">
-                                        NIDN: {{ $pengajuan->dosen->nidn }} &bull; {{ $pengajuan->dosen->email_kampus }}
+                                        NIP: {{ $pengajuan->dosen->nidn }} &bull; {{ $pengajuan->dosen->email_kampus }}
                                     </div>
                                 </div>
                             </div>
@@ -1075,9 +1075,15 @@
                         </div>
 
                         @if($pengajuan && $pengajuan->status === 'disetujui' && ($isKetua ?? ($selectedTim->nim === $authUser['id'])))
-                            <button type="button" class="btn btn-primary btn-sm" onclick="openModalLogbook({{ $pengajuan->id_pengajuan }})">
-                                <i class="bi bi-plus-lg"></i> Isi Logbook Baru
-                            </button>
+                            @if($kompetisiSelesai ?? false)
+                                <span class="badge badge-gray" title="Kompetisi telah selesai">
+                                    <i class="bi bi-lock-fill"></i> Kompetisi Selesai
+                                </span>
+                            @else
+                                <button type="button" class="btn btn-primary btn-sm" onclick="openModalLogbook({{ $pengajuan->id_pengajuan }})">
+                                    <i class="bi bi-plus-lg"></i> Isi Logbook Baru
+                                </button>
+                            @endif
                         @endif
                     </div>
                     <div class="card-body">
@@ -1190,9 +1196,15 @@
                             </div>
                             @if($isKetua ?? ($selectedTim->nim === $authUser['id'] && \App\Models\Tim::ketuaDisetujui($authUser['id'])))
                                 <div>
-                                    <button type="button" class="btn btn-primary btn-sm" onclick="openModalTambahProgres()">
-                                        <i class="bi bi-plus-lg"></i> Lapor Progres Babak
-                                    </button>
+                                    @if($kompetisiSelesai ?? false)
+                                        <span class="badge badge-success" title="Kompetisi telah selesai">
+                                            <i class="bi bi-lock-fill"></i> Kompetisi Selesai
+                                        </span>
+                                    @else
+                                        <button type="button" class="btn btn-primary btn-sm" onclick="openModalTambahProgres()">
+                                            <i class="bi bi-plus-lg"></i> Lapor Progres Babak
+                                        </button>
+                                    @endif
                                 </div>
                             @endif
                         </div>
@@ -1233,7 +1245,45 @@
                                                 </div>
                                             </div>
 
-                                            @if($prog->catatan_dosen)
+                                            @if(!empty($prog->keterangan_hasil) || !empty($prog->file_bukti))
+                                                <div style="margin-top: 8px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 0.78rem; color: var(--text-main);">
+                                                    @if(!empty($prog->keterangan_hasil))
+                                                        <span><i class="bi bi-award"></i> <strong>Keterangan:</strong> {{ $prog->keterangan_hasil }}</span>
+                                                    @endif
+                                                    @if(!empty($prog->file_bukti))
+                                                        <a href="{{ route('bimbingan.progres.bukti', $prog->id_progres) }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm" style="font-size: 0.72rem; padding: 2px 8px;">
+                                                            <i class="bi bi-file-earmark-text"></i> Lihat Bukti
+                                                        </a>
+                                                    @endif
+                                                </div>
+                                            @endif
+
+                                            @if($prog->status_setuju === 'ditolak')
+                                                <div style="margin-top: 8px; font-size: 0.78rem; background: #FEF2F2; border-left: 3px solid #EF4444; padding: 6px 10px; border-radius: 4px; color: #991B1B;">
+                                                    <strong>Alasan Penolakan Dosen:</strong> "{{ $prog->alasan_tolak ?? 'Tidak ada alasan yang dicantumkan.' }}"
+                                                </div>
+                                                @if(! ($kompetisiSelesai ?? false) && ($isKetua ?? ($selectedTim->nim === $authUser['id'] && \App\Models\Tim::ketuaDisetujui($authUser['id']))))
+                                                    @php
+                                                        $babakStandarList = \App\Models\ProgresBabak::BABAK_STANDAR;
+                                                        $progresEditPayload = [
+                                                            'id' => $prog->id_progres,
+                                                            'babak' => in_array($prog->babak, $babakStandarList, true) ? $prog->babak : \App\Models\ProgresBabak::BABAK_LAINNYA,
+                                                            'babak_lainnya' => in_array($prog->babak, $babakStandarList, true) ? '' : $prog->babak,
+                                                            'tanggal_update' => $prog->tanggal_update ? $prog->tanggal_update->format('Y-m-d') : '',
+                                                            'hasil_akhir' => $prog->hasil_akhir,
+                                                            'keterangan_hasil' => $prog->keterangan_hasil ?? '',
+                                                            'punya_bukti' => !empty($prog->file_bukti),
+                                                        ];
+                                                    @endphp
+                                                    <div style="margin-top: 8px; display: flex; justify-content: flex-end;">
+                                                        <button type="button" class="btn btn-warning btn-sm" style="font-size: 0.78rem; padding: 3px 10px;" data-progres='@json($progresEditPayload)' onclick="openModalEditProgres(this)">
+                                                            <i class="bi bi-pencil-square"></i> Perbaiki &amp; Kirim Ulang
+                                                        </button>
+                                                    </div>
+                                                @endif
+                                            @endif
+
+                                            @if($prog->catatan_dosen && $prog->status_setuju !== 'ditolak')
                                                 <div style="margin-top: 8px; font-size: 0.78rem; background: {{ $prog->status_setuju === 'ditolak' ? '#FEF2F2' : '#F0FDF4' }}; border-left: 3px solid {{ $prog->status_setuju === 'ditolak' ? '#EF4444' : '#22C55E' }}; padding: 6px 10px; border-radius: 4px; color: {{ $prog->status_setuju === 'ditolak' ? '#991B1B' : '#166534' }};">
                                                     <strong>Catatan Dosen Pembimbing:</strong> "{{ $prog->catatan_dosen }}"
                                                 </div>
@@ -1254,7 +1304,7 @@
                         $existingBabakMap = $rabItemsData->keyBy('babak');
                         // Babak yang masih bisa dibuat baru (sudah tervalidasi dosen dan belum ada RAB-nya)
                         $babakTersediaBuatBaru = array_values(array_filter($babakValidRab, fn($b) => !$existingBabakMap->has($b)));
-                        $bisaAjukanRabBaru = !empty($babakValidRab) && !empty($babakTersediaBuatBaru);
+                        $bisaAjukanRabBaru = ! ($kompetisiSelesai ?? false) && ! empty($babakValidRab) && ! empty($babakTersediaBuatBaru);
                         $semuaBabakValidSudahAdaRab = !empty($babakValidRab) && empty($babakTersediaBuatBaru);
                     @endphp
                     <div class="card">
@@ -1281,7 +1331,9 @@
                                 </button>
                                 @if(!$bisaAjukanRabBaru)
                                     <div style="font-size: 0.72rem; color: {{ $semuaBabakValidSudahAdaRab ? 'var(--text-muted)' : '#B45309' }}; margin-top: 4px; max-width: 240px; text-align: right;">
-                                        @if($semuaBabakValidSudahAdaRab)
+                                        @if($kompetisiSelesai ?? false)
+                                            <i class="bi bi-lock-fill"></i> Kompetisi telah selesai
+                                        @elseif($semuaBabakValidSudahAdaRab)
                                             RAB untuk babak tervalidasi sudah dibuat
                                         @else
                                             <i class="bi bi-info-circle"></i> Tersedia setelah lolos semi final/final dan divalidasi dosen
@@ -1505,6 +1557,83 @@
                 <div style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Riwayat Ditolak</div>
                 <div style="font-size: 1.6rem; font-weight: 800; color: #64748B; margin: 2px 0;">{{ $riwayatLamaCount ?? 0 }} Tim</div>
                 <div style="font-size: 0.72rem; color: var(--text-muted);">Pengajuan masa lalu</div>
+            </div>
+        </div>
+
+        <!-- Antrian Laporan Progres Babak Menunggu Verifikasi -->
+        @if($errors->has('alasan_penolakan') || $errors->has('status_setuju'))
+            <div style="background: #FEF2F2; border: 1px solid #FECACA; border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 16px; font-size: 0.82rem; color: #991B1B;">
+                <ul style="margin: 0; padding-left: 18px;">
+                    @foreach($errors->all() as $errMsg)
+                        <li>{{ $errMsg }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        <div class="card" style="margin-bottom: 20px;">
+            <div class="card-header">
+                <div>
+                    <div class="card-title"><i class="bi bi-flag-fill" style="color: var(--primary);"></i> Laporan Progres Babak Menunggu Verifikasi</div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted);">Laporan capaian babak dari tim bimbingan Anda yang perlu disetujui atau ditolak</div>
+                </div>
+                <span class="badge {{ ($progresMenunggu ?? collect())->isNotEmpty() ? 'badge-warning' : 'badge-gray' }}">{{ ($progresMenunggu ?? collect())->count() }} Menunggu</span>
+            </div>
+            <div class="card-body" style="padding: 0;">
+                @if(($progresMenunggu ?? collect())->isEmpty())
+                    <div style="text-align: center; padding: 28px; color: var(--text-muted); font-size: 0.85rem;">
+                        Tidak ada laporan progres babak yang menunggu verifikasi.
+                    </div>
+                @else
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem; min-width: 820px;">
+                            <thead>
+                                <tr style="background: #F8FAFC; color: var(--text-muted); text-align: left; text-transform: uppercase; font-size: 0.7rem;">
+                                    <th style="padding: 10px 14px; border-bottom: 1px solid var(--border);">Tim &amp; Lomba</th>
+                                    <th style="padding: 10px 14px; border-bottom: 1px solid var(--border);">Babak</th>
+                                    <th style="padding: 10px 14px; border-bottom: 1px solid var(--border);">Hasil &amp; Keterangan</th>
+                                    <th style="padding: 10px 14px; border-bottom: 1px solid var(--border);">Tanggal</th>
+                                    <th style="padding: 10px 14px; border-bottom: 1px solid var(--border); text-align: right;">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($progresMenunggu as $antrian)
+                                    <tr style="border-bottom: 1px solid var(--border);">
+                                        <td style="padding: 10px 14px;">
+                                            <div style="font-weight: 700; color: var(--primary-dark);">{{ $antrian->pengajuan->tim->nama_tim ?? '-' }}</div>
+                                            <div style="font-size: 0.74rem; color: var(--text-muted);">{{ $antrian->pengajuan->tim->lomba->nama_lomba ?? '-' }}</div>
+                                        </td>
+                                        <td style="padding: 10px 14px;"><span class="badge badge-purple">{{ $antrian->babak }}</span></td>
+                                        <td style="padding: 10px 14px;">
+                                            <span class="badge badge-primary">{{ $antrian->hasil_akhir ?? '-' }}</span>
+                                            @if(!empty($antrian->keterangan_hasil))
+                                                <div style="font-size: 0.74rem; color: var(--text-muted); margin-top: 3px;">{{ $antrian->keterangan_hasil }}</div>
+                                            @endif
+                                            @if(!empty($antrian->file_bukti))
+                                                <a href="{{ route('bimbingan.progres.bukti', $antrian->id_progres) }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm" style="font-size: 0.72rem; padding: 2px 8px; margin-top: 4px;">
+                                                    <i class="bi bi-file-earmark-text"></i> Lihat Bukti
+                                                </a>
+                                            @endif
+                                        </td>
+                                        <td style="padding: 10px 14px; white-space: nowrap;">{{ $antrian->tanggal_update ? $antrian->tanggal_update->format('d M Y') : '-' }}</td>
+                                        <td style="padding: 10px 14px; text-align: right; white-space: nowrap;">
+                                            <div style="display: inline-flex; gap: 6px;">
+                                                <form action="{{ route('bimbingan.progres.respon', $antrian->id_progres) }}" method="POST" style="margin: 0;" onsubmit="return confirm('Setujui laporan progres babak ini?');">
+                                                    @csrf
+                                                    <input type="hidden" name="status_setuju" value="disetujui">
+                                                    <button type="submit" class="btn btn-success btn-sm"><i class="bi bi-check-lg"></i> Setujui</button>
+                                                </form>
+                                                <button type="button" class="btn btn-danger btn-sm" onclick="openModalTolakProgres({{ $antrian->id_progres }}, @js($antrian->babak.' - '.($antrian->pengajuan->tim->nama_tim ?? 'Tim')))">
+                                                    <i class="bi bi-x-lg"></i> Tolak
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
             </div>
         </div>
 
@@ -1763,8 +1892,10 @@
                                                         </div>
 
                                                         <div style="display: flex; gap: 6px; align-items: center;">
-                                                            @if($pb->status_setuju !== 'disetujui')
-                                                                <form action="{{ route('bimbingan.progres.respon', $pb->id_progres) }}" method="POST" style="margin: 0;">
+                                                            @if($pb->status_setuju === 'ditolak')
+                                                                <span class="badge badge-danger"><i class="bi bi-x-circle-fill"></i> Ditolak</span>
+                                                            @elseif($pb->status_setuju !== 'disetujui')
+                                                                <form action="{{ route('bimbingan.progres.respon', $pb->id_progres) }}" method="POST" style="margin: 0;" onsubmit="return confirm('Setujui laporan progres babak ini?');">
                                                                     @csrf
                                                                     <input type="hidden" name="status_setuju" value="disetujui">
                                                                     <button type="submit" class="btn btn-success btn-sm" style="padding: 4px 10px; font-size: 0.78rem;">
@@ -2577,14 +2708,31 @@
                     </div>
                     <button type="button" onclick="closeModalTambahProgres()" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--text-muted);">&times;</button>
                 </div>
-                <form action="{{ route('bimbingan.progres.store') }}" method="POST">
+                <form id="formProgres" action="{{ route('bimbingan.progres.store') }}" method="POST" enctype="multipart/form-data" data-store-action="{{ route('bimbingan.progres.store') }}">
                     @csrf
+                    <input type="hidden" name="_method" id="progresMethodField" value="PUT" disabled>
                     <input type="hidden" name="id_pengajuan" value="{{ $pengajuan->id_pengajuan }}">
+                    <input type="hidden" name="form_progres_id" id="progresFormId" value="{{ old('form_progres_id') }}">
 
                     <div class="modal-body-custom">
+                        @if($errors->hasAny(['babak', 'babak_lainnya', 'tanggal_update', 'hasil_akhir', 'keterangan_hasil', 'file_bukti']))
+                            <div style="background: #FEF2F2; border: 1px solid #FECACA; border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 14px; font-size: 0.8rem; color: #991B1B;">
+                                <ul style="margin: 0; padding-left: 18px;">
+                                    @foreach($errors->all() as $errMsg)
+                                        <li>{{ $errMsg }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
                         <div class="form-group" style="margin-bottom: 14px;">
                             <label class="form-label">Tahapan / Babak Kompetisi *</label>
-                            <input type="text" name="babak" class="form-control" placeholder="Contoh: Babak Penyisihan, Babak Semifinal, Babak Final..." required maxlength="50">
+                            <select name="babak" id="progresBabak" class="form-select" required onchange="onProgresBabakChange()">
+                                <option value="" disabled {{ old('babak') ? '' : 'selected' }}>-- Pilih Babak --</option>
+                                @foreach(\App\Models\ProgresBabak::BABAK_OPTIONS as $opsiBabak)
+                                    <option value="{{ $opsiBabak }}" {{ old('babak') === $opsiBabak ? 'selected' : '' }}>{{ $opsiBabak }}</option>
+                                @endforeach
+                            </select>
+                            <input type="text" name="babak_lainnya" id="progresBabakLainnya" class="form-control" maxlength="50" placeholder="Tuliskan nama babak (maks. 50 karakter)" value="{{ old('babak_lainnya') }}" style="display: none; margin-top: 8px;">
                         </div>
 
                         <div class="form-group" style="margin-bottom: 14px;">
@@ -2592,15 +2740,29 @@
                             <input type="date" name="tanggal_update" class="form-control" value="{{ date('Y-m-d') }}" required>
                         </div>
 
-                        <div class="form-group" style="margin-bottom: 0;">
+                        <div class="form-group" style="margin-bottom: 14px;">
                             <label class="form-label">Hasil / Status Capaian Babak *</label>
-                            <input type="text" name="hasil_akhir" class="form-control" placeholder="Contoh: Lolos ke Semifinal, Finalis, Juara 1..." required maxlength="100">
+                            <select name="hasil_akhir" id="progresHasil" class="form-select" required onchange="onProgresHasilChange()">
+                                <option value="" disabled selected>-- Pilih babak terlebih dahulu --</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" id="progresKeteranganWrap" style="margin-bottom: 14px; display: none;">
+                            <label class="form-label">Keterangan Hasil (Opsional)</label>
+                            <input type="text" name="keterangan_hasil" id="progresKeterangan" class="form-control" maxlength="100" placeholder="Contoh: Best Prototype &amp; Implementation" value="{{ old('keterangan_hasil') }}">
+                            <small style="display: block; margin-top: 4px; font-size: 0.75rem; color: var(--text-muted);">Nama kategori/penghargaan, maksimal 100 karakter.</small>
+                        </div>
+
+                        <div class="form-group" id="progresBuktiWrap" style="margin-bottom: 0; display: none;">
+                            <label class="form-label">Unggah Bukti <span id="progresBuktiWajibLabel" style="color: var(--danger);">*</span></label>
+                            <input type="file" name="file_bukti" id="progresBukti" class="form-control" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png">
+                            <small id="progresBuktiHint" style="display: block; margin-top: 4px; font-size: 0.75rem; color: var(--text-muted);">PDF/JPG/PNG, maksimal 2 MB.</small>
                         </div>
                     </div>
                     <div class="modal-footer-custom">
                         <button type="button" class="btn btn-secondary btn-sm" onclick="closeModalTambahProgres()">Batal</button>
                         <button type="submit" class="btn btn-primary btn-sm">
-                            <i class="bi bi-send-fill"></i> Kirim Laporan Progres
+                            <i class="bi bi-send-fill"></i> <span id="progresSubmitLabel">Kirim Laporan Progres</span>
                         </button>
                     </div>
                 </form>
@@ -2843,9 +3005,9 @@
                         </div>
 
                         <div class="form-group" style="margin-bottom: 0;">
-                            <label class="form-label">Catatan Evaluasi / Alasan Penolakan (Wajib) *</label>
-                            <textarea name="catatan_dosen" id="catatanDosenProgres" rows="4" class="form-control" placeholder="Tuliskan catatan evaluasi, kekurangan tahapan, atau arahan tindak lanjut bagi tim..." maxlength="1000" required></textarea>
-                            <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; text-align: right;">Maksimal 1000 karakter</div>
+                            <label class="form-label">Alasan Penolakan (Wajib) *</label>
+                            <textarea name="alasan_penolakan" id="catatanDosenProgres" rows="4" class="form-control" placeholder="Tuliskan alasan penolakan agar Ketua Tim dapat memperbaiki laporan..." minlength="10" maxlength="500" required oninput="document.getElementById('alasanProgresCount').textContent = this.value.length"></textarea>
+                            <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; text-align: right;">Minimal 10 karakter &bull; <span id="alasanProgresCount">0</span> / 500 karakter</div>
                         </div>
                     </div>
                     <div class="modal-footer-custom">
@@ -2995,15 +3157,153 @@
         if (modal) modal.style.display = 'none';
     }
 
+    // =========================================================================
+    // FORM LAPOR PROGRES BABAK (dropdown dinamis; divalidasi ulang di server)
+    // =========================================================================
+    const PROGRES_HASIL_NON_FINAL = @json(\App\Models\ProgresBabak::HASIL_NON_FINAL);
+    const PROGRES_HASIL_FINAL = @json(\App\Models\ProgresBabak::HASIL_FINAL);
+    const PROGRES_HASIL_WAJIB_BUKTI = @json(\App\Models\ProgresBabak::HASIL_PRESTASI);
+
+    function populateProgresHasil(selectedHasil = null) {
+        const babak = document.getElementById('progresBabak')?.value;
+        const select = document.getElementById('progresHasil');
+        if (!select) return;
+
+        const opsi = babak === 'Final' ? PROGRES_HASIL_FINAL : (babak ? PROGRES_HASIL_NON_FINAL : []);
+        select.innerHTML = '';
+
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.disabled = true;
+        placeholder.textContent = babak ? '-- Pilih Hasil --' : '-- Pilih babak terlebih dahulu --';
+        placeholder.selected = !selectedHasil || !opsi.includes(selectedHasil);
+        select.appendChild(placeholder);
+
+        opsi.forEach(function (hasil) {
+            const opt = document.createElement('option');
+            opt.value = hasil;
+            opt.textContent = hasil;
+            if (selectedHasil && selectedHasil === hasil) opt.selected = true;
+            select.appendChild(opt);
+        });
+    }
+
+    function onProgresBabakChange() {
+        const babak = document.getElementById('progresBabak')?.value;
+        const lainnya = document.getElementById('progresBabakLainnya');
+        const ketWrap = document.getElementById('progresKeteranganWrap');
+        const buktiWrap = document.getElementById('progresBuktiWrap');
+        const isFinal = babak === 'Final';
+
+        if (lainnya) {
+            lainnya.style.display = babak === 'Babak Lainnya' ? 'block' : 'none';
+            lainnya.required = babak === 'Babak Lainnya';
+            if (babak !== 'Babak Lainnya') lainnya.value = '';
+        }
+
+        if (ketWrap) ketWrap.style.display = isFinal ? 'block' : 'none';
+        if (buktiWrap) buktiWrap.style.display = isFinal ? 'block' : 'none';
+
+        if (!isFinal) {
+            const ket = document.getElementById('progresKeterangan');
+            const bukti = document.getElementById('progresBukti');
+            if (ket) ket.value = '';
+            if (bukti) { bukti.value = ''; bukti.required = false; }
+        }
+
+        populateProgresHasil(null);
+        onProgresHasilChange();
+    }
+
+    function onProgresHasilChange() {
+        const babak = document.getElementById('progresBabak')?.value;
+        const hasil = document.getElementById('progresHasil')?.value;
+        const bukti = document.getElementById('progresBukti');
+        const label = document.getElementById('progresBuktiWajibLabel');
+        const hint = document.getElementById('progresBuktiHint');
+        if (!bukti) return;
+
+        const wajib = babak === 'Final' && PROGRES_HASIL_WAJIB_BUKTI.includes(hasil) && !bukti.dataset.sudahAda;
+        bukti.required = wajib;
+        if (label) label.style.display = (babak === 'Final' && PROGRES_HASIL_WAJIB_BUKTI.includes(hasil)) ? 'inline' : 'none';
+        if (hint) {
+            hint.textContent = bukti.dataset.sudahAda
+                ? 'PDF/JPG/PNG, maksimal 2 MB. Bukti sebelumnya sudah tersimpan; unggah berkas baru hanya jika ingin menggantinya.'
+                : 'PDF/JPG/PNG, maksimal 2 MB.' + (PROGRES_HASIL_WAJIB_BUKTI.includes(hasil) ? ' Wajib untuk hasil ini.' : ' Opsional.');
+        }
+    }
+
+    function resetFormProgres() {
+        const form = document.getElementById('formProgres');
+        if (!form) return;
+        form.reset();
+        form.action = form.dataset.storeAction;
+        const methodField = document.getElementById('progresMethodField');
+        if (methodField) methodField.disabled = true;
+        const formId = document.getElementById('progresFormId');
+        if (formId) formId.value = '';
+        const bukti = document.getElementById('progresBukti');
+        if (bukti) delete bukti.dataset.sudahAda;
+        const submitLabel = document.getElementById('progresSubmitLabel');
+        if (submitLabel) submitLabel.textContent = 'Kirim Laporan Progres';
+    }
+
     function openModalTambahProgres() {
         const modal = document.getElementById('modalTambahProgres');
-        if (modal) modal.style.display = 'flex';
+        if (!modal) return;
+        resetFormProgres();
+        onProgresBabakChange();
+        modal.style.display = 'flex';
+    }
+
+    function openModalEditProgres(btnEl) {
+        const modal = document.getElementById('modalTambahProgres');
+        const form = document.getElementById('formProgres');
+        if (!modal || !form || !btnEl) return;
+
+        const data = JSON.parse(btnEl.getAttribute('data-progres') || '{}');
+        resetFormProgres();
+
+        form.action = `/bimbingan/progres/${data.id}`;
+        document.getElementById('progresMethodField').disabled = false;
+        document.getElementById('progresFormId').value = data.id;
+        document.getElementById('progresSubmitLabel').textContent = 'Perbaiki & Kirim Ulang';
+
+        document.getElementById('progresBabak').value = data.babak || '';
+        form.querySelector('[name="tanggal_update"]').value = data.tanggal_update || '';
+        onProgresBabakChange();
+        document.getElementById('progresBabakLainnya').value = data.babak_lainnya || '';
+        document.getElementById('progresKeterangan').value = data.keterangan_hasil || '';
+        if (data.punya_bukti) document.getElementById('progresBukti').dataset.sudahAda = '1';
+
+        populateProgresHasil(data.hasil_akhir);
+        onProgresHasilChange();
+        modal.style.display = 'flex';
     }
 
     function closeModalTambahProgres() {
         const modal = document.getElementById('modalTambahProgres');
         if (modal) modal.style.display = 'none';
     }
+
+    @if($errors->hasAny(['babak', 'babak_lainnya', 'tanggal_update', 'hasil_akhir', 'keterangan_hasil', 'file_bukti']))
+    document.addEventListener('DOMContentLoaded', function () {
+        const modal = document.getElementById('modalTambahProgres');
+        const form = document.getElementById('formProgres');
+        if (!modal || !form) return;
+
+        const editId = document.getElementById('progresFormId')?.value;
+        if (editId) {
+            form.action = `/bimbingan/progres/${editId}`;
+            document.getElementById('progresMethodField').disabled = false;
+            document.getElementById('progresSubmitLabel').textContent = 'Perbaiki & Kirim Ulang';
+        }
+        onProgresBabakChange();
+        populateProgresHasil(@json(old('hasil_akhir')));
+        onProgresHasilChange();
+        modal.style.display = 'flex';
+    });
+    @endif
 
     function openModalTolakProgres(idProgres, namaBabak) {
         const modal = document.getElementById('modalTolakProgres');
@@ -3013,6 +3313,8 @@
 
         if (modal && form) {
             form.action = `/bimbingan/progres/${idProgres}/respon`;
+            const counterAlasan = document.getElementById('alasanProgresCount');
+            if (counterAlasan) counterAlasan.textContent = '0';
             if (labelBabak) labelBabak.textContent = namaBabak;
             if (textarea) textarea.value = '';
             modal.style.display = 'flex';

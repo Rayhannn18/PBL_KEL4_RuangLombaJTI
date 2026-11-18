@@ -42,7 +42,7 @@ class DashboardController extends Controller
                 (SELECT COUNT(*) FROM tim WHERE status_tim = 'disetujui') as total_tim,
                 (SELECT COUNT(DISTINCT nim) FROM anggota_tim WHERE status_gabung = 'diterima') as total_mhs,
                 (SELECT COUNT(DISTINCT nidn) FROM pengajuan_bimbingan WHERE status = 'disetujui') as total_dosen,
-                (SELECT COUNT(*) FROM progres_babak WHERE status_setuju = 'disetujui' AND (LOWER(hasil_akhir) LIKE '%juara%' OR LOWER(hasil_akhir) LIKE '%gold%' OR LOWER(hasil_akhir) LIKE '%silver%' OR LOWER(hasil_akhir) LIKE '%bronze%')) as total_prestasi
+                (SELECT COUNT(*) FROM prestasi_mahasiswa) as total_prestasi
         ");
 
         $totalTim = (int) ($metrics->total_tim ?? 0);
@@ -50,62 +50,88 @@ class DashboardController extends Controller
         $totalDosenAktif = (int) ($metrics->total_dosen ?? 0);
         $totalPrestasi = (int) ($metrics->total_prestasi ?? 0);
 
-        // 3. Ambil Progres Babak & Prestasi dalam 1 Query Tunggal Terbatas (Take 15)
-        $allProgres = ProgresBabak::with([
+        // 3. Monitoring Progres Babak (semua laporan disetujui) & Rekapitulasi Prestasi (dari prestasi_mahasiswa per id_progres)
+        $babakMonitoring = ProgresBabak::with([
             'pengajuan.tim.lomba',
             'pengajuan.tim.ketua',
             'pengajuan.dosen',
         ])
             ->where('status_setuju', 'disetujui')
             ->orderByDesc('tanggal_update')
+            ->orderByDesc('id_progres')
+            ->take(6)
+            ->get();
+
+        $rekapAggregates = DB::table('prestasi_mahasiswa')
+            ->select(
+                'id_progres',
+                'id_tim',
+                'id_lomba',
+                'hasil',
+                'keterangan_hasil',
+                'tingkat_lomba',
+                'tanggal_capaian',
+                DB::raw('count(*) as jumlah_anggota')
+            )
+            ->groupBy('id_progres', 'id_tim', 'id_lomba', 'hasil', 'keterangan_hasil', 'tingkat_lomba', 'tanggal_capaian')
+            ->orderByDesc('tanggal_capaian')
+            ->orderByDesc('id_progres')
             ->take(15)
             ->get();
 
-        $babakMonitoring = $allProgres->take(6);
-        $daftarJuara = $allProgres->filter(fn ($item) => $item->isJuara())->values();
+        $progresRekapMap = ProgresBabak::with([
+            'pengajuan.tim.lomba',
+            'pengajuan.tim.ketua',
+            'pengajuan.dosen',
+        ])
+            ->whereIn('id_progres', $rekapAggregates->pluck('id_progres')->all())
+            ->get()
+            ->keyBy('id_progres');
 
-        // 4. Analisis per Program Studi (SIB vs TI)
+        $daftarJuara = $rekapAggregates->map(function ($agg) use ($progresRekapMap) {
+            $prog = $progresRekapMap->get($agg->id_progres);
+
+            return (object) [
+                'id_progres' => $agg->id_progres,
+                'hasil' => $agg->hasil,
+                'tingkat_lomba' => $agg->tingkat_lomba,
+                'keterangan_hasil' => $agg->keterangan_hasil,
+                'jumlah_anggota' => (int) $agg->jumlah_anggota,
+                'tanggal_capaian' => $agg->tanggal_capaian ? Carbon::parse($agg->tanggal_capaian) : null,
+                'babak' => $prog?->babak ?? ProgresBabak::BABAK_FINAL,
+                'nama_tim' => $prog?->pengajuan?->tim?->nama_tim ?? '-',
+                'nama_lomba' => $prog?->pengajuan?->tim?->lomba?->nama_lomba ?? '-',
+                'prodi_ketua' => $prog?->pengajuan?->tim?->ketua?->prodi ?? 'JTI Polinema',
+                'nama_dosen' => $prog?->pengajuan?->dosen?->nama ?? '-',
+                'nidn_dosen' => $prog?->pengajuan?->dosen?->nidn ?? '-',
+            ];
+        });
+
+        // 4. Analisis per Program Studi (Satuan seragam: per mahasiswa unik)
         $prodiStats = DB::table('mahasiswa')
             ->join('anggota_tim', 'mahasiswa.nim', '=', 'anggota_tim.nim')
             ->join('tim', 'anggota_tim.id_tim', '=', 'tim.id_tim')
             ->where('anggota_tim.status_gabung', 'diterima')
+            ->where('tim.status_tim', 'disetujui')
             ->select(
                 'mahasiswa.prodi',
-                DB::raw('count(distinct anggota_tim.nim) as total_mahasiswa'),
-                DB::raw('count(distinct tim.id_tim) as total_tim')
+                DB::raw('count(distinct anggota_tim.nim) as total_mahasiswa')
             )
             ->groupBy('mahasiswa.prodi')
             ->get();
 
-        $prestasiPerProdi = DB::table('progres_babak')
-            ->join('pengajuan_bimbingan', 'progres_babak.id_pengajuan', '=', 'pengajuan_bimbingan.id_pengajuan')
-            ->join('tim', 'pengajuan_bimbingan.id_tim', '=', 'tim.id_tim')
-            ->join('mahasiswa', 'tim.nim', '=', 'mahasiswa.nim')
-            ->where('progres_babak.status_setuju', 'disetujui')
-            ->where('progres_babak.hasil_akhir', 'like', '%Juara%')
-            ->select('mahasiswa.prodi', DB::raw('count(progres_babak.id_progres) as total_juara'))
-            ->groupBy('mahasiswa.prodi')
-            ->pluck('total_juara', 'prodi')
+        $prestasiPerProdi = DB::table('prestasi_mahasiswa')
+            ->select('prodi', DB::raw('count(distinct nim) as total_mahasiswa_berprestasi'))
+            ->groupBy('prodi')
+            ->pluck('total_mahasiswa_berprestasi', 'prodi')
             ->toArray();
 
-        // 5. Analisis Paling Sering Juara per Angkatan (4 Angkatan Akademik)
+        // 5. Analisis Paling Sering Juara per Angkatan (dari prestasi_mahasiswa per mahasiswa)
         $targetAngkatan = [2023, 2024, 2025, 2026];
 
-        $juaraPerAngkatanQuery = DB::table('progres_babak')
-            ->join('pengajuan_bimbingan', 'progres_babak.id_pengajuan', '=', 'pengajuan_bimbingan.id_pengajuan')
-            ->join('tim', 'pengajuan_bimbingan.id_tim', '=', 'tim.id_tim')
-            ->join('mahasiswa', 'tim.nim', '=', 'mahasiswa.nim')
-            ->where('progres_babak.status_setuju', 'disetujui')
-            ->where(function ($q) {
-                $q->where('progres_babak.hasil_akhir', 'like', '%Juara%')
-                    ->orWhere('progres_babak.hasil_akhir', 'like', '%Gold%')
-                    ->orWhere('progres_babak.hasil_akhir', 'like', '%Silver%')
-                    ->orWhere('progres_babak.hasil_akhir', 'like', '%Bronze%')
-                    ->orWhere('progres_babak.hasil_akhir', 'like', '%Best%')
-                    ->orWhere('progres_babak.hasil_akhir', 'like', '%Pemenang%');
-            })
-            ->select('mahasiswa.angkatan', DB::raw('count(progres_babak.id_progres) as total_juara'))
-            ->groupBy('mahasiswa.angkatan')
+        $juaraPerAngkatanQuery = DB::table('prestasi_mahasiswa')
+            ->select('angkatan', DB::raw('count(*) as total_juara'))
+            ->groupBy('angkatan')
             ->pluck('total_juara', 'angkatan')
             ->toArray();
 

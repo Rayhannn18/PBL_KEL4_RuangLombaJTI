@@ -5,8 +5,10 @@ namespace App\Providers;
 use App\Auth\MultiActorUserProvider;
 use App\Enums\UserRole;
 use App\Models\AnggotaTim;
+use App\Models\ProgresBabak;
 use App\Models\Tim;
 use App\Models\User;
+use App\Policies\ProgresBabakPolicy;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
@@ -30,6 +32,12 @@ class AppServiceProvider extends ServiceProvider
         Auth::provider('multi-actor', function ($app, array $config) {
             return new MultiActorUserProvider;
         });
+
+        Gate::policy(ProgresBabak::class, ProgresBabakPolicy::class);
+        Gate::define('create-progres-babak', [ProgresBabakPolicy::class, 'create']);
+        Gate::define('update-progres-babak', [ProgresBabakPolicy::class, 'update']);
+        Gate::define('respond-progres-babak', [ProgresBabakPolicy::class, 'respond']);
+        Gate::define('view-progres-bukti', [ProgresBabakPolicy::class, 'viewBukti']);
 
         Gate::define('view-permintaan-profil', function (?User $user, AnggotaTim $permintaan): bool {
             $role = $user

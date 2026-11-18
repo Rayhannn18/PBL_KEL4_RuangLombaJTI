@@ -781,6 +781,14 @@
                                         <span class="badge {{ str_contains($p->hasil_akhir, 'Juara') ? 'badge-success' : 'badge-warning' }}" style="font-size: 0.8rem; font-weight: 700;">
                                             <i class="bi bi-trophy-fill"></i> {{ $p->hasil_akhir }}
                                         </span>
+                                        @if(!empty($p->keterangan_hasil))
+                                            <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; white-space: normal;">{{ $p->keterangan_hasil }}</div>
+                                        @endif
+                                        @if(!empty($p->file_bukti))
+                                            <a href="{{ route('bimbingan.progres.bukti', $p->id_progres) }}" target="_blank" rel="noopener noreferrer" style="display: inline-block; margin-top: 4px; font-size: 0.72rem; font-weight: 700; color: var(--primary);">
+                                                <i class="bi bi-file-earmark-text"></i> Lihat Bukti
+                                            </a>
+                                        @endif
                                     </td>
                                     <td style="font-size: 0.8rem; color: var(--text-muted); white-space: nowrap;">
                                         {{ $p->tanggal_update ? $p->tanggal_update->format('d M Y') : '-' }}
@@ -1284,9 +1292,15 @@
                         @endforeach
                     </select>
 
+                    <select name="mhs_role" class="form-select" style="width: auto; padding: 6px 10px; font-size: 0.85rem;" onchange="this.form.submit()">
+                        <option value="semua" {{ ($mhsRole ?? 'semua') === 'semua' ? 'selected' : '' }}>Semua Role</option>
+                        <option value="mahasiswa" {{ ($mhsRole ?? 'semua') === 'mahasiswa' ? 'selected' : '' }}>Mahasiswa</option>
+                        <option value="ketua_tim" {{ ($mhsRole ?? 'semua') === 'ketua_tim' ? 'selected' : '' }}>Ketua Tim</option>
+                    </select>
+
                     <input type="text" name="mhs_search" class="form-control" style="width: 200px; padding: 6px 10px; font-size: 0.85rem;" placeholder="Cari NIM / Nama..." value="{{ $mhsSearch }}">
                     <button type="submit" class="btn btn-secondary btn-sm"><i class="bi bi-search"></i></button>
-                    @if(!empty($mhsSearch) || $mhsProdi !== 'semua' || $mhsAngkatan !== 'semua')
+                    @if(!empty($mhsSearch) || $mhsProdi !== 'semua' || $mhsAngkatan !== 'semua' || ($mhsRole ?? 'semua') !== 'semua')
                         <a href="{{ route('admin.index', ['tab' => 'mahasiswa']) }}" class="btn btn-secondary btn-sm" title="Reset"><i class="bi bi-x"></i></a>
                     @endif
                 </form>
@@ -1302,24 +1316,59 @@
         <!-- Tabel Mahasiswa -->
         <div class="table-container" style="overflow: visible;">
             <div style="overflow-x: auto; border-radius: var(--radius-md);">
-            <table class="custom-table" style="min-width: 900px;">
+            <table class="custom-table" style="min-width: 960px;">
                 <thead>
                     <tr>
-                        <th style="width: 150px;">NIM</th>
+                        <th style="width: 140px;">NIM</th>
                         <th>Nama Mahasiswa</th>
                         <th>Email Kampus</th>
                         <th>Program Studi</th>
                         <th>Angkatan</th>
+                        <th>Portofolio</th>
                         <th>Keaktifan Lomba</th>
-                        <th style="text-align: right; width: 130px;">Aksi</th>
+                        <th style="text-align: right; width: 150px;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($mahasiswaList as $mhs)
+                        @php
+                            $mhsRoleLabel = $mhs->role_label ?? 'Mahasiswa';
+                            $mhsPortofolioItems = $mhs->portofolio_items ?? [];
+                            $mhsPortofolioCount = is_array($mhsPortofolioItems) ? count($mhsPortofolioItems) : 0;
+                            $mhsEditPayload = [
+                                'nim' => $mhs->nim,
+                                'nama' => $mhs->nama,
+                                'email_kampus' => $mhs->email_kampus,
+                                'prodi' => $mhs->prodi,
+                                'angkatan' => $mhs->angkatan,
+                            ];
+                            $mhsDetailPayload = [
+                                'nim' => $mhs->nim,
+                                'nama' => $mhs->nama,
+                                'email_kampus' => $mhs->email_kampus,
+                                'prodi' => $mhs->prodi,
+                                'angkatan' => $mhs->angkatan,
+                                'role_label' => $mhsRoleLabel,
+                                'portofolio' => $mhsPortofolioItems,
+                                'tim_diikuti' => $mhs->tim_diikuti_items ?? [],
+                                'prestasi' => $mhs->prestasi_items ?? [],
+                            ];
+                        @endphp
                         <tr>
                             <td style="font-weight: 700; color: var(--primary);">{{ $mhs->nim }}</td>
                             <td>
                                 <div style="font-weight: 700; color: var(--primary-dark);">{{ $mhs->nama }}</div>
+                                <div style="margin-top: 4px;">
+                                    @if($mhsRoleLabel === 'Ketua Tim')
+                                        <span class="badge badge-primary" style="font-size: 0.68rem; padding: 2px 8px;">
+                                            <i class="bi bi-patch-check-fill"></i> Ketua Tim
+                                        </span>
+                                    @else
+                                        <span class="badge badge-gray" style="font-size: 0.68rem; padding: 2px 8px;">
+                                            Mahasiswa
+                                        </span>
+                                    @endif
+                                </div>
                             </td>
                             <td>
                                 <a href="mailto:{{ $mhs->email_kampus }}" style="color: #2563EB;">{{ $mhs->email_kampus }}</a>
@@ -1327,6 +1376,15 @@
                             <td>{{ $mhs->prodi }}</td>
                             <td>
                                 <span class="badge badge-purple">{{ $mhs->angkatan }}</span>
+                            </td>
+                            <td style="white-space: nowrap;">
+                                @if($mhsPortofolioCount > 0)
+                                    <span class="badge badge-primary" style="font-size: 0.74rem; padding: 4px 10px;">
+                                        <i class="bi bi-link-45deg"></i> {{ $mhsPortofolioCount }} tautan
+                                    </span>
+                                @else
+                                    <span style="color: var(--text-muted);">-</span>
+                                @endif
                             </td>
                             <td>
                                 <div style="font-size: 0.8rem;">
@@ -1336,7 +1394,10 @@
                             </td>
                             <td style="text-align: right; padding-right: 16px; white-space: nowrap;">
                                 <div style="display: inline-flex; gap: 4px;">
-                                    <button type="button" class="btn btn-secondary btn-sm" title="Ubah Data Mahasiswa" onclick="editMahasiswa({{ json_encode($mhs) }})">
+                                    <button type="button" class="btn btn-secondary btn-sm" title="Lihat Detail Profil Mahasiswa" onclick="previewMahasiswa(@js($mhsDetailPayload))">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-secondary btn-sm" title="Ubah Data Mahasiswa" onclick="editMahasiswa(@js($mhsEditPayload))">
                                         <i class="bi bi-pencil"></i>
                                     </button>
                                     <form action="{{ route('admin.mahasiswa.destroy', $mhs->nim) }}" method="POST" onsubmit="return confirm('Hapus data mahasiswa ini?');" style="margin: 0;">
@@ -1351,7 +1412,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                            <td colspan="8" style="text-align: center; padding: 40px; color: var(--text-muted);">
                                 <i class="bi bi-person-x" style="font-size: 2.2rem; display: block; margin-bottom: 8px;"></i>
                                 Tidak ditemukan data mahasiswa yang sesuai dengan kriteria filter saat ini.
                             </td>
@@ -1849,7 +1910,7 @@
             <div class="modal-body">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
                     <div class="form-group">
-                        <label class="form-label">NIDN (Kunci Primer)</label>
+                        <label class="form-label">NIP (Kunci Primer)</label>
                         <input type="text" id="edit_dosen_nidn_view" class="form-control" disabled>
                     </div>
                     <div class="form-group">
@@ -2005,6 +2066,29 @@
                 <button type="submit" class="btn btn-primary btn-sm">Perbarui Data Mahasiswa</button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- 8. Modal Detail Profil Mahasiswa (Read-Only) -->
+<div class="modal-overlay" id="modalDetailMahasiswa">
+    <div class="modal-box" style="max-width: 720px;">
+        <div class="modal-header">
+            <div class="modal-title">
+                <i class="bi bi-person-vcard-fill" style="color: var(--primary);"></i> Detail Profil Mahasiswa
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span class="badge badge-gray" style="font-size: 0.7rem;">
+                    <i class="bi bi-lock-fill"></i> Hanya Lihat
+                </span>
+                <button type="button" class="modal-close" onclick="closeModal('modalDetailMahasiswa')">&times;</button>
+            </div>
+        </div>
+        <div class="modal-body" id="detailMahasiswaContent">
+            <!-- Diisi lewat JS previewMahasiswa() -->
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="closeModal('modalDetailMahasiswa')">Tutup</button>
+        </div>
     </div>
 </div>
 
@@ -2387,6 +2471,205 @@
         document.getElementById('edit_mhs_angkatan').value = item.angkatan || 2024;
 
         openModal('modalEditMahasiswa');
+    }
+
+    function escapeHtmlText(str) {
+        return String(str ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    // Pratinjau Detail Profil Mahasiswa (Read-Only)
+    function previewMahasiswa(item) {
+        if (!item) return;
+
+        const nama = escapeHtmlText(item.nama || '-');
+        const nim = escapeHtmlText(item.nim || '-');
+        const email = escapeHtmlText(item.email_kampus || '-');
+        const prodi = escapeHtmlText(item.prodi || '-');
+        const angkatan = escapeHtmlText(item.angkatan || '-');
+        const roleLabel = item.role_label === 'Ketua Tim' ? 'Ketua Tim' : 'Mahasiswa';
+
+        const roleBadgeHtml = roleLabel === 'Ketua Tim'
+            ? `<span class="badge badge-primary" style="font-size: 0.76rem; padding: 4px 10px;"><i class="bi bi-patch-check-fill"></i> Ketua Tim</span>`
+            : `<span class="badge badge-gray" style="font-size: 0.76rem; padding: 4px 10px;">Mahasiswa</span>`;
+
+        // 1. Portofolio
+        const portofolioList = Array.isArray(item.portofolio) ? item.portofolio : [];
+        let portofolioHtml = '';
+        if (portofolioList.length > 0) {
+            const linksHtml = portofolioList.map(p => {
+                const rawUrl = String(p.url || '').trim();
+                const safeUrl = /^https:\/\//i.test(rawUrl) ? escapeHtmlText(rawUrl) : '#';
+                const labelText = p.label && String(p.label).trim() !== ''
+                    ? `${escapeHtmlText(p.label)} (${escapeHtmlText(rawUrl)})`
+                    : escapeHtmlText(rawUrl);
+
+                return `
+                    <a href="${safeUrl}"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--primary-soft); color: var(--primary); border: 1px solid #BFDBFE; border-radius: 999px; font-size: 0.82rem; font-weight: 700; text-decoration: none; max-width: 100%; word-break: break-all;">
+                        <i class="bi bi-box-arrow-up-right"></i>
+                        <span>${labelText}</span>
+                    </a>
+                `;
+            }).join('');
+
+            portofolioHtml = `<div style="display: flex; flex-wrap: wrap; gap: 8px;">${linksHtml}</div>`;
+        } else {
+            portofolioHtml = `
+                <div style="background: #F8FAFC; border: 1px dashed #CBD5E1; border-radius: var(--radius-sm); padding: 14px; text-align: center; color: var(--text-muted); font-size: 0.84rem;">
+                    Belum ada portofolio.
+                </div>
+            `;
+        }
+
+        // 2. Tim yang Diikuti
+        const timList = Array.isArray(item.tim_diikuti) ? item.tim_diikuti : [];
+        let timHtml = '';
+        if (timList.length > 0) {
+            const timItemsHtml = timList.map(t => {
+                const isKetua = t.peran === 'Ketua';
+                const peranText = isKetua
+                    ? 'Ketua'
+                    : (t.detail_peran ? `Anggota • ${escapeHtmlText(t.detail_peran)}` : 'Anggota');
+                const peranBadgeClass = isKetua ? 'badge-primary' : 'badge-purple';
+
+                let statusClass = 'badge-warning';
+                let statusLabel = 'Menunggu Persetujuan';
+                if (t.status_tim === 'disetujui') {
+                    statusClass = 'badge-success';
+                    statusLabel = 'Tim Disetujui';
+                } else if (t.status_tim === 'ditolak') {
+                    statusClass = 'badge-danger';
+                    statusLabel = 'Tim Ditolak';
+                }
+
+                const metaParts = [];
+                if (t.tingkat_lomba) metaParts.push(escapeHtmlText(t.tingkat_lomba));
+                if (t.kategori_lomba) metaParts.push(escapeHtmlText(t.kategori_lomba));
+                const metaSuffix = metaParts.length > 0 ? ` • ${metaParts.join(' • ')}` : '';
+
+                return `
+                    <div style="background: #F8FAFC; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+                            <div style="font-weight: 700; font-size: 0.92rem; color: var(--primary-dark);">
+                                ${escapeHtmlText(t.nama_tim || '-')}
+                            </div>
+                            <div style="display: inline-flex; gap: 6px; flex-wrap: wrap;">
+                                <span class="badge ${peranBadgeClass}" style="font-size: 0.72rem;">${peranText}</span>
+                                <span class="badge ${statusClass}" style="font-size: 0.72rem;">${statusLabel}</span>
+                            </div>
+                        </div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">
+                            <i class="bi bi-trophy-fill" style="color: var(--accent);"></i>
+                            <strong>${escapeHtmlText(t.nama_lomba || 'Kompetisi JTI')}</strong>${metaSuffix}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            timHtml = `<div style="display: flex; flex-direction: column; gap: 10px;">${timItemsHtml}</div>`;
+        } else {
+            timHtml = `
+                <div style="background: #F8FAFC; border: 1px dashed #CBD5E1; border-radius: var(--radius-sm); padding: 14px; text-align: center; color: var(--text-muted); font-size: 0.84rem;">
+                    Belum tergabung dalam tim kompetisi mana pun.
+                </div>
+            `;
+        }
+
+        // 3. Prestasi
+        const prestasiList = Array.isArray(item.prestasi) ? item.prestasi : [];
+        let prestasiHtml = '';
+        if (prestasiList.length > 0) {
+            const prestasiItemsHtml = prestasiList.map(pr => `
+                <div style="background: #F8FAFC; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            <span class="badge badge-warning" style="font-size: 0.76rem; padding: 4px 10px;">
+                                <i class="bi bi-award-fill"></i> ${escapeHtmlText(pr.hasil_akhir || '-')}
+                            </span>
+                            <span style="font-weight: 700; color: var(--primary-dark); font-size: 0.88rem;">
+                                ${escapeHtmlText(pr.nama_tim || '-')}
+                            </span>
+                        </div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">
+                            ${escapeHtmlText(pr.nama_lomba || '-')} (Babak: ${escapeHtmlText(pr.babak || '-')})
+                        </div>
+                    </div>
+                    <div style="font-size: 0.76rem; color: var(--text-muted); white-space: nowrap;">
+                        ${escapeHtmlText(pr.tanggal_update || '-')}
+                    </div>
+                </div>
+            `).join('');
+
+            prestasiHtml = `<div style="display: flex; flex-direction: column; gap: 10px;">${prestasiItemsHtml}</div>`;
+        } else {
+            prestasiHtml = `
+                <div style="background: #F8FAFC; border: 1px dashed #CBD5E1; border-radius: var(--radius-sm); padding: 14px; text-align: center; color: var(--text-muted); font-size: 0.84rem;">
+                    Belum ada catatan prestasi juara yang terverifikasi.
+                </div>
+            `;
+        }
+
+        const content = `
+            <!-- Data Akun -->
+            <div style="margin-bottom: 20px;">
+                <div style="font-size: 0.85rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+                    <span><i class="bi bi-person-badge-fill" style="color: var(--primary);"></i> Data Akun Mahasiswa</span>
+                    ${roleBadgeHtml}
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px;">
+                    <div style="background: #F8FAFC; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px;">
+                        <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Nama Lengkap</div>
+                        <div style="font-size: 0.88rem; font-weight: 700; color: var(--text-main);">${nama}</div>
+                    </div>
+                    <div style="background: #F8FAFC; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px;">
+                        <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">NIM</div>
+                        <div style="font-size: 0.88rem; font-weight: 700; color: var(--primary);">${nim}</div>
+                    </div>
+                    <div style="background: #F8FAFC; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px;">
+                        <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Email Kampus</div>
+                        <div style="font-size: 0.86rem; font-weight: 600; color: #2563EB; word-break: break-all;">${email}</div>
+                    </div>
+                    <div style="background: #F8FAFC; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px;">
+                        <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Program Studi & Angkatan</div>
+                        <div style="font-size: 0.86rem; font-weight: 700; color: var(--text-main);">${prodi} • Angkatan ${angkatan}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Portofolio -->
+            <div style="margin-bottom: 20px;">
+                <div style="font-size: 0.85rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                    <i class="bi bi-link-45deg" style="color: var(--primary);"></i> Portofolio (${portofolioList.length})
+                </div>
+                ${portofolioHtml}
+            </div>
+
+            <!-- Tim yang Diikuti -->
+            <div style="margin-bottom: 20px;">
+                <div style="font-size: 0.85rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                    <i class="bi bi-people-fill" style="color: var(--primary);"></i> Tim yang Diikuti (${timList.length})
+                </div>
+                ${timHtml}
+            </div>
+
+            <!-- Prestasi -->
+            <div>
+                <div style="font-size: 0.85rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                    <i class="bi bi-trophy-fill" style="color: #D97706;"></i> Prestasi (${prestasiList.length})
+                </div>
+                ${prestasiHtml}
+            </div>
+        `;
+
+        document.getElementById('detailMahasiswaContent').innerHTML = content;
+        openModal('modalDetailMahasiswa');
     }
 </script>
 @endsection

@@ -26,6 +26,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
@@ -167,6 +169,7 @@ class BimbinganController extends Controller
                 ->get();
 
             $babakRabTervalidasi = $selectedTim->babakRabTervalidasi($pengajuan);
+            $kompetisiSelesai = $selectedTim->isKompetisiSelesai($pengajuan);
 
             // Referensi tarif SBM TA 2026 (PMK 32/2025) dari tabel sbm_tarif
             $sbmTarifList = SbmTarif::where('tahun_anggaran', 2026)->get();
@@ -187,6 +190,7 @@ class BimbinganController extends Controller
                 'isKetua' => $isKetua,
                 'rabList' => $rabList,
                 'babakRabTervalidasi' => $babakRabTervalidasi,
+                'kompetisiSelesai' => $kompetisiSelesai,
                 'sbmTarifList' => $sbmTarifList,
                 'provinsiSbmList' => $provinsiSbmList,
                 'jumlahPesertaTim' => $jumlahPesertaTim,
@@ -258,10 +262,19 @@ class BimbinganController extends Controller
                 $q->where('nidn', $nidn);
             })->get(['id_lomba', 'nama_lomba']);
 
+            // Antrian laporan progres babak berstatus menunggu dari tim bimbingan dosen ini saja
+            $progresMenunggu = ProgresBabak::with(['pengajuan.tim.lomba'])
+                ->where('status_setuju', 'menunggu')
+                ->whereHas('pengajuan', fn ($q) => $q->where('nidn', $nidn)->where('status', 'disetujui'))
+                ->orderBy('tanggal_update')
+                ->orderBy('id_progres')
+                ->get();
+
             return view('bimbingan.index', [
                 'authUser' => $authUser,
                 'role' => 'dosen',
                 'dosen' => $dosen,
+                'progresMenunggu' => $progresMenunggu,
                 'pengajuanList' => $pengajuanList,
                 'hasLomba' => true,
                 'totalSesiLogbook' => $totalSesiLogbook,
@@ -459,6 +472,10 @@ class BimbinganController extends Controller
             return back()->with('error', 'Logbook hanya dapat ditambahkan setelah bimbingan resmi disetujui oleh Dosen Pembimbing dan tim telah disetujui oleh Admin.');
         }
 
+        if ($pengajuan->tim->isKompetisiSelesai($pengajuan)) {
+            return back()->with('error', 'Kompetisi tim ini telah selesai. Catatan logbook baru tidak dapat ditambahkan.');
+        }
+
         // Pengecekan Otorisasi:
         if ($authUser['role'] === 'mahasiswa') {
             $isKetua = ($pengajuan->tim->nim === $authUser['id'] && Tim::ketuaDisetujui($authUser['id']));
@@ -639,39 +656,89 @@ class BimbinganController extends Controller
     }
 
     /**
+     * Tentukan nama babak final yang disimpan (Babak Lainnya memakai teks singkat dari ketua).
+     *
+     * @param  array<string, mixed>  $validated
+     */
+    private function resolveNamaBabak(array $validated): string
+    {
+        if ($validated['babak'] === ProgresBabak::BABAK_LAINNYA) {
+            return trim((string) $validated['babak_lainnya']);
+        }
+
+        return $validated['babak'];
+    }
+
+    /**
+     * Cek aturan: per tim dan lomba hanya boleh ada SATU laporan peringkat Final
+     * (Juara 1/2/3, Harapan/Favorit, Finalis) DAN SATU laporan Penghargaan Khusus
+     * yang aktif (menunggu atau disetujui). Laporan yang ditolak tidak dihitung.
+     * Mengembalikan pesan galat bila terjadi konflik, atau null jika aman.
+     */
+    private function cekKonflikLaporanFinal(PengajuanBimbingan $pengajuan, string $babak, string $hasil, ?int $kecualiIdProgres = null): ?string
+    {
+        if ($babak !== ProgresBabak::BABAK_FINAL) {
+            return null;
+        }
+
+        $kategori = ProgresBabak::kategoriFinal($hasil);
+        if ($kategori === null) {
+            return null;
+        }
+
+        $idPengajuanTim = PengajuanBimbingan::where('id_tim', $pengajuan->id_tim)->pluck('id_pengajuan');
+
+        $laporanAktif = ProgresBabak::whereIn('id_pengajuan', $idPengajuanTim)
+            ->where('babak', ProgresBabak::BABAK_FINAL)
+            ->whereIn('status_setuju', ['menunggu', 'disetujui'])
+            ->when($kecualiIdProgres, fn ($q) => $q->where('id_progres', '!=', $kecualiIdProgres))
+            ->get();
+
+        $konflik = $laporanAktif->first(fn (ProgresBabak $item) => ProgresBabak::kategoriFinal($item->hasil_akhir) === $kategori);
+
+        if (! $konflik) {
+            return null;
+        }
+
+        return $kategori === 'penghargaan_khusus'
+            ? 'Tim ini sudah memiliki laporan Penghargaan Khusus babak Final yang menunggu verifikasi atau sudah disetujui.'
+            : 'Tim ini sudah memiliki laporan peringkat babak Final yang menunggu verifikasi atau sudah disetujui.';
+    }
+
+    /**
      * Mahasiswa Melaporkan Capaian Progres Babak Kompetisi
      */
     public function storeProgres(StoreProgresBabakRequest $request)
     {
         $validated = $request->validated();
-        $authUser = $this->authUser();
-
-        if (! $authUser || $authUser['role'] !== 'mahasiswa') {
-            return back()->with('error', 'Hanya anggota tim mahasiswa yang dapat melaporkan progres babak.');
-        }
-
         $pengajuan = PengajuanBimbingan::with(['tim.anggotaDiterima'])->findOrFail($validated['id_pengajuan']);
 
-        if ($pengajuan->status !== 'disetujui') {
-            return back()->with('error', 'Laporan progres babak hanya dapat diajukan setelah bimbingan resmi disetujui oleh Dosen Pembimbing.');
+        Gate::forUser(Auth::user())->authorize('create-progres-babak', $pengajuan);
+
+        if ($pengajuan->tim->isKompetisiSelesai($pengajuan)) {
+            return back()->with('error', 'Kompetisi tim ini telah selesai (laporan Final atau Tidak lolos sudah disetujui dosen). Tidak dapat menambah laporan progres babak baru.');
         }
 
-        $isKetua = ($pengajuan->tim->nim === $authUser['id'] && Tim::ketuaDisetujui($authUser['id']));
-        $isAnggota = $pengajuan->tim->anggotaDiterima->contains('nim', $authUser['id']);
+        $namaBabak = $this->resolveNamaBabak($validated);
+        $isFinal = $namaBabak === ProgresBabak::BABAK_FINAL;
 
-        if (! $isKetua) {
-            if ($isAnggota) {
-                return back()->with('error', 'Akses ditolak. Hanya Ketua Tim dengan status resmi yang berhak melaporkan progres babak kompetisi.');
-            }
+        $pesanKonflik = $this->cekKonflikLaporanFinal($pengajuan, $namaBabak, $validated['hasil_akhir']);
+        if ($pesanKonflik) {
+            return back()->withInput()->withErrors(['hasil_akhir' => $pesanKonflik]);
+        }
 
-            return back()->with('error', 'Anda bukan anggota resmi dari tim ini.');
+        $pathBukti = null;
+        if ($isFinal && $request->hasFile('file_bukti')) {
+            $pathBukti = $request->file('file_bukti')->store('progres_bukti', ProgresBabak::DISK_BUKTI);
         }
 
         ProgresBabak::create([
             'id_pengajuan' => $pengajuan->id_pengajuan,
-            'babak' => $validated['babak'],
+            'babak' => $namaBabak,
             'tanggal_update' => $validated['tanggal_update'],
             'hasil_akhir' => $validated['hasil_akhir'],
+            'keterangan_hasil' => $isFinal ? ($validated['keterangan_hasil'] ?? null) : null,
+            'file_bukti' => $pathBukti,
             'status_setuju' => 'menunggu',
         ]);
 
@@ -679,29 +746,118 @@ class BimbinganController extends Controller
     }
 
     /**
-     * Dosen Memvalidasi / Merespon Progres Babak (Setujui / Tolak dengan Catatan)
+     * Ketua Tim Memperbaiki & Mengirim Ulang Laporan Progres Babak yang Ditolak Dosen
+     */
+    public function updateProgres(StoreProgresBabakRequest $request, $id)
+    {
+        $validated = $request->validated();
+        $progres = ProgresBabak::with('pengajuan.tim.anggotaDiterima')->findOrFail($id);
+        $pengajuan = $progres->pengajuan;
+
+        Gate::forUser(Auth::user())->authorize('update-progres-babak', $progres);
+
+        if ($pengajuan->tim->isKompetisiSelesai($pengajuan)) {
+            return back()->with('error', 'Kompetisi tim ini telah selesai. Laporan progres babak tidak dapat diubah atau dikirim ulang.');
+        }
+
+        if ($progres->status_setuju !== 'ditolak') {
+            return back()->with('error', 'Hanya laporan yang ditolak dosen yang dapat diperbaiki dan dikirim ulang.');
+        }
+
+        $namaBabak = $this->resolveNamaBabak($validated);
+        $isFinal = $namaBabak === ProgresBabak::BABAK_FINAL;
+
+        $pesanKonflik = $this->cekKonflikLaporanFinal($pengajuan, $namaBabak, $validated['hasil_akhir'], (int) $progres->id_progres);
+        if ($pesanKonflik) {
+            return back()->withInput()->withErrors(['hasil_akhir' => $pesanKonflik]);
+        }
+
+        $pathBukti = $progres->file_bukti;
+        if (! $isFinal) {
+            $this->hapusFileBukti($pathBukti);
+            $pathBukti = null;
+        } elseif ($request->hasFile('file_bukti')) {
+            $this->hapusFileBukti($pathBukti);
+            $pathBukti = $request->file('file_bukti')->store('progres_bukti', ProgresBabak::DISK_BUKTI);
+        }
+
+        $progres->update([
+            'babak' => $namaBabak,
+            'tanggal_update' => $validated['tanggal_update'],
+            'hasil_akhir' => $validated['hasil_akhir'],
+            'keterangan_hasil' => $isFinal ? ($validated['keterangan_hasil'] ?? null) : null,
+            'file_bukti' => $pathBukti,
+            'status_setuju' => 'menunggu',
+            'catatan_dosen' => null,
+            'alasan_penolakan' => null,
+            'diverifikasi_oleh' => null,
+            'diverifikasi_pada' => null,
+        ]);
+
+        return back()->with('success', 'Laporan progres babak berhasil diperbaiki dan dikirim ulang! Menunggu verifikasi Dosen Pembimbing.');
+    }
+
+    /**
+     * Hapus berkas bukti progres babak dari penyimpanan (jika ada).
+     */
+    private function hapusFileBukti(?string $path): void
+    {
+        if ($path && Storage::disk(ProgresBabak::DISK_BUKTI)->exists($path)) {
+            Storage::disk(ProgresBabak::DISK_BUKTI)->delete($path);
+        }
+    }
+
+    /**
+     * Tampilkan berkas bukti progres babak (tab baru) untuk ketua, anggota,
+     * dosen pembimbing tim tersebut, dan admin.
+     */
+    public function lihatBuktiProgres($id)
+    {
+        $progres = ProgresBabak::with('pengajuan.tim.anggotaDiterima')->findOrFail($id);
+
+        Gate::forUser(Auth::user())->authorize('view-progres-bukti', $progres);
+
+        if (! $progres->file_bukti) {
+            abort(404, 'Bukti belum diunggah untuk laporan ini.');
+        }
+
+        $disk = Storage::disk(ProgresBabak::DISK_BUKTI);
+
+        if (! $disk->exists($progres->file_bukti)) {
+            abort(404, 'Berkas bukti tidak ditemukan pada server penyimpanan.');
+        }
+
+        $ekstensi = pathinfo($progres->file_bukti, PATHINFO_EXTENSION) ?: 'pdf';
+        $namaFile = 'Bukti_Progres_'.$progres->id_progres.'.'.$ekstensi;
+
+        return $disk->response($progres->file_bukti, $namaFile, [
+            'Content-Disposition' => 'inline; filename="'.$namaFile.'"',
+        ]);
+    }
+
+    /**
+     * Dosen Pembimbing Menyetujui / Menolak Laporan Progres Babak (hanya yang berstatus menunggu)
      */
     public function responProgresBabak(ResponProgresBabakRequest $request, $id)
     {
         $validated = $request->validated();
-        $authUser = $this->authUser();
-
-        if (! $authUser || ! in_array($authUser['role'], ['dosen', 'admin'])) {
-            return back()->with('error', 'Hanya Dosen Pembimbing atau Administrator yang berhak memvalidasi progres babak.');
-        }
-
         $progres = ProgresBabak::with('pengajuan')->findOrFail($id);
 
-        if ($authUser['role'] === 'dosen' && $progres->pengajuan->nidn !== $authUser['id']) {
-            return back()->with('error', 'Anda hanya dapat memvalidasi progres babak untuk tim bimbingan Anda.');
+        Gate::forUser(Auth::user())->authorize('respond-progres-babak', $progres);
+
+        $authUser = $this->authUser();
+        $verifikatorId = (string) ($authUser['id'] ?? Auth::user()?->nim_nip ?? '');
+
+        if ($progres->status_setuju !== 'menunggu') {
+            return back()->with('error', 'Hanya laporan progres babak berstatus menunggu yang dapat disetujui atau ditolak.');
         }
 
         if ($validated['status_setuju'] === 'disetujui') {
-            $progres->setujuiProgres($validated['catatan_dosen'] ?? null);
+            $progres->setujuiProgres(null, $verifikatorId);
             $pesan = "Capaian babak '{$progres->babak}' berhasil disetujui.";
         } else {
-            $progres->tolakProgres($validated['catatan_dosen']);
-            $pesan = "Capaian babak '{$progres->babak}' ditolak dengan catatan evaluasi.";
+            $progres->tolakProgres($validated['alasan_penolakan'], $verifikatorId);
+            $pesan = "Capaian babak '{$progres->babak}' ditolak dan dikembalikan ke Ketua Tim beserta alasan penolakan.";
         }
 
         return back()->with('success', $pesan);
@@ -782,6 +938,10 @@ class BimbinganController extends Controller
         $existingRab = RabPengajuan::where('tim_id', $tim->id_tim)
             ->where('babak', $validated['babak'])
             ->first();
+
+        if (! $existingRab && $tim->isKompetisiSelesai($bimbingan)) {
+            return back()->with('error', 'Kompetisi tim ini telah selesai. Pengajuan RAB baru tidak dapat dibuat.');
+        }
 
         if ($existingRab && ! $existingRab->isEditable()) {
             $labelStatus = $existingRab->labelStatus();

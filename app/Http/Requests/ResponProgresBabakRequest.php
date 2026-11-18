@@ -9,6 +9,7 @@ class ResponProgresBabakRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
+     * Otorisasi dosen pembimbing dilakukan di controller.
      */
     public function authorize(): bool
     {
@@ -24,7 +25,7 @@ class ResponProgresBabakRequest extends FormRequest
     {
         return [
             'status_setuju' => ['required', 'in:disetujui,ditolak'],
-            'catatan_dosen' => ['nullable', 'string', 'max:1000', 'required_if:status_setuju,ditolak'],
+            'alasan_penolakan' => ['nullable', 'required_if:status_setuju,ditolak', 'string', 'min:10', 'max:500'],
         ];
     }
 
@@ -38,8 +39,10 @@ class ResponProgresBabakRequest extends FormRequest
         return [
             'status_setuju.required' => 'Status keputusan progres babak wajib dipilih.',
             'status_setuju.in' => 'Status keputusan harus berupa disetujui atau ditolak.',
-            'catatan_dosen.required_if' => 'Catatan arahan/alasan revisi wajib diisi apabila menolak progres babak.',
-            'catatan_dosen.max' => 'Catatan dosen maksimal 1000 karakter.',
+            'alasan_penolakan.required_if' => 'Alasan penolakan wajib diisi.',
+            'alasan_penolakan.string' => 'Alasan penolakan harus berupa teks.',
+            'alasan_penolakan.min' => 'Alasan penolakan minimal 10 karakter.',
+            'alasan_penolakan.max' => 'Alasan penolakan maksimal 500 karakter.',
         ];
     }
 }

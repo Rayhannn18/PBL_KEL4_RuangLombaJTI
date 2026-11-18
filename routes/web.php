@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\UserRole;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
@@ -9,6 +10,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DosenController;
 use App\Http\Controllers\LombaController;
 use App\Http\Controllers\TimController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // Dashboard Analitik Prestasi (publik)
@@ -45,10 +47,10 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
 });
 
 // Modul Katalog & Eksplorasi Lomba Mahasiswa
-Route::aliasMiddleware('mahasiswa', function (\Illuminate\Http\Request $request, \Closure $next) {
+Route::aliasMiddleware('mahasiswa', function (Request $request, Closure $next) {
     $user = auth()->user();
     $role = $user
-        ? ($user->role instanceof \App\Enums\UserRole ? $user->role->value : (string) $user->role)
+        ? ($user->role instanceof UserRole ? $user->role->value : (string) $user->role)
         : null;
 
     if (! $role && session()->has('auth_user')) {
@@ -107,7 +109,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('/bimbingan/logbook/{id}', [BimbinganController::class, 'destroyLogbook'])->name('bimbingan.logbook.destroy');
     Route::post('/bimbingan/logbook/{id}/validasi', [BimbinganController::class, 'validasiLogbook'])->middleware('dosen')->name('bimbingan.logbook.validasi');
     Route::post('/bimbingan/progres', [BimbinganController::class, 'storeProgres'])->name('bimbingan.progres.store');
-    Route::post('/bimbingan/progres/{id}/respon', [BimbinganController::class, 'responProgresBabak'])->middleware('dosen')->name('bimbingan.progres.respon');
+    Route::put('/bimbingan/progres/{id}', [BimbinganController::class, 'updateProgres'])->name('bimbingan.progres.update')->whereNumber('id');
+    Route::get('/bimbingan/progres/{id}/bukti', [BimbinganController::class, 'lihatBuktiProgres'])->name('bimbingan.progres.bukti')->whereNumber('id');
+    Route::post('/bimbingan/progres/{id}/respon', [BimbinganController::class, 'responProgresBabak'])->name('bimbingan.progres.respon')->whereNumber('id');
     Route::post('/bimbingan/rab', [BimbinganController::class, 'storeOrUpdateRab'])->name('bimbingan.rab.store');
     Route::post('/bimbingan/rab/{id}/respon', [BimbinganController::class, 'responRab'])->middleware('dosen')->name('bimbingan.rab.respon');
     Route::post('/bimbingan/pengajuan/{id}/respon', [BimbinganController::class, 'responPengajuan'])->middleware('dosen')->name('bimbingan.pengajuan.respon');
