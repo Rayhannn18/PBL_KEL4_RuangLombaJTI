@@ -326,7 +326,7 @@
     {{-- ========================================================================= --}}
     {{-- BAGIAN: PENGAJUAN PEMBENTUKAN TIM SAYA (CALON KETUA TIM)                  --}}
     {{-- ========================================================================= --}}
-    @if(($authUser['role'] ?? '') === 'mahasiswa' && isset($pengajuanKetua) && $pengajuanKetua->isNotEmpty())
+    @if(in_array($authUser['role'] ?? '', ['mahasiswa', 'ketua_tim'], true) && isset($pengajuanKetua) && $pengajuanKetua->isNotEmpty())
         <div class="user-applications-card" style="border-left: 4px solid var(--primary);">
             <div class="user-applications-header">
                 <div>
@@ -425,6 +425,15 @@
                                 <i class="bi {{ $noteIcon }}" style="font-size: 0.95rem;"></i>
                                 <span>{{ $statusNote }}</span>
                             </div>
+
+                            @if($status === 'ditolak')
+                                <div style="margin-top: 10px; background: #FEF2F2; border: 1px solid #FECACA; border-left: 4px solid var(--danger); border-radius: 6px; padding: 10px 12px; font-size: 0.82rem; color: #991B1B;">
+                                    <div style="font-weight: 700; margin-bottom: 2px;">
+                                        <i class="bi bi-exclamation-triangle-fill"></i> Alasan Penolakan dari Admin:
+                                    </div>
+                                    <div>{{ !empty($pk->alasan_penolakan) ? $pk->alasan_penolakan : 'Tidak ada alasan yang dicantumkan.' }}</div>
+                                </div>
+                            @endif
                         </div>
 
                         <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed var(--border); padding-top: 10px; gap: 8px; flex-wrap: wrap;">
@@ -452,12 +461,111 @@
                                         <i class="bi bi-hourglass-split"></i> Menunggu review admin
                                     </span>
                                 @elseif($status === 'ditolak')
-                                    <a href="{{ route('tim.create') }}"
+                                    <a href="{{ route('tim.create', ['lomba_id' => $pk->id_lomba]) }}"
                                        class="btn btn-primary btn-sm"
                                        style="font-size: 0.74rem; font-weight: 700; padding: 4px 10px;">
-                                        <i class="bi bi-plus-circle"></i> Ajukan Tim Lain
+                                        <i class="bi bi-arrow-repeat"></i> Ajukan Ulang
                                     </a>
                                 @endif
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
+    {{-- ========================================================================= --}}
+    {{-- BAGIAN: PERMINTAAN GABUNG MASUK (DASHBOARD KETUA TIM)                     --}}
+    {{-- ========================================================================= --}}
+    @if(isset($permintaanMasukKetua) && $permintaanMasukKetua->isNotEmpty())
+        <div class="user-applications-card" style="border-left: 4px solid #F59E0B;">
+            <div class="user-applications-header">
+                <div>
+                    <div style="font-size: 0.72rem; font-weight: 700; color: #D97706; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">
+                        <i class="bi bi-inbox-fill"></i> Dashboard Ketua Tim
+                    </div>
+                    <h3 style="font-size: 1.18rem; font-weight: 800; color: var(--primary-dark); margin: 0; display: flex; align-items: center; gap: 8px;">
+                        <span>Permintaan Gabung Masuk</span>
+                        <span class="badge badge-warning" style="font-size: 0.72rem; padding: 2px 8px;">
+                            {{ $permintaanMasukKetua->count() }} Menunggu
+                        </span>
+                    </h3>
+                    <p style="font-size: 0.82rem; color: var(--text-muted); margin: 3px 0 0 0;">
+                        Tinjau profil, posisi yang dilamar, dan pesan pelamar sebelum menyetujui atau menolak anggota tim.
+                    </p>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px;">
+                @foreach($permintaanMasukKetua as $pend)
+                    <div class="application-item status-menunggu">
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 8px;">
+                                <div>
+                                    <div style="font-weight: 800; color: var(--primary-dark); font-size: 1rem; line-height: 1.3;">
+                                        {{ $pend->mahasiswa->nama ?? 'Mahasiswa Pelamar' }}
+                                    </div>
+                                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">
+                                        {{ $pend->mahasiswa->prodi ?? '-' }}{{ isset($pend->mahasiswa->angkatan) ? ' • Angkatan '.$pend->mahasiswa->angkatan : '' }}
+                                    </div>
+                                </div>
+                                <span class="badge application-badge-menunggu" style="font-size: 0.72rem; padding: 4px 10px; white-space: nowrap;">
+                                    <i class="bi bi-clock-history"></i> Menunggu
+                                </span>
+                            </div>
+
+                            <div style="display: flex; flex-wrap: wrap; gap: 10px; font-size: 0.78rem; color: var(--text-muted); margin-bottom: 8px;">
+                                <span>
+                                    <i class="bi bi-people-fill" style="color: var(--primary);"></i>
+                                    Tim: <strong>{{ $pend->tim->nama_tim ?? '-' }}</strong>
+                                </span>
+                                <span>&bull;</span>
+                                <span>
+                                    <i class="bi bi-briefcase-fill" style="color: var(--primary);"></i>
+                                    Posisi Dilamar: <strong>{{ $pend->posisi_dilamar ?: ($pend->peran ?? 'Anggota') }}</strong>
+                                </span>
+                            </div>
+
+                            @if(!empty($pend->pesan))
+                                <div style="background: #fff; border: 1px solid var(--border); border-left: 3px solid var(--primary); border-radius: 6px; padding: 8px 12px; font-size: 0.8rem; color: var(--text-main); margin-bottom: 8px;">
+                                    <span style="font-weight: 700; color: var(--text-muted);">Pesan:</span> {{ $pend->pesan }}
+                                </div>
+                            @endif
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed var(--border); padding-top: 10px; gap: 8px; flex-wrap: wrap;">
+                            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                <a href="{{ route('tim.permintaan.profil', $pend->id_anggota) }}"
+                                   class="btn btn-secondary btn-sm"
+                                   style="font-size: 0.74rem; padding: 4px 10px;">
+                                    <i class="bi bi-person-lines-fill"></i> Lihat Profil
+                                </a>
+                                @if($pend->file_cv)
+                                    <a href="{{ route('tim.cv', ['type' => 'anggota', 'id' => $pend->id_anggota]) }}"
+                                       target="_blank"
+                                       class="btn btn-outline-primary btn-sm"
+                                       style="font-size: 0.74rem; padding: 4px 10px;">
+                                        <i class="bi bi-file-earmark-pdf"></i> Lihat CV
+                                    </a>
+                                @endif
+                            </div>
+
+                            <div style="display: flex; gap: 6px;">
+                                <form action="{{ route('tim.anggota.respon', $pend->id_anggota) }}" method="POST" style="margin: 0;">
+                                    @csrf
+                                    <input type="hidden" name="status" value="diterima">
+                                    <button type="submit" class="btn btn-success btn-sm" style="font-size: 0.74rem; padding: 4px 10px;">
+                                        <i class="bi bi-check-lg"></i> Setujui
+                                    </button>
+                                </form>
+                                <form action="{{ route('tim.anggota.respon', $pend->id_anggota) }}" method="POST" style="margin: 0;">
+                                    @csrf
+                                    <input type="hidden" name="status" value="ditolak">
+                                    <button type="submit" class="btn btn-danger btn-sm" style="font-size: 0.74rem; padding: 4px 10px;">
+                                        <i class="bi bi-x-lg"></i> Tolak
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -558,7 +666,7 @@
                                     <span>&bull;</span>
                                     <span>
                                         <i class="bi bi-briefcase-fill" style="color: var(--primary);"></i>
-                                        Posisi: <strong>{{ $pg->peran ?? 'Anggota' }}</strong>
+                                        Posisi: <strong>{{ $pg->posisi_dilamar ?: ($pg->peran ?? 'Anggota') }}</strong>
                                     </span>
                                     @if($pg->created_at)
                                         <span>&bull;</span>
@@ -568,6 +676,12 @@
                                         </span>
                                     @endif
                                 </div>
+
+                                @if(!empty($pg->pesan))
+                                    <div style="background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; font-size: 0.8rem; color: var(--text-main); margin-bottom: 10px;">
+                                        <span style="font-weight: 700; color: var(--text-muted);">Pesan:</span> {{ $pg->pesan }}
+                                    </div>
+                                @endif
 
                                 <div class="application-note-box {{ $noteClass }}">
                                     <i class="bi {{ $noteIcon }}" style="font-size: 0.95rem;"></i>

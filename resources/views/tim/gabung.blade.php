@@ -91,30 +91,31 @@
         <form action="{{ route('tim.gabung', $tim->id_tim) }}" method="POST" enctype="multipart/form-data">
             @csrf
 
-            <!-- 1. Peran / Bidang Keahlian yang Ditawarkan (Wajib) -->
+            <!-- 1. Posisi/Bidang yang Dilamar (Wajib, Maks 60 Karakter) -->
             <div class="form-group" style="margin-bottom: 22px;">
-                <label class="form-label">
-                    Peran / Bidang Keahlian yang Anda Tawarkan <span style="color: var(--danger);">*</span>
+                <label class="form-label" for="posisi_dilamar">
+                    Posisi/Bidang yang Dilamar <span style="color: var(--danger);">*</span>
                 </label>
-                <select name="peran" class="form-select @error('peran') is-invalid @enderror" required>
-                    <option value="" disabled {{ old('peran') ? '' : 'selected' }}>-- Pilih Peran / Posisi Anda dalam Tim --</option>
-                    <option value="Frontend Developer" {{ old('peran') === 'Frontend Developer' ? 'selected' : '' }}>Frontend Developer (Web/Mobile UI)</option>
-                    <option value="Backend Developer" {{ old('peran') === 'Backend Developer' ? 'selected' : '' }}>Backend & Database Engineer</option>
-                    <option value="UI/UX Designer" {{ old('peran') === 'UI/UX Designer' ? 'selected' : '' }}>UI/UX Designer (Figma / Prototyping)</option>
-                    <option value="Machine Learning / AI Engineer" {{ old('peran') === 'Machine Learning / AI Engineer' ? 'selected' : '' }}>Machine Learning / AI Engineer</option>
-                    <option value="Mobile App Developer" {{ old('peran') === 'Mobile App Developer' ? 'selected' : '' }}>Mobile App Developer (Flutter/React Native)</option>
-                    <option value="Cyber Security / Pentester" {{ old('peran') === 'Cyber Security / Pentester' ? 'selected' : '' }}>Cyber Security / Pentester</option>
-                    <option value="IoT / Embedded Hardware" {{ old('peran') === 'IoT / Embedded Hardware' ? 'selected' : '' }}>IoT / Embedded Hardware</option>
-                    <option value="Pitch Deck & Business Analyst" {{ old('peran') === 'Pitch Deck & Business Analyst' ? 'selected' : '' }}>Pitch Deck & Business Analyst</option>
-                    <option value="Anggota Tim" {{ old('peran') === 'Anggota Tim' ? 'selected' : '' }}>Anggota Tim Umum</option>
-                </select>
+                <input type="text"
+                       id="posisi_dilamar"
+                       name="posisi_dilamar"
+                       maxlength="60"
+                       value="{{ old('posisi_dilamar', old('peran')) }}"
+                       class="form-control @error('posisi_dilamar') is-invalid @enderror @error('peran') is-invalid @enderror"
+                       placeholder="Backend Developer / UI/UX / Data Analyst"
+                       required>
+                @error('posisi_dilamar')
+                    <div style="font-size: 0.8rem; color: var(--danger); margin-top: 5px; font-weight: 600;">
+                        <i class="bi bi-exclamation-circle-fill"></i> {{ $message }}
+                    </div>
+                @enderror
                 @error('peran')
                     <div style="font-size: 0.8rem; color: var(--danger); margin-top: 5px; font-weight: 600;">
                         <i class="bi bi-exclamation-circle-fill"></i> {{ $message }}
                     </div>
                 @enderror
                 <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 5px;">
-                    Pilihlah keahlian spesifik yang paling sesuai dengan kebutuhan kompetisi tim sasaran.
+                    Tuliskan posisi atau bidang keahlian yang Anda lamar pada tim ini (maksimal 60 karakter).
                 </div>
             </div>
 
@@ -154,23 +155,29 @@
                 </div>
             </div>
 
-            <!-- 3. Catatan / Deskripsi Singkat untuk Ketua Tim (Wajib) -->
+            <!-- 3. Pesan Singkat untuk Ketua (Opsional, Maks 300 Karakter) -->
             <div class="form-group" style="margin-bottom: 28px;">
-                <label class="form-label">
-                    Deskripsi Singkat / Pesan untuk Ketua Tim <span style="color: var(--danger);">*</span>
+                <label class="form-label" for="pesan">
+                    Pesan Singkat untuk Ketua <span style="font-size: 0.75rem; font-weight: 500; color: var(--text-muted);">(Opsional, maks. 300 karakter)</span>
                 </label>
-                <textarea name="catatan"
+                <textarea id="pesan"
+                          name="pesan"
                           rows="3"
-                          class="form-control @error('catatan') is-invalid @enderror"
-                          placeholder="Tuliskan pengalaman relevan, tautan portofolio/GitHub, atau motivasi Anda bergabung ke tim ini..."
-                          required>{{ old('catatan') }}</textarea>
+                          maxlength="300"
+                          class="form-control @error('pesan') is-invalid @enderror @error('catatan') is-invalid @enderror"
+                          placeholder="Tuliskan pesan singkat, pengalaman relevan, atau motivasi Anda bergabung ke tim ini...">{{ old('pesan', old('catatan')) }}</textarea>
+                @error('pesan')
+                    <div style="font-size: 0.8rem; color: var(--danger); margin-top: 5px; font-weight: 600;">
+                        <i class="bi bi-exclamation-circle-fill"></i> {{ $message }}
+                    </div>
+                @enderror
                 @error('catatan')
                     <div style="font-size: 0.8rem; color: var(--danger); margin-top: 5px; font-weight: 600;">
                         <i class="bi bi-exclamation-circle-fill"></i> {{ $message }}
                     </div>
                 @enderror
                 <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 5px;">
-                    Ceritakan pengalaman singkat Anda yang dapat meyakinkan Ketua Tim untuk menerima lamaran delegasi Anda.
+                    Ceritakan secara singkat motivasi atau keahlian yang Anda tawarkan kepada Ketua Tim.
                 </div>
             </div>
 

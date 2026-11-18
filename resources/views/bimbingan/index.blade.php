@@ -295,6 +295,195 @@
         color: #FFFFFF;
         border-color: #4F46E5;
     }
+
+    /* Styling Khusus Rekap Bimbingan Role Admin (Seragam dengan Panel Admin) */
+    .admin-bimbingan-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .admin-bimbingan-stat-card {
+        background: #FFFFFF;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 18px 20px;
+        box-shadow: var(--shadow-sm);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    .admin-bimbingan-stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+    .admin-bimbingan-stat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        margin-bottom: 12px;
+    }
+    .admin-bimbingan-stat-val {
+        font-size: 1.65rem;
+        font-weight: 800;
+        color: var(--primary-dark);
+        line-height: 1.1;
+    }
+    .admin-bimbingan-stat-label {
+        font-size: 0.82rem;
+        color: var(--text-muted);
+        font-weight: 600;
+        margin-top: 4px;
+    }
+    .admin-bimbingan-stat-sub {
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        margin-top: 10px;
+        padding-top: 8px;
+        border-top: 1px dashed #E2E8F0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    /* Filter Toolbar Admin */
+    .admin-filter-card {
+        background: #FFFFFF;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 16px 20px;
+        margin-bottom: 22px;
+        box-shadow: var(--shadow-sm);
+    }
+    .admin-filter-grid {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr 1fr 1fr auto;
+        gap: 12px;
+        align-items: end;
+    }
+
+    /* Accordion Card Tim Admin */
+    .admin-accordion-list {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+    .admin-accordion-card {
+        background: #FFFFFF;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .admin-accordion-card:hover {
+        border-color: #CBD5E1;
+        box-shadow: var(--shadow-md);
+    }
+    .admin-accordion-card.is-open {
+        border-color: #93C5FD;
+        box-shadow: 0 6px 18px -4px rgba(30, 64, 175, 0.1);
+    }
+    .admin-accordion-trigger {
+        width: 100%;
+        background: #FFFFFF;
+        border: none;
+        padding: 18px 22px;
+        text-align: left;
+        cursor: pointer;
+        font-family: inherit;
+        transition: background-color 0.15s ease;
+        display: block;
+    }
+    .admin-accordion-trigger:hover {
+        background: #F8FAFC;
+    }
+    .admin-accordion-card.is-open .admin-accordion-trigger {
+        background: linear-gradient(90deg, #F8FAFC 0%, #EFF6FF 100%);
+        border-bottom: 1px solid var(--border);
+    }
+    .admin-accordion-header-grid {
+        display: grid;
+        grid-template-columns: minmax(220px, 1.45fr) minmax(165px, 1fr) minmax(195px, 1.15fr) auto;
+        gap: 20px;
+        align-items: center;
+    }
+    .admin-team-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%);
+        color: #FFFFFF;
+        font-weight: 800;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        letter-spacing: 0.5px;
+        box-shadow: 0 4px 10px rgba(30, 64, 175, 0.2);
+    }
+    .admin-accordion-chevron {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: #F1F5F9;
+        color: #475569;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.25s ease, background-color 0.2s ease, color 0.2s ease;
+        flex-shrink: 0;
+    }
+    .admin-accordion-card.is-open .admin-accordion-chevron {
+        transform: rotate(180deg);
+        background: #DBEAFE;
+        color: #1E40AF;
+    }
+    .admin-accordion-body {
+        display: none;
+        padding: 22px 24px;
+        background: #FFFFFF;
+    }
+    .admin-accordion-card.is-open .admin-accordion-body {
+        display: block;
+    }
+
+    @media (max-width: 1100px) {
+        .admin-bimbingan-stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        .admin-filter-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+        .admin-accordion-header-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+    }
+    @media (max-width: 640px) {
+        .admin-bimbingan-stats-grid {
+            grid-template-columns: 1fr;
+        }
+        .admin-filter-grid {
+            grid-template-columns: 1fr;
+        }
+        .admin-accordion-trigger {
+            padding: 16px;
+        }
+        .admin-accordion-header-grid {
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+        .admin-accordion-body {
+            padding: 16px;
+        }
+    }
 </style>
 @endpush
 
@@ -302,14 +491,25 @@
     <div class="dashboard-header">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px;">
             <div>
-                <div class="dashboard-header-badge">
-                    <i class="bi bi-mortarboard-fill"></i> Sistem Informasi Manajemen Prestasi JTI
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 14px;">
+                    <div class="dashboard-header-badge" style="margin-bottom: 0;">
+                        <i class="bi bi-mortarboard-fill"></i> Sistem Informasi Manajemen Prestasi JTI
+                    </div>
+                    @if($role === 'admin')
+                        <span style="display: inline-flex; align-items: center; gap: 6px; background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.35); color: #FFFFFF; padding: 5px 12px; border-radius: 999px; font-size: 0.76rem; font-weight: 700; letter-spacing: 0.3px;">
+                            <i class="bi bi-eye-fill"></i> Mode Admin: Hanya Lihat
+                        </span>
+                    @endif
                 </div>
                 <h1 style="font-size: 1.9rem; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 8px;">
-                    Monitoring Bimbingan Tim
+                    {{ $role === 'admin' ? 'Rekapitulasi Bimbingan Seluruh JTI' : 'Monitoring Bimbingan Tim' }}
                 </h1>
                 <p style="font-size: 0.95rem; opacity: 0.9; max-width: 650px; line-height: 1.6; margin: 0;">
-                    Pantau proses pengajuan dosen pembimbing, konsultasi, logbook, dan progres keikutsertaan tim dalam kompetisi.
+                    @if($role === 'admin')
+                        Pantau seluruh rekam jejak sesi konsultasi dan logbook bimbingan dari semua tim kompetisi mahasiswa JTI secara terpusat (read-only).
+                    @else
+                        Pantau proses pengajuan dosen pembimbing, konsultasi, logbook, dan progres keikutsertaan tim dalam kompetisi.
+                    @endif
                 </p>
             </div>
             @php
@@ -597,19 +797,27 @@
                                             @foreach($pendingAnggota as $pend)
                                                 <div style="background: #fff; border: 1px solid #FDE68A; border-radius: 6px; padding: 10px; font-size: 0.82rem;">
                                                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
-                                                        <div>
-                                                            <strong>{{ $pend->mahasiswa->nama ?? "NIM {$pend->nim}" }}</strong>
+                                                        <div style="width: 100%;">
+                                                            <strong>{{ $pend->mahasiswa->nama ?? 'Mahasiswa Pelamar' }}</strong>
                                                             <div style="font-size: 0.72rem; color: var(--text-muted);">
-                                                                NIM: {{ $pend->nim }} ({{ $pend->mahasiswa->prodi ?? '-' }})
+                                                                {{ $pend->mahasiswa->prodi ?? '-' }}{{ isset($pend->mahasiswa->angkatan) ? ' • Angkatan '.$pend->mahasiswa->angkatan : '' }}
                                                             </div>
                                                             <div style="margin-top: 4px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                                                                <span class="badge badge-purple" style="font-size: 0.7rem;">Posisi: {{ $pend->peran }}</span>
+                                                                <span class="badge badge-purple" style="font-size: 0.7rem;">Posisi: {{ $pend->posisi_dilamar ?: $pend->peran }}</span>
+                                                                <a href="{{ route('tim.permintaan.profil', $pend->id_anggota) }}" class="btn btn-secondary btn-sm" style="font-size: 0.7rem; padding: 1px 8px;" title="Lihat Profil Terbatas Pelamar">
+                                                                    <i class="bi bi-person-lines-fill"></i> Lihat Profil
+                                                                </a>
                                                                 @if($pend->file_cv)
                                                                     <a href="{{ route('tim.cv', ['type' => 'anggota', 'id' => $pend->id_anggota]) }}" target="_blank" class="btn btn-outline-primary btn-sm" style="font-size: 0.7rem; padding: 1px 6px;" title="Unduh / Lihat CV Pelamar">
                                                                         <i class="bi bi-file-earmark-pdf"></i> Lihat CV
                                                                     </a>
                                                                 @endif
                                                             </div>
+                                                            @if(!empty($pend->pesan))
+                                                                <div style="margin-top: 6px; padding: 6px 10px; background: #F8FAFC; border: 1px solid var(--border); border-left: 3px solid var(--primary); border-radius: 4px; font-size: 0.76rem; color: var(--text-main);">
+                                                                    <span style="font-weight: 700; color: var(--text-muted);">Pesan:</span> {{ $pend->pesan }}
+                                                                </div>
+                                                            @endif
                                                         </div>
                                                     </div>
                                                     <div style="display: flex; gap: 6px; justify-content: flex-end; margin-top: 8px; border-top: 1px dashed var(--border); padding-top: 6px;">
@@ -1812,64 +2020,384 @@
         </div>
 
     {{-- ========================================================================= --}}
-    {{-- KONDISI 4: ROLE ADMIN (Rekapitulasi Seluruh Bimbingan JTI)                 --}}
+    {{-- KONDISI 4: ROLE ADMIN (Rekapitulasi Seluruh Bimbingan JTI - Read Only)    --}}
     {{-- ========================================================================= --}}
     @elseif($role === 'admin')
-        <div class="card">
-            <div class="card-header">
+
+        <!-- 4 Kartu Ringkasan Rekapitulasi Bimbingan JTI -->
+        <div class="admin-bimbingan-stats-grid">
+            <!-- 1. Total Tim Bimbingan -->
+            <div class="admin-bimbingan-stat-card">
                 <div>
-                    <div class="card-title"><i class="bi bi-database-check" style="color: var(--primary);"></i> Rekapitulasi Bimbingan Seluruh JTI</div>
-                    <div style="font-size: 0.78rem; color: var(--text-muted);">Monitoring pembimbingan tim kompetisi mahasiswa oleh dosen</div>
+                    <div class="admin-bimbingan-stat-icon" style="background: #EFF6FF; color: #2563EB;">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                    <div class="admin-bimbingan-stat-val">{{ $totalTimBimbingan ?? 0 }}</div>
+                    <div class="admin-bimbingan-stat-label">Total Tim Bimbingan</div>
+                </div>
+                <div class="admin-bimbingan-stat-sub">
+                    <span>Status Bimbingan:</span>
+                    <span class="badge badge-success" style="font-size: 0.7rem;">Disetujui</span>
                 </div>
             </div>
-            <div class="card-body" style="padding: 0;">
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Tim & Kompetisi</th>
-                                <th>Ketua Tim</th>
-                                <th>Dosen Pembimbing</th>
-                                <th>Status Bimbingan</th>
-                                <th>Logbook</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($pengajuanList as $row)
-                                <tr>
-                                    <td>
-                                        <strong>{{ $row->tim->nama_tim ?? '-' }}</strong>
-                                        <div style="font-size: 0.75rem; color: var(--text-muted);">
-                                            {{ $row->tim->lomba->nama_lomba ?? '-' }}
-                                        </div>
-                                    </td>
-                                    <td>
-                                        {{ $row->tim->ketua->nama ?? '-' }}
-                                        <div style="font-size: 0.72rem; color: var(--text-muted);">NIM: {{ $row->tim->nim }}</div>
-                                    </td>
-                                    <td>
-                                        <strong>{{ $row->dosen->nama ?? '-' }}</strong>
-                                        <div style="font-size: 0.72rem; color: var(--text-muted);">{{ $row->dosen->bidang_keahlian ?? '' }}</div>
-                                    </td>
-                                    <td>
-                                        <span class="badge {{ $row->status === 'disetujui' ? 'badge-success' : ($row->status === 'ditolak' ? 'badge-danger' : 'badge-warning') }}">
-                                            {{ ucfirst($row->status) }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span class="badge badge-purple">{{ $row->logbook->count() }} Sesi</span>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="5" style="text-align: center; padding: 30px; color: var(--text-muted);">
-                                        Belum ada data bimbingan tercatat.
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+
+            <!-- 2. Total Sesi Logbook -->
+            <div class="admin-bimbingan-stat-card">
+                <div>
+                    <div class="admin-bimbingan-stat-icon" style="background: #EDE9FE; color: #6D28D9;">
+                        <i class="bi bi-journal-text"></i>
+                    </div>
+                    <div class="admin-bimbingan-stat-val">{{ $totalSesiLogbook ?? 0 }}</div>
+                    <div class="admin-bimbingan-stat-label">Total Sesi Logbook</div>
                 </div>
+                <div class="admin-bimbingan-stat-sub">
+                    <span>Rekam Konsultasi:</span>
+                    <span class="badge badge-purple" style="font-size: 0.7rem;">{{ $totalSesiLogbook ?? 0 }} Sesi</span>
+                </div>
+            </div>
+
+            <!-- 3. Tim Belum Ada Logbook -->
+            <div class="admin-bimbingan-stat-card">
+                <div>
+                    <div class="admin-bimbingan-stat-icon" style="background: #F1F5F9; color: #475569;">
+                        <i class="bi bi-journal-x"></i>
+                    </div>
+                    <div class="admin-bimbingan-stat-val">{{ $timBelumAdaLogbook ?? 0 }}</div>
+                    <div class="admin-bimbingan-stat-label">Tim Belum Ada Logbook</div>
+                </div>
+                <div class="admin-bimbingan-stat-sub">
+                    <span>Catatan Sesi:</span>
+                    <span class="badge badge-gray" style="font-size: 0.7rem;">0 Sesi Tercatat</span>
+                </div>
+            </div>
+
+            <!-- 4. Dosen Aktif Membimbing -->
+            <div class="admin-bimbingan-stat-card">
+                <div>
+                    <div class="admin-bimbingan-stat-icon" style="background: #ECFDF5; color: #059669;">
+                        <i class="bi bi-person-workspace"></i>
+                    </div>
+                    <div class="admin-bimbingan-stat-val">{{ $dosenAktifMembimbing ?? 0 }}</div>
+                    <div class="admin-bimbingan-stat-label">Dosen Aktif Membimbing</div>
+                </div>
+                <div class="admin-bimbingan-stat-sub">
+                    <span>Pendamping Resmi:</span>
+                    <span class="badge badge-success" style="font-size: 0.7rem;">Dosen JTI</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toolbar Pencarian & Filter Responsif -->
+        <div class="admin-filter-card">
+            <form action="{{ route('bimbingan.index') }}" method="GET">
+                <div class="admin-filter-grid">
+                    <!-- Pencarian: Nama Tim / Ketua / NIM / Dosen -->
+                    <div>
+                        <label class="form-label" style="font-size: 0.76rem; color: var(--text-muted); margin-bottom: 4px;">
+                            <i class="bi bi-search"></i> Cari Tim / Ketua / NIM / Dosen
+                        </label>
+                        <input type="text"
+                               name="search"
+                               value="{{ $search ?? request('search') }}"
+                               class="form-control"
+                               placeholder="Ketik nama tim, ketua, NIM, atau dosen..."
+                               style="font-size: 0.85rem; padding: 8px 12px;">
+                    </div>
+
+                    <!-- Filter Lomba -->
+                    <div>
+                        <label class="form-label" style="font-size: 0.76rem; color: var(--text-muted); margin-bottom: 4px;">
+                            <i class="bi bi-trophy"></i> Filter Lomba
+                        </label>
+                        <select name="lomba_id" class="form-select" style="font-size: 0.85rem; padding: 8px 12px;">
+                            <option value="">Semua Lomba</option>
+                            @foreach($lombaOptions ?? [] as $lopt)
+                                <option value="{{ $lopt->id_lomba }}" {{ (string) ($lombaFilter ?? request('lomba_id')) === (string) $lopt->id_lomba ? 'selected' : '' }}>
+                                    {{ $lopt->nama_lomba }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Filter Dosen Pembimbing -->
+                    <div>
+                        <label class="form-label" style="font-size: 0.76rem; color: var(--text-muted); margin-bottom: 4px;">
+                            <i class="bi bi-person-badge"></i> Filter Dosen Pembimbing
+                        </label>
+                        <select name="nidn" class="form-select" style="font-size: 0.85rem; padding: 8px 12px;">
+                            <option value="">Semua Dosen</option>
+                            @foreach($dosenOptions ?? [] as $dopt)
+                                <option value="{{ $dopt->nidn }}" {{ (string) ($dosenFilter ?? request('nidn')) === (string) $dopt->nidn ? 'selected' : '' }}>
+                                    {{ $dopt->nama }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Filter Status Logbook -->
+                    <div>
+                        <label class="form-label" style="font-size: 0.76rem; color: var(--text-muted); margin-bottom: 4px;">
+                            <i class="bi bi-journal-check"></i> Status Logbook
+                        </label>
+                        <select name="status_logbook" class="form-select" style="font-size: 0.85rem; padding: 8px 12px;">
+                            <option value="">Semua Tim</option>
+                            <option value="sudah" {{ ($logbookFilter ?? request('status_logbook')) === 'sudah' ? 'selected' : '' }}>Sudah ada logbook</option>
+                            <option value="belum" {{ ($logbookFilter ?? request('status_logbook')) === 'belum' ? 'selected' : '' }}>Belum ada logbook</option>
+                        </select>
+                    </div>
+
+                    <!-- Tombol Aksi Filter -->
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <button type="submit" class="btn btn-primary btn-sm" style="padding: 9px 16px; font-size: 0.85rem;">
+                            <i class="bi bi-funnel-fill"></i> Terapkan
+                        </button>
+                        @if(request()->filled('search') || request()->filled('lomba_id') || request()->filled('nidn') || request()->filled('status_logbook'))
+                            <a href="{{ route('bimbingan.index') }}" class="btn btn-secondary btn-sm" style="padding: 9px 14px; font-size: 0.85rem;" title="Reset Filter">
+                                <i class="bi bi-arrow-counterclockwise"></i> Reset
+                            </a>
+                        @endif
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Daftar Tim Bimbingan (Kartu Accordion Read-Only) -->
+        <div class="card">
+            <div class="card-header" style="flex-wrap: wrap; gap: 12px;">
+                <div>
+                    <div class="card-title">
+                        <i class="bi bi-database-check" style="color: var(--primary);"></i> Rekapitulasi Bimbingan Seluruh JTI
+                    </div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted);">
+                        Klik pada kartu tim untuk membuka atau menutup detail riwayat sesi logbook bimbingan (Hanya Lihat)
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span class="badge badge-gray" style="font-size: 0.75rem;">
+                        <i class="bi bi-shield-lock"></i> Read-Only Admin
+                    </span>
+                </div>
+            </div>
+
+            <div class="card-body">
+                @if($pengajuanList->isEmpty())
+                    <!-- Empty State Hasil Pencarian / Filter Kosong -->
+                    <div style="text-align: center; padding: 48px 20px; color: var(--text-muted);">
+                        <div style="width: 64px; height: 64px; border-radius: 50%; background: #F1F5F9; color: #64748B; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin: 0 auto 14px;">
+                            <i class="bi bi-inbox"></i>
+                        </div>
+                        <div style="font-size: 1.05rem; font-weight: 800; color: var(--primary-dark); margin-bottom: 6px;">
+                            Tidak Ada Tim Bimbingan yang Ditemukan
+                        </div>
+                        <p style="font-size: 0.86rem; max-width: 460px; margin: 0 auto 16px; line-height: 1.6;">
+                            @if(request()->filled('search') || request()->filled('lomba_id') || request()->filled('nidn') || request()->filled('status_logbook'))
+                                Tidak ada tim bimbingan yang cocok dengan kriteria pencarian atau filter yang Anda pilih.
+                            @else
+                                Belum ada tim mahasiswa dengan pengajuan bimbingan berstatus disetujui yang tercatat saat ini.
+                            @endif
+                        </p>
+                        @if(request()->filled('search') || request()->filled('lomba_id') || request()->filled('nidn') || request()->filled('status_logbook'))
+                            <a href="{{ route('bimbingan.index') }}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-arrow-counterclockwise"></i> Tampilkan Semua Tim
+                            </a>
+                        @endif
+                    </div>
+                @else
+                    <div class="admin-accordion-list">
+                        @foreach($pengajuanList as $row)
+                            @php
+                                $namaTim = trim((string) ($row->tim->nama_tim ?? 'Tim'));
+                                $words = preg_split('/\s+/', $namaTim, -1, PREG_SPLIT_NO_EMPTY);
+                                if (count($words) >= 2) {
+                                    $inisialTim = strtoupper(substr($words[0], 0, 1) . substr($words[1], 0, 1));
+                                } else {
+                                    $inisialTim = strtoupper(substr($namaTim, 0, 2));
+                                }
+                                $jumlahSesi = $row->logbook_count ?? $row->logbook->count();
+                            @endphp
+
+                            <div class="admin-accordion-card" x-data="{ open: false }" :class="{ 'is-open': open }">
+                                <!-- Header Kartu Accordion -->
+                                <button type="button"
+                                        class="admin-accordion-trigger"
+                                        aria-expanded="false"
+                                        @click="open = !open"
+                                        onclick="toggleAdminAccordion(this)">
+                                    <div style="overflow-x: auto;">
+                                        <div class="admin-accordion-header-grid">
+                                            <!-- Kolom 1: Avatar Inisial, Nama Tim, Nama Lomba -->
+                                            <div style="display: flex; align-items: center; gap: 14px; min-width: 0; padding-right: 8px;">
+                                                <div class="admin-team-avatar">
+                                                    {{ $inisialTim }}
+                                                </div>
+                                                <div style="min-width: 0;">
+                                                    <div style="font-size: 0.98rem; font-weight: 800; color: var(--primary-dark); line-height: 1.3; word-break: break-word;">
+                                                        {{ $row->tim->nama_tim ?? '-' }}
+                                                    </div>
+                                                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 3px; line-height: 1.35;">
+                                                        <i class="bi bi-trophy" style="color: var(--primary);"></i>
+                                                        {{ $row->tim->lomba->nama_lomba ?? '-' }}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Kolom 2: Ketua Tim + NIM -->
+                                            <div style="padding: 0 8px;">
+                                                <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-muted); margin-bottom: 2px;">
+                                                    Ketua Tim
+                                                </div>
+                                                <div style="font-size: 0.86rem; font-weight: 700; color: var(--text-main);">
+                                                    {{ $row->tim->ketua->nama ?? '-' }}
+                                                </div>
+                                                <div style="font-size: 0.75rem; color: var(--text-muted);">
+                                                    NIM: {{ $row->tim->nim ?? ($row->tim->ketua->nim ?? '-') }}
+                                                </div>
+                                            </div>
+
+                                            <!-- Kolom 3: Dosen Pembimbing + Bidang Keahlian -->
+                                            <div style="padding: 0 8px;">
+                                                <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-muted); margin-bottom: 2px;">
+                                                    Dosen Pembimbing
+                                                </div>
+                                                <div style="font-size: 0.86rem; font-weight: 700; color: var(--primary-dark);">
+                                                    {{ $row->dosen->nama ?? '-' }}
+                                                </div>
+                                                <div style="font-size: 0.75rem; color: var(--text-muted);">
+                                                    {{ $row->dosen->bidang_keahlian ?? '-' }}
+                                                </div>
+                                            </div>
+
+                                            <!-- Kolom 4: Badge Status Disetujui, Badge N Sesi, dan Ikon Panah -->
+                                            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap;">
+                                                <span class="badge badge-success" style="padding: 5px 11px; font-size: 0.74rem;">
+                                                    <i class="bi bi-check-circle-fill"></i> Disetujui
+                                                </span>
+                                                <span class="badge {{ $jumlahSesi > 0 ? 'badge-purple' : 'badge-gray' }}" style="padding: 5px 11px; font-size: 0.74rem;">
+                                                    <i class="bi bi-journal-bookmark-fill"></i> {{ $jumlahSesi }} Sesi
+                                                </span>
+                                                <span class="admin-accordion-chevron" title="Buka / Tutup Detail Logbook">
+                                                    <i class="bi bi-chevron-down"></i>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </button>
+
+                                <!-- Isi Kartu Accordion (Timeline Vertikal Logbook Read-Only) -->
+                                <div class="admin-accordion-body" x-show="open">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px dashed var(--border);">
+                                        <div style="font-size: 0.82rem; font-weight: 700; color: var(--primary-dark); display: flex; align-items: center; gap: 6px;">
+                                            <i class="bi bi-clock-history" style="color: var(--primary);"></i>
+                                            Riwayat Sesi Logbook Bimbingan ({{ $jumlahSesi }} Sesi)
+                                        </div>
+                                        <div style="font-size: 0.75rem; color: var(--text-muted);">
+                                            Disetujui sejak: <strong>{{ $row->tgl_pengajuan ? $row->tgl_pengajuan->format('d M Y') : '-' }}</strong>
+                                        </div>
+                                    </div>
+
+                                    @if($row->logbook->isEmpty())
+                                        <!-- Empty State jika Logbook Tim Kosong -->
+                                        <div style="text-align: center; padding: 28px 18px; background: #F8FAFC; border: 1px dashed var(--border); border-radius: var(--radius-sm); color: var(--text-muted);">
+                                            <i class="bi bi-journal-x" style="font-size: 1.75rem; color: #94A3B8; display: block; margin-bottom: 8px;"></i>
+                                            <div style="font-size: 0.88rem; font-weight: 600; color: #475569;">
+                                                Belum ada catatan logbook untuk tim ini
+                                            </div>
+                                        </div>
+                                    @else
+                                        <div style="overflow-x: auto;">
+                                            <div class="timeline-wrap" style="margin-top: 4px;">
+                                                @foreach($row->logbook as $lb)
+                                                    @php
+                                                        $dicatatOlehDosen = ($lb->catatan_dosen === 'Dicatat langsung oleh Dosen Pembimbing.');
+                                                        $namaPencatat = $dicatatOlehDosen
+                                                            ? (($row->dosen->nama ?? 'Dosen Pembimbing') . ' (Dosen Pembimbing)')
+                                                            : (($row->tim->ketua->nama ?? 'Ketua Tim') . ' (Ketua Tim - ' . ($row->tim->nim ?? '-') . ')');
+                                                    @endphp
+                                                    <div class="timeline-item" style="margin-bottom: {{ $loop->last ? '0' : '18px' }};">
+                                                        <div class="timeline-point"></div>
+                                                        <div class="timeline-content">
+                                                            <!-- Baris Atas: Tanggal, Pencatat, & Status Validasi -->
+                                                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
+                                                                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                                                                    <span style="font-size: 0.8rem; font-weight: 700; color: var(--primary);">
+                                                                        <i class="bi bi-calendar-event"></i>
+                                                                        {{ $lb->tanggal ? $lb->tanggal->format('d M Y') : '-' }}
+                                                                    </span>
+                                                                    <span style="font-size: 0.75rem; color: var(--text-muted);">
+                                                                        <i class="bi bi-person-lines-fill"></i> Dicatat oleh: <strong>{{ $namaPencatat }}</strong>
+                                                                    </span>
+                                                                </div>
+
+                                                                <div>
+                                                                    @if($lb->status_validasi === 'disetujui')
+                                                                        <span class="badge badge-success" style="font-size: 0.7rem;">
+                                                                            <i class="bi bi-check-circle-fill"></i> Divalidasi Dosen
+                                                                        </span>
+                                                                    @elseif($lb->status_validasi === 'revisi')
+                                                                        <span class="badge badge-purple" style="font-size: 0.7rem;">
+                                                                            <i class="bi bi-arrow-repeat"></i> Perlu Revisi
+                                                                        </span>
+                                                                    @else
+                                                                        <span class="badge badge-gray" style="font-size: 0.7rem;">
+                                                                            <i class="bi bi-clock-history"></i> Menunggu Validasi
+                                                                        </span>
+                                                                    @endif
+                                                                </div>
+                                                            </div>
+
+                                                            <!-- Topik / Materi Bimbingan -->
+                                                            <div style="margin-bottom: 8px;">
+                                                                <div style="font-size: 0.74rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.3px; margin-bottom: 2px;">
+                                                                    Topik / Catatan Bimbingan
+                                                                </div>
+                                                                <div style="font-size: 0.88rem; font-weight: 600; color: var(--primary-dark); line-height: 1.55;">
+                                                                    {{ $lb->materi }}
+                                                                </div>
+                                                            </div>
+
+                                                            <!-- Tindak Lanjut -->
+                                                            <div style="font-size: 0.8rem; background: #FFFFFF; border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; color: #475569;">
+                                                                <strong style="color: var(--primary-dark);">Tindak Lanjut:</strong>
+                                                                {{ ($lb->tindak_lanjut && $lb->tindak_lanjut !== '-') ? $lb->tindak_lanjut : 'Tidak ada catatan tindak lanjut khusus.' }}
+                                                            </div>
+
+                                                            @if($lb->catatan_dosen && !$dicatatOlehDosen)
+                                                                <div style="margin-top: 8px; font-size: 0.78rem; background: #F0FDF4; border-left: 3px solid #10B981; padding: 7px 12px; border-radius: 4px; color: #065F46;">
+                                                                    <i class="bi bi-chat-left-quote-fill"></i>
+                                                                    <strong>Feedback Dosen Pembimbing:</strong> "{{ $lb->catatan_dosen }}"
+                                                                </div>
+                                                            @endif
+
+                                                            @if($lb->link_dokumentasi)
+                                                                <div style="margin-top: 8px;">
+                                                                    <a href="{{ $lb->link_dokumentasi }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm" style="font-size: 0.74rem; padding: 3px 10px;">
+                                                                        <i class="bi bi-google"></i> Lihat Dokumentasi Sesi
+                                                                    </a>
+                                                                </div>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    <!-- Pagination di Bawah Daftar -->
+                    @if($pengajuanList->hasPages())
+                        <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                            <div style="font-size: 0.8rem; color: var(--text-muted);">
+                                Menampilkan <strong>{{ $pengajuanList->firstItem() }}</strong> – <strong>{{ $pengajuanList->lastItem() }}</strong> dari <strong>{{ $pengajuanList->total() }}</strong> tim bimbingan
+                            </div>
+                            <div style="overflow-x: auto;">
+                                {{ $pengajuanList->links() }}
+                            </div>
+                        </div>
+                    @endif
+                @endif
             </div>
         </div>
     @endif
@@ -1877,6 +2405,7 @@
     {{-- ========================================================================= --}}
     {{-- MODAL 1: Pendaftaran Tim Cepat untuk Mahasiswa yang Belum Ikut Lomba      --}}
     {{-- ========================================================================= --}}
+    @if($role === 'mahasiswa')
     <div id="modalDaftarTim" class="modal-backdrop-custom">
         <div class="modal-box">
             <div class="modal-header-custom">
@@ -1930,6 +2459,7 @@
             </form>
         </div>
     </div>
+    @endif
 
     {{-- ========================================================================= --}}
     {{-- MODAL 2: Form Tambah Logbook Aktivitas Bimbingan                          --}}
@@ -2226,7 +2756,7 @@
     {{-- ========================================================================= --}}
     {{-- MODAL 3: Form Penolakan Pengajuan Bimbingan dengan Catatan Alasan Dosen   --}}
     {{-- ========================================================================= --}}
-    @if($role === 'dosen' || $role === 'admin')
+    @if($role === 'dosen')
         <div id="modalTolakPengajuan" class="modal-backdrop-custom" style="display: none;">
             <div class="modal-box">
                 <div class="modal-header-custom">
@@ -2367,6 +2897,13 @@
 
 @push('scripts')
 <script>
+    function toggleAdminAccordion(btnEl) {
+        const card = btnEl.closest('.admin-accordion-card');
+        if (!card) return;
+        const isOpen = card.classList.toggle('is-open');
+        btnEl.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    }
+
     function openModalDaftarTim(idLomba = null, namaLomba = '') {
         const modal = document.getElementById('modalDaftarTim');
         if (modal) {

@@ -10,6 +10,7 @@ use App\Http\Requests\Admin\UpdateLombaRequest;
 use App\Models\Admin;
 use App\Models\AnggotaTim;
 use App\Models\Dosen;
+use App\Models\Logbook;
 use App\Models\Lomba;
 use App\Models\Mahasiswa;
 use App\Models\ProgresBabak;
@@ -18,7 +19,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
 class AdminController extends Controller
@@ -282,9 +285,16 @@ class AdminController extends Controller
     /**
      * Perbarui Data Lomba
      */
-    public function updateLomba(UpdateLombaRequest $request, $id)
+    public function updateLomba(Request $request, $id)
     {
         $lomba = Lomba::findOrFail($id);
+
+        if (($lomba->status_verifikasi ?? $lomba->status) === 'ditolak') {
+            return redirect()->route('admin.index', ['tab' => 'lomba'])
+                ->with('error', 'Lomba yang sudah ditolak tidak dapat diubah.');
+        }
+
+        $request = app(UpdateLombaRequest::class);
         $validated = $request->validated();
         $adminId = session('auth_user.id');
 
@@ -387,18 +397,64 @@ class AdminController extends Controller
      */
     public function verifikasiLomba(Request $request, $id)
     {
-        $request->validate([
-            'status' => 'required|in:terverifikasi,ditolak',
+        $lomba = Lomba::findOrFail($id);
+
+        $currentStatus = $lomba->status_verifikasi ?? $lomba->status ?? 'menunggu';
+        if ($currentStatus !== 'menunggu') {
+            return redirect()->route('admin.index', ['tab' => 'lomba'])
+                ->with('error', 'Hanya pengajuan lomba yang masih berstatus menunggu yang dapat diverifikasi atau ditolak.');
+        }
+
+        $rules = [
+            'status' => ['required', 'in:terverifikasi,ditolak'],
+        ];
+
+        if ($request->input('status') === 'ditolak') {
+            $rules['alasan_penolakan'] = ['required', 'string', 'min:10', 'max:500'];
+        }
+
+        $validator = Validator::make($request->all(), $rules, [
+            'status.required' => 'Status verifikasi wajib ditentukan.',
+            'status.in' => 'Status verifikasi tidak valid.',
+            'alasan_penolakan.required' => 'Alasan penolakan wajib diisi.',
+            'alasan_penolakan.string' => 'Alasan penolakan harus berupa teks.',
+            'alasan_penolakan.min' => 'Alasan penolakan minimal 10 karakter.',
+            'alasan_penolakan.max' => 'Alasan penolakan maksimal 500 karakter.',
         ]);
 
-        $lomba = Lomba::findOrFail($id);
-        $adminId = session('auth_user.id');
-        $status = $request->status;
+        if ($validator->fails()) {
+            return redirect()->route('admin.index', ['tab' => 'lomba'])
+                ->withErrors($validator)
+                ->withInput(array_merge($request->all(), [
+                    'tolak_lomba_id' => $lomba->id_lomba,
+                    'tolak_lomba_nama' => $lomba->nama_lomba,
+                ]));
+        }
 
-        $lomba->update([
+        $adminId = session('auth_user.id') ?? auth()->id();
+        $status = $request->input('status');
+
+        $updateData = [
             'status_verifikasi' => $status,
             'id_admin' => $adminId,
-        ]);
+        ];
+
+        if (Schema::hasColumn('lomba', 'status')) {
+            $updateData['status'] = $status;
+        }
+        if (Schema::hasColumn('lomba', 'alasan_penolakan')) {
+            $updateData['alasan_penolakan'] = $status === 'ditolak'
+                ? trim((string) $request->input('alasan_penolakan'))
+                : null;
+        }
+        if (Schema::hasColumn('lomba', 'verified_by')) {
+            $updateData['verified_by'] = auth()->id() ?? $adminId;
+        }
+        if (Schema::hasColumn('lomba', 'verified_at')) {
+            $updateData['verified_at'] = now();
+        }
+
+        $lomba->update($updateData);
 
         $pesan = $status === 'terverifikasi'
             ? 'Lomba "'.$lomba->nama_lomba.'" dinyatakan Kredibel dan berhasil dipublikasikan!'
@@ -443,13 +499,14 @@ class AdminController extends Controller
      */
     public function verifikasiTim(Request $request, $id)
     {
-        $request->validate([
-            'status' => 'required|in:disetujui,ditolak',
-        ]);
-
         $tim = Tim::with('ketua')->findOrFail($id);
-        $adminId = session('auth_user.id');
-        $status = $request->status;
+        $adminId = session('auth_user.id') ?? auth()->id();
+        $status = $request->input('status');
+
+        if ($status === 'ditolak' && $tim->status_tim !== 'menunggu_persetujuan') {
+            return redirect()->route('admin.index', ['tab' => 'tim'])
+                ->with('error', 'Hanya pengajuan tim yang masih berstatus menunggu persetujuan yang dapat ditolak.');
+        }
 
         // Tolak jika status_tim sudah sama dengan yang diminta
         if ($tim->status_tim === $status) {
@@ -464,11 +521,54 @@ class AdminController extends Controller
                 ->with('error', "Status tim \"{$tim->nama_tim}\" sudah {$label}, tidak ada perubahan yang dilakukan.");
         }
 
-        DB::transaction(function () use ($tim, $status, $adminId) {
-            $tim->update([
+        $rules = [
+            'status' => ['required', 'in:disetujui,ditolak'],
+        ];
+
+        if ($status === 'ditolak') {
+            $rules['alasan_penolakan'] = ['required', 'string', 'min:10', 'max:500'];
+        }
+
+        $validator = Validator::make($request->all(), $rules, [
+            'status.required' => 'Status verifikasi tim wajib ditentukan.',
+            'status.in' => 'Status verifikasi tim tidak valid.',
+            'alasan_penolakan.required' => 'Alasan penolakan wajib diisi.',
+            'alasan_penolakan.string' => 'Alasan penolakan harus berupa teks.',
+            'alasan_penolakan.min' => 'Alasan penolakan minimal 10 karakter.',
+            'alasan_penolakan.max' => 'Alasan penolakan maksimal 500 karakter.',
+        ]);
+
+        if ($validator->fails()) {
+            $ketuaInfo = ($tim->ketua ? $tim->ketua->nama : 'Ketua Tim').' ('.($tim->ketua->nim ?? $tim->nim).')';
+
+            return redirect()->route('admin.index', ['tab' => 'tim'])
+                ->withErrors($validator)
+                ->withInput(array_merge($request->all(), [
+                    'tolak_tim_id' => $tim->id_tim,
+                    'tolak_tim_nama' => $tim->nama_tim,
+                    'tolak_tim_ketua' => $ketuaInfo,
+                ]));
+        }
+
+        DB::transaction(function () use ($tim, $status, $adminId, $request) {
+            $updateData = [
                 'status_tim' => $status,
                 'id_admin' => $adminId,
-            ]);
+            ];
+
+            if (Schema::hasColumn('tim', 'alasan_penolakan')) {
+                $updateData['alasan_penolakan'] = $status === 'ditolak'
+                    ? trim((string) $request->input('alasan_penolakan'))
+                    : null;
+            }
+            if (Schema::hasColumn('tim', 'verified_by')) {
+                $updateData['verified_by'] = auth()->id() ?? $adminId;
+            }
+            if (Schema::hasColumn('tim', 'verified_at')) {
+                $updateData['verified_at'] = now();
+            }
+
+            $tim->update($updateData);
 
             if ($status === 'disetujui') {
                 // Mahasiswa yang mengajukan otomatis ditetapkan sebagai Ketua Tim resmi
@@ -505,8 +605,37 @@ class AdminController extends Controller
     public function destroyTim($id)
     {
         $tim = Tim::findOrFail($id);
+
+        if ($tim->status_tim === 'disetujui') {
+            return redirect()->route('admin.index', ['tab' => 'tim'])
+                ->with('error', 'Tim yang sudah disetujui tidak dapat dihapus.');
+        }
+
+        // Cek apakah masih ada data turunan (anggota selain pemohon awal, pengajuan dosen, atau logbook)
+        $hasAnggotaTurunan = $tim->anggota()
+            ->where(function ($q) use ($tim) {
+                $q->where('nim', '!=', $tim->nim)
+                    ->orWhere('status_gabung', 'diterima');
+            })
+            ->exists();
+
+        $hasPengajuanDosen = $tim->pengajuanBimbingan()->exists();
+        $hasLogbook = Logbook::whereIn(
+            'id_pengajuan',
+            $tim->pengajuanBimbingan()->select('id_pengajuan')
+        )->exists();
+
+        if ($hasAnggotaTurunan || $hasPengajuanDosen || $hasLogbook) {
+            return redirect()->route('admin.index', ['tab' => 'tim'])
+                ->with('error', 'Tim "'.$tim->nama_tim.'" tidak dapat dihapus karena masih memiliki data turunan (anggota, pengajuan dosen, atau logbook).');
+        }
+
         $namaTim = $tim->nama_tim;
-        $tim->delete();
+
+        DB::transaction(function () use ($tim) {
+            AnggotaTim::where('id_tim', $tim->id_tim)->delete();
+            $tim->delete();
+        });
 
         $this->clearCache();
 

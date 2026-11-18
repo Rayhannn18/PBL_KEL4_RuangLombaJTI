@@ -487,8 +487,8 @@
     @if($currentTab === 'overview')
         <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 28px;">
             <!-- Aksi Cepat & Status Verifikasi -->
-            <div class="card">
-                <div class="card-header">
+            <div class="card" style="min-width: 0;">
+                <div class="card-header" style="flex-wrap: wrap; gap: 10px;">
                     <div class="card-title">
                         <i class="bi bi-lightning-charge-fill" style="color: var(--accent);"></i> Tindakan Cepat Administrator
                     </div>
@@ -512,21 +512,34 @@
 
                     <!-- Progress Lomba & Tim -->
                     <div style="background: #F8FAFC; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;">
                             <span style="font-size: 0.84rem; font-weight: 700; color: var(--primary-dark);">Status Validasi Lomba</span>
                             <span style="font-size: 0.78rem; color: var(--text-muted);">
                                 {{ $stats['lomba_terverifikasi'] }} Terverifikasi / {{ $stats['total_lomba'] }} Total
                             </span>
                         </div>
-                        <div style="background: #E2E8F0; height: 10px; border-radius: 999px; overflow: hidden; display: flex;">
+                        <div style="background: #E2E8F0; height: 10px; border-radius: 999px; overflow: hidden; display: flex; width: 100%;">
                             @php
-                                $pctLombaVerif = $stats['total_lomba'] > 0 ? ($stats['lomba_terverifikasi'] / $stats['total_lomba']) * 100 : 0;
-                                $pctLombaMenunggu = $stats['total_lomba'] > 0 ? ($stats['lomba_menunggu'] / $stats['total_lomba']) * 100 : 0;
+                                $totalLombaCount = (int) ($stats['total_lomba'] ?? 0);
+                                $lombaVerifCount = (int) ($stats['lomba_terverifikasi'] ?? 0);
+                                $lombaMenungguCount = (int) ($stats['lomba_menunggu'] ?? 0);
+                                $lombaDitolakCount = (int) ($stats['lomba_ditolak'] ?? 0);
+
+                                $pctLombaVerif = $totalLombaCount > 0 ? ($lombaVerifCount / $totalLombaCount) * 100 : 0;
+                                $pctLombaMenunggu = $totalLombaCount > 0 ? ($lombaMenungguCount / $totalLombaCount) * 100 : 0;
+                                $pctLombaDitolak = $totalLombaCount > 0 ? ($lombaDitolakCount / $totalLombaCount) * 100 : 0;
                             @endphp
-                            <div style="width: {{ $pctLombaVerif }}%; background: var(--success);" title="Terverifikasi: {{ $stats['lomba_terverifikasi'] }}"></div>
-                            <div style="width: {{ $pctLombaMenunggu }}%; background: var(--accent);" title="Menunggu: {{ $stats['lomba_menunggu'] }}"></div>
+                            @if($lombaVerifCount > 0)
+                                <div style="width: {{ $pctLombaVerif }}%; height: 100%; background: var(--success);" title="Terverifikasi: {{ $lombaVerifCount }}"></div>
+                            @endif
+                            @if($lombaMenungguCount > 0)
+                                <div style="width: {{ $pctLombaMenunggu }}%; height: 100%; background: var(--accent);" title="Menunggu: {{ $lombaMenungguCount }}"></div>
+                            @endif
+                            @if($lombaDitolakCount > 0)
+                                <div style="width: {{ $pctLombaDitolak }}%; height: 100%; background: var(--danger);" title="Ditolak: {{ $lombaDitolakCount }}"></div>
+                            @endif
                         </div>
-                        <div style="display: flex; gap: 16px; margin-top: 8px; font-size: 0.75rem; color: var(--text-muted);">
+                        <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-top: 8px; font-size: 0.75rem; color: var(--text-muted);">
                             <span><i class="bi bi-circle-fill" style="color: var(--success); font-size: 0.6rem;"></i> Terverifikasi ({{ $stats['lomba_terverifikasi'] }})</span>
                             <span><i class="bi bi-circle-fill" style="color: var(--accent); font-size: 0.6rem;"></i> Menunggu ({{ $stats['lomba_menunggu'] }})</span>
                             <span><i class="bi bi-circle-fill" style="color: var(--danger); font-size: 0.6rem;"></i> Ditolak ({{ $stats['lomba_ditolak'] }})</span>
@@ -536,8 +549,8 @@
             </div>
 
             <!-- Tautan Analitik Prestasi & Info Sistem -->
-            <div class="card">
-                <div class="card-header">
+            <div class="card" style="min-width: 0;">
+                <div class="card-header" style="flex-wrap: wrap; gap: 10px;">
                     <div class="card-title">
                         <i class="bi bi-bar-chart-fill" style="color: var(--primary-light);"></i> Integrasi Prestasi
                     </div>
@@ -557,231 +570,232 @@
         </div>
 
         <!-- Tabel Perhatian Utama 1: Lomba Menunggu Verifikasi Segera -->
-        <div class="card" style="margin-bottom: 24px;">
-            <div class="card-header">
+        <div class="card" style="margin-bottom: 24px; min-width: 0;">
+            <div class="card-header" style="flex-wrap: wrap; gap: 10px;">
                 <div class="card-title">
                     <i class="bi bi-hourglass-split" style="color: var(--accent);"></i> Lomba Menunggu Verifikasi Kredibilitas
                 </div>
-                <a href="{{ route('admin.index', ['tab' => 'lomba', 'lomba_status' => 'menunggu']) }}" class="btn btn-secondary btn-sm">
+                <a href="{{ route('admin.index', ['tab' => 'lomba', 'lomba_status' => 'menunggu']) }}" class="btn btn-secondary btn-sm" style="white-space: nowrap;">
                     Lihat Semua ({{ $stats['lomba_menunggu'] }})
                 </a>
             </div>
-            <div class="table-container">
-                <table class="custom-table">
-                    <thead>
-                        <tr>
-                            <th>Nama Lomba</th>
-                            <th>Kategori & Tingkat</th>
-                            <th>Penyelenggara</th>
-                            <th>Tenggat</th>
-                            <th>Pengaju</th>
-                            <th style="text-align: right;">Aksi Kurasi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($lombaList->where('status_verifikasi', 'menunggu')->take(5) as $item)
+            <div class="table-container" style="overflow: visible; border: none; border-radius: 0; box-shadow: none;">
+                <div style="overflow-x: auto; border-bottom-left-radius: var(--radius-md); border-bottom-right-radius: var(--radius-md);">
+                    <table class="custom-table" style="min-width: 780px; width: 100%;">
+                        <thead>
                             <tr>
-                                <td>
-                                    <div style="font-weight: 700; color: var(--primary-dark);">{{ $item->nama_lomba }}</div>
-                                    <span class="badge badge-warning" style="font-size: 0.7rem; margin-top: 4px;">Menunggu Verifikasi</span>
-                                </td>
-                                <td>
-                                    <div>{{ $item->kategori }}</div>
-                                    <span style="font-size: 0.75rem; color: var(--text-muted);">Tingkat {{ $item->tingkat }}</span>
-                                </td>
-                                <td>{{ $item->penyelenggara }}</td>
-                                <td>
-                                    <div>{{ $item->tenggat ? $item->tenggat->format('d M Y') : '-' }}</div>
-                                    <span style="font-size: 0.72rem; color: {{ $item->is_buka ? 'var(--success)' : 'var(--danger)' }}; font-weight: 600;">
-                                        {{ $item->is_buka ? $item->sisa_hari . ' hari lagi' : 'Telah berakhir' }}
-                                    </span>
-                                </td>
-                                <td>
-                                    @if($item->pengaju)
-                                        <div style="font-weight: 600;">{{ $item->pengaju->nama }}</div>
-                                        <div style="font-size: 0.75rem; color: var(--text-muted);">NIM: {{ $item->pengaju->nim }}</div>
-                                    @else
-                                        <span class="badge badge-gray">Eksternal / Mitra</span>
-                                    @endif
-                                </td>
-                                <td style="text-align: right;">
-                                    <div style="display: inline-flex; gap: 6px;">
-                                        <form action="{{ route('admin.lomba.verifikasi', $item->id_lomba) }}" method="POST" style="margin: 0;">
-                                            @csrf
-                                            <input type="hidden" name="status" value="terverifikasi">
-                                            <button type="submit" class="btn btn-success btn-sm" title="Nyatakan Kredibel & Publikasikan">
-                                                <i class="bi bi-check-lg"></i> Kredibel
-                                            </button>
-                                        </form>
-                                        <form action="{{ route('admin.lomba.verifikasi', $item->id_lomba) }}" method="POST" style="margin: 0;">
-                                            @csrf
-                                            <input type="hidden" name="status" value="ditolak">
-                                            <button type="submit" class="btn btn-danger btn-sm" title="Tolak Pengajuan Lomba">
+                                <th>Nama Lomba</th>
+                                <th>Kategori & Tingkat</th>
+                                <th>Penyelenggara</th>
+                                <th>Tenggat</th>
+                                <th>Pengaju</th>
+                                <th style="text-align: right;">Aksi Kurasi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($lombaList->where('status_verifikasi', 'menunggu')->take(5) as $item)
+                                <tr>
+                                    <td>
+                                        <div style="font-weight: 700; color: var(--primary-dark);">{{ $item->nama_lomba }}</div>
+                                        <span class="badge badge-warning" style="font-size: 0.7rem; margin-top: 4px;">Menunggu Verifikasi</span>
+                                    </td>
+                                    <td>
+                                        <div>{{ $item->kategori }}</div>
+                                        <span style="font-size: 0.75rem; color: var(--text-muted);">Tingkat {{ $item->tingkat }}</span>
+                                    </td>
+                                    <td>{{ $item->penyelenggara }}</td>
+                                    <td style="white-space: nowrap;">
+                                        <div>{{ $item->tenggat ? $item->tenggat->format('d M Y') : '-' }}</div>
+                                        <span style="font-size: 0.72rem; color: {{ $item->is_buka ? 'var(--success)' : 'var(--danger)' }}; font-weight: 600;">
+                                            {{ $item->is_buka ? $item->sisa_hari . ' hari lagi' : 'Telah berakhir' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if($item->pengaju)
+                                            <div style="font-weight: 600;">{{ $item->pengaju->nama }}</div>
+                                            <div style="font-size: 0.75rem; color: var(--text-muted);">NIM: {{ $item->pengaju->nim }}</div>
+                                        @else
+                                            <span class="badge badge-gray">Eksternal / Mitra</span>
+                                        @endif
+                                    </td>
+                                    <td style="text-align: right; white-space: nowrap;">
+                                        <div style="display: inline-flex; gap: 6px;">
+                                            <form action="{{ route('admin.lomba.verifikasi', $item->id_lomba) }}" method="POST" style="margin: 0;">
+                                                @csrf
+                                                <input type="hidden" name="status" value="terverifikasi">
+                                                <button type="submit" class="btn btn-success btn-sm" title="Nyatakan Kredibel & Publikasikan">
+                                                    <i class="bi bi-check-lg"></i> Kredibel
+                                                </button>
+                                            </form>
+                                            <button type="button" class="btn btn-danger btn-sm" title="Tolak Pengajuan Lomba" onclick="openModalTolakLomba({{ $item->id_lomba }}, @js($item->nama_lomba))">
                                                 <i class="bi bi-x-lg"></i> Tolak
                                             </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" style="text-align: center; padding: 30px; color: var(--text-muted);">
-                                    <i class="bi bi-check-all" style="font-size: 2rem; color: var(--success); display: block; margin-bottom: 8px;"></i>
-                                    Tidak ada pengajuan lomba baru yang menunggu verifikasi. Seluruh lomba telah dikurasi.
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" style="text-align: center; padding: 30px; color: var(--text-muted);">
+                                        <i class="bi bi-check-all" style="font-size: 2rem; color: var(--success); display: block; margin-bottom: 8px;"></i>
+                                        Tidak ada pengajuan lomba baru yang menunggu verifikasi. Seluruh lomba telah dikurasi.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
         <!-- Tabel Perhatian Utama 2: Tim Menunggu Persetujuan Ketua -->
-        <div class="card" style="margin-bottom: 24px;">
-            <div class="card-header">
+        <div class="card" style="margin-bottom: 24px; min-width: 0;">
+            <div class="card-header" style="flex-wrap: wrap; gap: 10px;">
                 <div class="card-title">
                     <i class="bi bi-person-exclamation" style="color: var(--danger);"></i> Pengajuan Tim & Ketua yang Menunggu Persetujuan
                 </div>
-                <a href="{{ route('admin.index', ['tab' => 'tim', 'tim_status' => 'menunggu_persetujuan']) }}" class="btn btn-secondary btn-sm">
+                <a href="{{ route('admin.index', ['tab' => 'tim', 'tim_status' => 'menunggu_persetujuan']) }}" class="btn btn-secondary btn-sm" style="white-space: nowrap;">
                     Lihat Semua ({{ $stats['tim_menunggu'] }})
                 </a>
             </div>
-            <div class="table-container">
-                <table class="custom-table">
-                    <thead>
-                        <tr>
-                            <th>Nama Tim</th>
-                            <th>Lomba yang Diikuti</th>
-                            <th>Ketua Tim</th>
-                            <th>Anggota Terdaftar</th>
-                            <th>Tanggal Pengajuan</th>
-                            <th style="text-align: right;">Aksi Validasi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($timList->where('status_tim', 'menunggu_persetujuan')->take(5) as $tim)
+            <div class="table-container" style="overflow: visible; border: none; border-radius: 0; box-shadow: none;">
+                <div style="overflow-x: auto; border-bottom-left-radius: var(--radius-md); border-bottom-right-radius: var(--radius-md);">
+                    <table class="custom-table" style="min-width: 780px; width: 100%;">
+                        <thead>
                             <tr>
-                                <td>
-                                    <div style="font-weight: 700; color: var(--primary-dark);">{{ $tim->nama_tim }}</div>
-                                    <span class="badge badge-warning" style="font-size: 0.7rem; margin-top: 4px;">Menunggu Persetujuan</span>
-                                </td>
-                                <td>
-                                    <div style="font-weight: 600;">{{ $tim->lomba ? $tim->lomba->nama_lomba : '-' }}</div>
-                                    <span style="font-size: 0.75rem; color: var(--text-muted);">{{ $tim->lomba ? $tim->lomba->kategori : '' }}</span>
-                                </td>
-                                <td>
-                                    @if($tim->ketua)
-                                        <div style="font-weight: 600;">{{ $tim->ketua->nama }}</div>
-                                        <div style="font-size: 0.75rem; color: var(--text-muted);">NIM: {{ $tim->ketua->nim }} • {{ $tim->ketua->prodi }}</div>
-                                    @else
-                                        -
-                                    @endif
-                                </td>
-                                <td>
-                                    <span class="badge badge-primary">{{ $tim->anggota->count() }} / {{ $tim->kuota_anggota }} Orang</span>
-                                </td>
-                                <td>
-                                    <span style="font-size: 0.8rem; color: var(--text-muted);">{{ $tim->created_at ? $tim->created_at->format('d M Y') : '-' }}</span>
-                                </td>
-                                <td style="text-align: right;">
-                                    <div style="display: inline-flex; gap: 6px;">
-                                        <form action="{{ route('admin.tim.verifikasi', $tim->id_tim) }}" method="POST" style="margin: 0;">
-                                            @csrf
-                                            <input type="hidden" name="status" value="disetujui">
-                                            <button type="submit" class="btn btn-success btn-sm" title="Setujui Tim & Ketua">
-                                                <i class="bi bi-check-circle"></i> Setujui
-                                            </button>
-                                        </form>
-                                        <form action="{{ route('admin.tim.verifikasi', $tim->id_tim) }}" method="POST" style="margin: 0;">
-                                            @csrf
-                                            <input type="hidden" name="status" value="ditolak">
-                                            <button type="submit" class="btn btn-danger btn-sm" title="Tolak Pengajuan Tim">
+                                <th>Nama Tim</th>
+                                <th>Lomba yang Diikuti</th>
+                                <th>Ketua Tim</th>
+                                <th>Anggota Terdaftar</th>
+                                <th>Tanggal Pengajuan</th>
+                                <th style="text-align: right;">Aksi Validasi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($timList->where('status_tim', 'menunggu_persetujuan')->take(5) as $tim)
+                                <tr>
+                                    <td>
+                                        <div style="font-weight: 700; color: var(--primary-dark);">{{ $tim->nama_tim }}</div>
+                                        <span class="badge badge-warning" style="font-size: 0.7rem; margin-top: 4px;">Menunggu Persetujuan</span>
+                                    </td>
+                                    <td>
+                                        <div style="font-weight: 600;">{{ $tim->lomba ? $tim->lomba->nama_lomba : '-' }}</div>
+                                        <span style="font-size: 0.75rem; color: var(--text-muted);">{{ $tim->lomba ? $tim->lomba->kategori : '' }}</span>
+                                    </td>
+                                    <td>
+                                        @if($tim->ketua)
+                                            <div style="font-weight: 600;">{{ $tim->ketua->nama }}</div>
+                                            <div style="font-size: 0.75rem; color: var(--text-muted);">NIM: {{ $tim->ketua->nim }} • {{ $tim->ketua->prodi }}</div>
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
+                                    <td style="white-space: nowrap;">
+                                        <span class="badge badge-primary">{{ $tim->anggota->count() }} / {{ $tim->kuota_anggota }} Orang</span>
+                                    </td>
+                                    <td style="white-space: nowrap;">
+                                        <span style="font-size: 0.8rem; color: var(--text-muted);">{{ $tim->created_at ? $tim->created_at->format('d M Y') : '-' }}</span>
+                                    </td>
+                                    <td style="text-align: right; white-space: nowrap;">
+                                        <div style="display: inline-flex; gap: 6px;">
+                                            <form action="{{ route('admin.tim.verifikasi', $tim->id_tim) }}" method="POST" style="margin: 0;">
+                                                @csrf
+                                                <input type="hidden" name="status" value="disetujui">
+                                                <button type="submit" class="btn btn-success btn-sm" title="Setujui Tim & Ketua">
+                                                    <i class="bi bi-check-circle"></i> Setujui
+                                                </button>
+                                            </form>
+                                            <button type="button"
+                                                    class="btn btn-danger btn-sm"
+                                                    title="Tolak Pengajuan Tim"
+                                                    onclick="openModalTolakTim({{ $tim->id_tim }}, @js($tim->nama_tim), @js(($tim->ketua ? $tim->ketua->nama : 'Ketua Tim').' ('.($tim->ketua->nim ?? $tim->nim).')'))">
                                                 <i class="bi bi-x-circle"></i> Tolak
                                             </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" style="text-align: center; padding: 30px; color: var(--text-muted);">
-                                    <i class="bi bi-check-all" style="font-size: 2rem; color: var(--success); display: block; margin-bottom: 8px;"></i>
-                                    Tidak ada pengajuan ketua tim baru yang tertunda. Semua tim telah diproses.
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" style="text-align: center; padding: 30px; color: var(--text-muted);">
+                                        <i class="bi bi-check-all" style="font-size: 2rem; color: var(--success); display: block; margin-bottom: 8px;"></i>
+                                        Tidak ada pengajuan ketua tim baru yang tertunda. Semua tim telah diproses.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
         <!-- Tabel Perhatian Utama 3: Riwayat Prestasi Mahasiswa Terbaru -->
-        <div class="card">
-            <div class="card-header">
+        <div class="card" style="min-width: 0;">
+            <div class="card-header" style="flex-wrap: wrap; gap: 10px;">
                 <div class="card-title">
                     <i class="bi bi-award-fill" style="color: var(--success);"></i> Riwayat Prestasi & Monitoring Terkini
                 </div>
-                <a href="{{ route('dashboard.analitik') }}" class="btn btn-secondary btn-sm">
+                <a href="{{ route('dashboard.analitik') }}" class="btn btn-secondary btn-sm" style="white-space: nowrap;">
                     Buka Halaman Analitik Lengkap
                 </a>
             </div>
-            <div class="table-container">
-                <table class="custom-table">
-                    <thead>
-                        <tr>
-                            <th>Tim & Mahasiswa</th>
-                            <th>Kompetisi / Lomba</th>
-                            <th>Dosen Pembimbing</th>
-                            <th>Babak Terakhir</th>
-                            <th>Pencapaian / Juara</th>
-                            <th>Tanggal Update</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($prestasiList->take(6) as $p)
+            <div class="table-container" style="overflow: visible; border: none; border-radius: 0; box-shadow: none;">
+                <div style="overflow-x: auto; border-bottom-left-radius: var(--radius-md); border-bottom-right-radius: var(--radius-md);">
+                    <table class="custom-table" style="min-width: 780px; width: 100%;">
+                        <thead>
                             <tr>
-                                <td>
-                                    <div style="font-weight: 700; color: var(--primary-dark);">
-                                        {{ $p->pengajuan?->tim?->nama_tim ?? '-' }}
-                                    </div>
-                                    <div style="font-size: 0.75rem; color: var(--text-muted);">
-                                        Ketua: {{ $p->pengajuan?->tim?->ketua?->nama ?? '-' }}
-                                    </div>
-                                </td>
-                                <td>
-                                    <div style="font-weight: 600;">
-                                        {{ $p->pengajuan?->tim?->lomba?->nama_lomba ?? '-' }}
-                                    </div>
-                                    <span class="badge badge-purple" style="font-size: 0.68rem;">
-                                        {{ $p->pengajuan?->tim?->lomba?->tingkat ?? '-' }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <div style="font-size: 0.82rem; font-weight: 600;">
-                                        {{ $p->pengajuan?->dosen?->nama ?? '-' }}
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="badge badge-primary">{{ $p->babak }}</span>
-                                </td>
-                                <td>
-                                    <span class="badge {{ str_contains($p->hasil_akhir, 'Juara') ? 'badge-success' : 'badge-warning' }}" style="font-size: 0.8rem; font-weight: 700;">
-                                        <i class="bi bi-trophy-fill"></i> {{ $p->hasil_akhir }}
-                                    </span>
-                                </td>
-                                <td style="font-size: 0.8rem; color: var(--text-muted);">
-                                    {{ $p->tanggal_update ? $p->tanggal_update->format('d M Y') : '-' }}
-                                </td>
+                                <th>Tim & Mahasiswa</th>
+                                <th>Kompetisi / Lomba</th>
+                                <th>Dosen Pembimbing</th>
+                                <th>Babak Terakhir</th>
+                                <th>Pencapaian / Juara</th>
+                                <th>Tanggal Update</th>
                             </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" style="text-align: center; padding: 30px; color: var(--text-muted);">
-                                    Belum ada catatan riwayat prestasi yang tervalidasi.
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @forelse($prestasiList->take(6) as $p)
+                                <tr>
+                                    <td>
+                                        <div style="font-weight: 700; color: var(--primary-dark);">
+                                            {{ $p->pengajuan?->tim?->nama_tim ?? '-' }}
+                                        </div>
+                                        <div style="font-size: 0.75rem; color: var(--text-muted);">
+                                            Ketua: {{ $p->pengajuan?->tim?->ketua?->nama ?? '-' }}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div style="font-weight: 600;">
+                                            {{ $p->pengajuan?->tim?->lomba?->nama_lomba ?? '-' }}
+                                        </div>
+                                        <span class="badge badge-purple" style="font-size: 0.68rem;">
+                                            {{ $p->pengajuan?->tim?->lomba?->tingkat ?? '-' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div style="font-size: 0.82rem; font-weight: 600;">
+                                            {{ $p->pengajuan?->dosen?->nama ?? '-' }}
+                                        </div>
+                                    </td>
+                                    <td style="white-space: nowrap;">
+                                        <span class="badge badge-primary">{{ $p->babak }}</span>
+                                    </td>
+                                    <td style="white-space: nowrap;">
+                                        <span class="badge {{ str_contains($p->hasil_akhir, 'Juara') ? 'badge-success' : 'badge-warning' }}" style="font-size: 0.8rem; font-weight: 700;">
+                                            <i class="bi bi-trophy-fill"></i> {{ $p->hasil_akhir }}
+                                        </span>
+                                    </td>
+                                    <td style="font-size: 0.8rem; color: var(--text-muted); white-space: nowrap;">
+                                        {{ $p->tanggal_update ? $p->tanggal_update->format('d M Y') : '-' }}
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" style="text-align: center; padding: 30px; color: var(--text-muted);">
+                                        Belum ada catatan riwayat prestasi yang tervalidasi.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     @endif
@@ -889,7 +903,14 @@
                                 @elseif($item->status_verifikasi === 'menunggu')
                                     <span class="badge badge-warning"><i class="bi bi-hourglass-split"></i> Menunggu</span>
                                 @else
-                                    <span class="badge badge-danger"><i class="bi bi-x-circle"></i> Ditolak</span>
+                                    <span class="badge badge-danger" @if(!empty($item->alasan_penolakan)) title="Alasan Penolakan: {{ $item->alasan_penolakan }}" @endif>
+                                        <i class="bi bi-x-circle"></i> Ditolak
+                                    </span>
+                                    @if(!empty($item->alasan_penolakan))
+                                        <div style="font-size: 0.72rem; color: #991B1B; margin-top: 4px; max-width: 210px; line-height: 1.35;" title="{{ $item->alasan_penolakan }}">
+                                            <i class="bi bi-exclamation-circle"></i> {{ \Illuminate\Support\Str::limit($item->alasan_penolakan, 45) }}
+                                        </div>
+                                    @endif
                                 @endif
                             </td>
                             <td>
@@ -914,13 +935,9 @@
                                                 <i class="bi bi-check-lg"></i>
                                             </button>
                                         </form>
-                                        <form action="{{ route('admin.lomba.verifikasi', $item->id_lomba) }}" method="POST" style="margin: 0;">
-                                            @csrf
-                                            <input type="hidden" name="status" value="ditolak">
-                                            <button type="submit" class="btn btn-danger btn-sm" title="Tolak Lomba">
-                                                <i class="bi bi-x-lg"></i>
-                                            </button>
-                                        </form>
+                                        <button type="button" class="btn btn-danger btn-sm" title="Tolak Lomba" onclick="openModalTolakLomba({{ $item->id_lomba }}, @js($item->nama_lomba))">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
                                     @endif
 
                                     <!-- Tombol Detail / Pratinjau -->
@@ -928,10 +945,12 @@
                                         <i class="bi bi-eye"></i>
                                     </button>
 
-                                    <!-- Tombol Edit Lomba -->
-                                    <button type="button" class="btn btn-secondary btn-sm" title="Ubah Data Lomba" onclick="editLomba({{ json_encode($item) }})">
-                                        <i class="bi bi-pencil"></i>
-                                    </button>
+                                    <!-- Tombol Edit Lomba (Tidak tampil jika status ditolak) -->
+                                    @if(($item->status_verifikasi ?? $item->status) !== 'ditolak')
+                                        <button type="button" class="btn btn-secondary btn-sm" title="Ubah Data Lomba" onclick="editLomba({{ json_encode($item) }})">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                    @endif
 
                                     <!-- Tombol Hapus Lomba -->
                                     <form action="{{ route('admin.lomba.destroy', $item->id_lomba) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data lomba ini secara permanen?');" style="margin: 0;">
@@ -1060,7 +1079,14 @@
                                 @elseif($tim->status_tim === 'menunggu_persetujuan')
                                     <span class="badge badge-warning"><i class="bi bi-clock-history"></i> Menunggu Approval</span>
                                 @else
-                                    <span class="badge badge-danger"><i class="bi bi-x-circle-fill"></i> Ditolak</span>
+                                    <span class="badge badge-danger" @if(!empty($tim->alasan_penolakan)) title="Alasan Penolakan: {{ $tim->alasan_penolakan }}" @endif>
+                                        <i class="bi bi-x-circle-fill"></i> Ditolak
+                                    </span>
+                                    @if(!empty($tim->alasan_penolakan))
+                                        <div style="font-size: 0.72rem; color: #991B1B; margin-top: 4px; max-width: 210px; line-height: 1.35;" title="{{ $tim->alasan_penolakan }}">
+                                            <i class="bi bi-exclamation-circle"></i> {{ \Illuminate\Support\Str::limit($tim->alasan_penolakan, 45) }}
+                                        </div>
+                                    @endif
                                 @endif
                             </td>
                             <td style="text-align: right; padding-right: 16px; white-space: nowrap;">
@@ -1074,42 +1100,40 @@
                                                 <i class="bi bi-check-lg"></i> Setujui
                                             </button>
                                         </form>
-                                        <form action="{{ route('admin.tim.verifikasi', $tim->id_tim) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menolak pengajuan tim ini?');" style="margin: 0;">
+                                        <button type="button"
+                                                class="btn btn-danger btn-sm"
+                                                title="Tolak Pengajuan Tim"
+                                                onclick="openModalTolakTim({{ $tim->id_tim }}, @js($tim->nama_tim), @js(($tim->ketua ? $tim->ketua->nama : 'Ketua Tim').' ('.($tim->ketua->nim ?? $tim->nim).')'))">
+                                            <i class="bi bi-x-lg"></i> Tolak
+                                        </button>
+                                    @elseif($tim->status_tim === 'ditolak')
+                                        <form action="{{ route('admin.tim.verifikasi', $tim->id_tim) }}" method="POST" style="margin: 0;">
                                             @csrf
-                                            <input type="hidden" name="status" value="ditolak">
-                                            <button type="submit" class="btn btn-danger btn-sm" title="Tolak Pengajuan Tim">
-                                                <i class="bi bi-x-lg"></i> Tolak
+                                            <input type="hidden" name="status" value="disetujui">
+                                            <button type="submit" class="btn btn-outline-primary btn-sm" title="Ubah status jadi Disetujui">
+                                                Setujui
                                             </button>
                                         </form>
-                                    @else
-                                        <!-- Tombol Toggle Ulang Jika Perlu Re-validasi -->
-                                        @if($tim->status_tim === 'ditolak')
-                                            <form action="{{ route('admin.tim.verifikasi', $tim->id_tim) }}" method="POST" style="margin: 0;">
-                                                @csrf
-                                                <input type="hidden" name="status" value="disetujui">
-                                                <button type="submit" class="btn btn-outline-primary btn-sm" title="Ubah status jadi Disetujui">
-                                                    Setujui
-                                                </button>
-                                            </form>
-                                        @elseif($tim->status_tim === 'disetujui')
-                                            <form action="{{ route('admin.tim.verifikasi', $tim->id_tim) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menolak tim ini?');" style="margin: 0;">
-                                                @csrf
-                                                <input type="hidden" name="status" value="ditolak">
-                                                <button type="submit" class="btn btn-secondary btn-sm" style="color: var(--danger);" title="Tolak Tim">
-                                                    Tolak
-                                                </button>
-                                            </form>
-                                        @endif
                                     @endif
 
-                                    <!-- Hapus Tim -->
-                                    <form action="{{ route('admin.tim.destroy', $tim->id_tim) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data tim ini?');" style="margin: 0;">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-secondary btn-sm" style="color: var(--danger);" title="Hapus Tim">
+                                    <!-- Hapus Tim (Hanya aktif untuk status menunggu persetujuan dan ditolak) -->
+                                    @if($tim->status_tim === 'disetujui')
+                                        <button type="button"
+                                                class="btn btn-secondary btn-sm"
+                                                style="color: #CBD5E1; cursor: not-allowed; opacity: 0.65;"
+                                                disabled
+                                                title="Tim yang sudah disetujui tidak dapat dihapus">
                                             <i class="bi bi-trash"></i>
                                         </button>
-                                    </form>
+                                    @else
+                                        <form action="{{ route('admin.tim.destroy', $tim->id_tim) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data tim ini?');" style="margin: 0;">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-secondary btn-sm" style="color: var(--danger);" title="Hapus Tim">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
@@ -1619,6 +1643,151 @@
     </div>
 </div>
 
+<!-- 3B. Modal Tolak Pengajuan Lomba -->
+<div class="modal-overlay" id="modalTolakLomba" style="display: {{ old('tolak_lomba_id') ? 'flex' : 'none' }};">
+    <div class="modal-box" style="max-width: 550px;">
+        <div class="modal-header">
+            <div class="modal-title" style="color: #991B1B;">
+                <i class="bi bi-x-circle-fill" style="color: var(--danger);"></i> Tolak Pengajuan Lomba
+            </div>
+            <button type="button" class="modal-close" onclick="closeModal('modalTolakLomba')">&times;</button>
+        </div>
+        <form id="formTolakLomba"
+              action="{{ old('tolak_lomba_id') ? route('admin.lomba.verifikasi', old('tolak_lomba_id')) : '' }}"
+              method="POST">
+            @csrf
+            <input type="hidden" name="status" value="ditolak">
+            <input type="hidden" name="tolak_lomba_id" id="tolak_lomba_id" value="{{ old('tolak_lomba_id') }}">
+            <input type="hidden" name="tolak_lomba_nama" id="tolak_lomba_nama" value="{{ old('tolak_lomba_nama') }}">
+
+            <div class="modal-body">
+                <div style="background: #FEF2F2; border: 1px solid #FECACA; border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 16px; font-size: 0.85rem; color: #7F1D1D;">
+                    <div style="font-size: 0.74rem; text-transform: uppercase; font-weight: 700; color: #991B1B; letter-spacing: 0.4px; margin-bottom: 3px;">
+                        Nama Lomba yang Ditolak:
+                    </div>
+                    <div id="tolak_lomba_nama_label" style="font-weight: 800; font-size: 0.96rem; color: #7F1D1D;">
+                        {{ old('tolak_lomba_nama', '-') }}
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" for="tolak_lomba_alasan">
+                        Alasan Penolakan <span style="color: var(--danger);">*</span>
+                    </label>
+                    <textarea name="alasan_penolakan"
+                              id="tolak_lomba_alasan"
+                              class="form-control"
+                              rows="4"
+                              minlength="10"
+                              maxlength="500"
+                              required
+                              placeholder="Contoh: Penyelenggara tidak jelas / tautan pendaftaran tidak valid"
+                              oninput="updateCharCountTolakLomba(this)">{{ old('tolak_lomba_id') ? old('alasan_penolakan') : '' }}</textarea>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-top: 6px;">
+                        <div style="flex: 1;">
+                            @if(old('tolak_lomba_id') && $errors->has('alasan_penolakan'))
+                                <div style="color: var(--danger); font-size: 0.78rem; font-weight: 600;">
+                                    <i class="bi bi-exclamation-circle-fill"></i> {{ $errors->first('alasan_penolakan') }}
+                                </div>
+                            @else
+                                <span style="font-size: 0.74rem; color: var(--text-muted);">Wajib diisi minimal 10 karakter</span>
+                            @endif
+                        </div>
+                        <div style="font-size: 0.74rem; color: var(--text-muted); white-space: nowrap;">
+                            <span id="tolak_lomba_char_count">{{ old('tolak_lomba_id') ? mb_strlen((string) old('alasan_penolakan')) : 0 }}</span> / 500 karakter
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="closeModal('modalTolakLomba')">Batal</button>
+                <button type="submit" class="btn btn-danger btn-sm">
+                    <i class="bi bi-x-circle-fill"></i> Tolak Pengajuan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 3C. Modal Tolak Pengajuan Ketua Tim -->
+<div class="modal-overlay" id="modalTolakTim" style="display: {{ old('tolak_tim_id') ? 'flex' : 'none' }};">
+    <div class="modal-box" style="max-width: 550px;">
+        <div class="modal-header">
+            <div class="modal-title" style="color: #991B1B;">
+                <i class="bi bi-x-circle-fill" style="color: var(--danger);"></i> Tolak Pengajuan Ketua Tim
+            </div>
+            <button type="button" class="modal-close" onclick="closeModal('modalTolakTim')">&times;</button>
+        </div>
+        <form id="formTolakTim"
+              action="{{ old('tolak_tim_id') ? route('admin.tim.verifikasi', old('tolak_tim_id')) : '' }}"
+              method="POST">
+            @csrf
+            <input type="hidden" name="status" value="ditolak">
+            <input type="hidden" name="tolak_tim_id" id="tolak_tim_id" value="{{ old('tolak_tim_id') }}">
+            <input type="hidden" name="tolak_tim_nama" id="tolak_tim_nama" value="{{ old('tolak_tim_nama') }}">
+            <input type="hidden" name="tolak_tim_ketua" id="tolak_tim_ketua" value="{{ old('tolak_tim_ketua') }}">
+
+            <div class="modal-body">
+                <div style="background: #FEF2F2; border: 1px solid #FECACA; border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 16px; font-size: 0.85rem; color: #7F1D1D;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div>
+                            <div style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700; color: #991B1B; letter-spacing: 0.4px; margin-bottom: 2px;">
+                                Nama Tim:
+                            </div>
+                            <div id="tolak_tim_nama_label" style="font-weight: 800; font-size: 0.94rem; color: #7F1D1D;">
+                                {{ old('tolak_tim_nama', '-') }}
+                            </div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700; color: #991B1B; letter-spacing: 0.4px; margin-bottom: 2px;">
+                                Calon Ketua Tim:
+                            </div>
+                            <div id="tolak_tim_ketua_label" style="font-weight: 700; font-size: 0.88rem; color: #7F1D1D;">
+                                {{ old('tolak_tim_ketua', '-') }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" for="tolak_tim_alasan">
+                        Alasan Penolakan <span style="color: var(--danger);">*</span>
+                    </label>
+                    <textarea name="alasan_penolakan"
+                              id="tolak_tim_alasan"
+                              class="form-control"
+                              rows="4"
+                              minlength="10"
+                              maxlength="500"
+                              required
+                              placeholder="Contoh: Berkas CV belum lengkap atau deskripsi pembagian peran tim belum jelas"
+                              oninput="updateCharCountTolakTim(this)">{{ old('tolak_tim_id') ? old('alasan_penolakan') : '' }}</textarea>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-top: 6px;">
+                        <div style="flex: 1;">
+                            @if(old('tolak_tim_id') && $errors->has('alasan_penolakan'))
+                                <div style="color: var(--danger); font-size: 0.78rem; font-weight: 600;">
+                                    <i class="bi bi-exclamation-circle-fill"></i> {{ $errors->first('alasan_penolakan') }}
+                                </div>
+                            @else
+                                <span style="font-size: 0.74rem; color: var(--text-muted);">Wajib diisi minimal 10 karakter</span>
+                            @endif
+                        </div>
+                        <div style="font-size: 0.74rem; color: var(--text-muted); white-space: nowrap;">
+                            <span id="tolak_tim_char_count">{{ old('tolak_tim_id') ? mb_strlen((string) old('alasan_penolakan')) : 0 }}</span> / 500 karakter
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="closeModal('modalTolakTim')">Batal</button>
+                <button type="submit" class="btn btn-danger btn-sm">
+                    <i class="bi bi-x-circle-fill"></i> Tolak Pengajuan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- 4. Modal Tambah Dosen -->
 <div class="modal-overlay" id="modalTambahDosen">
     <div class="modal-box">
@@ -1976,6 +2145,15 @@
             </a>
         ` : '<span style="font-size: 0.8rem; color: var(--text-muted); margin-left: 8px;">(Panduan belum tersedia)</span>';
 
+        const alasanPenolakanHtml = (item.status_verifikasi === 'ditolak' || item.alasan_penolakan) ? `
+            <div style="background: #FEF2F2; border: 1px solid #FECACA; border-left: 4px solid var(--danger); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 16px; color: #991B1B;">
+                <div style="font-size: 0.8rem; font-weight: 700; margin-bottom: 4px;">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Alasan Penolakan:
+                </div>
+                <div style="font-size: 0.86rem; line-height: 1.5;">${item.alasan_penolakan || 'Tidak memenuhi kriteria verifikasi admin.'}</div>
+            </div>
+        ` : '';
+
         const content = `
             ${posterHtml}
             <div style="margin-bottom: 16px;">
@@ -1993,6 +2171,8 @@
             <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
                 Penyelenggara: <strong>${item.penyelenggara}</strong> • Tenggat: <strong>${item.tenggat || '-'}</strong> • Biaya: <strong>${formattedBiaya}</strong>
             </div>
+
+            ${alasanPenolakanHtml}
 
             <div style="background: #F8FAFC; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 16px;">
                 <div style="font-size: 0.82rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 4px;">Deskripsi Kompetisi:</div>
@@ -2022,8 +2202,101 @@
         openModal('modalPreviewLomba');
     }
 
+    // Modal Tolak Pengajuan Lomba
+    function openModalTolakLomba(idLomba, namaLomba) {
+        const form = document.getElementById('formTolakLomba');
+        const idInput = document.getElementById('tolak_lomba_id');
+        const namaInput = document.getElementById('tolak_lomba_nama');
+        const namaLabel = document.getElementById('tolak_lomba_nama_label');
+        const textarea = document.getElementById('tolak_lomba_alasan');
+
+        if (form) {
+            form.action = '/admin/lomba/' + idLomba + '/verifikasi';
+        }
+        if (idInput) {
+            idInput.value = idLomba;
+        }
+        if (namaInput) {
+            namaInput.value = namaLomba || '';
+        }
+        if (namaLabel) {
+            namaLabel.textContent = namaLomba || '-';
+        }
+        if (textarea) {
+            textarea.value = '';
+            updateCharCountTolakLomba(textarea);
+        }
+
+        openModal('modalTolakLomba');
+    }
+
+    function updateCharCountTolakLomba(textareaEl) {
+        const counter = document.getElementById('tolak_lomba_char_count');
+        if (counter && textareaEl) {
+            counter.textContent = (textareaEl.value || '').length;
+        }
+    }
+
+    // Modal Tolak Pengajuan Ketua Tim
+    function openModalTolakTim(idTim, namaTim, namaKetua) {
+        const form = document.getElementById('formTolakTim');
+        const idInput = document.getElementById('tolak_tim_id');
+        const namaInput = document.getElementById('tolak_tim_nama');
+        const ketuaInput = document.getElementById('tolak_tim_ketua');
+        const namaLabel = document.getElementById('tolak_tim_nama_label');
+        const ketuaLabel = document.getElementById('tolak_tim_ketua_label');
+        const textarea = document.getElementById('tolak_tim_alasan');
+
+        if (form) {
+            form.action = '/admin/tim/' + idTim + '/verifikasi';
+        }
+        if (idInput) {
+            idInput.value = idTim;
+        }
+        if (namaInput) {
+            namaInput.value = namaTim || '';
+        }
+        if (ketuaInput) {
+            ketuaInput.value = namaKetua || '';
+        }
+        if (namaLabel) {
+            namaLabel.textContent = namaTim || '-';
+        }
+        if (ketuaLabel) {
+            ketuaLabel.textContent = namaKetua || '-';
+        }
+        if (textarea) {
+            textarea.value = '';
+            updateCharCountTolakTim(textarea);
+        }
+
+        openModal('modalTolakTim');
+    }
+
+    function updateCharCountTolakTim(textareaEl) {
+        const counter = document.getElementById('tolak_tim_char_count');
+        if (counter && textareaEl) {
+            counter.textContent = (textareaEl.value || '').length;
+        }
+    }
+
+    @if(old('tolak_lomba_id'))
+    document.addEventListener('DOMContentLoaded', function() {
+        openModal('modalTolakLomba');
+    });
+    @endif
+
+    @if(old('tolak_tim_id'))
+    document.addEventListener('DOMContentLoaded', function() {
+        openModal('modalTolakTim');
+    });
+    @endif
+
     // Isi Data Modal Edit Lomba
     function editLomba(item) {
+        if (!item || (item.status_verifikasi || item.status) === 'ditolak') {
+            return;
+        }
         document.getElementById('formEditLomba').action = '/admin/lomba/' + item.id_lomba;
         document.getElementById('edit_lomba_nama').value = item.nama_lomba || '';
         document.getElementById('edit_lomba_kategori').value = item.kategori || '';

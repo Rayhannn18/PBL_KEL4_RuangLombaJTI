@@ -277,23 +277,101 @@ class BimbinganController extends Controller
             ]);
         }
 
-        // Role Admin
-        $pengajuanList = PengajuanBimbingan::with([
-            'dosen',
-            'tim.lomba',
-            'tim.ketua',
-            'tim.anggotaDiterima.mahasiswa',
-            'logbook',
-            'progresBabak',
-        ])
-            ->latest()
-            ->get();
+        // Role Admin: Rekapitulasi Bimbingan Seluruh JTI (Read-Only)
+        $search = trim((string) $request->query('search', ''));
+        $lombaFilter = $request->query('lomba_id');
+        $dosenFilter = $request->query('nidn');
+        $logbookFilter = $request->query('status_logbook');
+
+        // Base query: semua tim yang punya pengajuan bimbingan berstatus disetujui
+        $baseDisetujuiQuery = PengajuanBimbingan::where('status', 'disetujui')
+            ->whereHas('tim');
+
+        // Statistik 4 Kartu Ringkasan (dari seluruh bimbingan berstatus disetujui)
+        $totalTimBimbingan = (clone $baseDisetujuiQuery)->count();
+        $totalSesiLogbook = Logbook::whereHas('pengajuan', function ($q) {
+            $q->where('status', 'disetujui')->whereHas('tim');
+        })->count();
+        $timBelumAdaLogbook = (clone $baseDisetujuiQuery)->doesntHave('logbook')->count();
+        $dosenAktifMembimbing = (clone $baseDisetujuiQuery)->distinct('nidn')->count('nidn');
+
+        // Query daftar tim dengan eager loading & pengurutan logbook terbaru
+        $adminQuery = (clone $baseDisetujuiQuery)
+            ->with([
+                'dosen',
+                'tim.lomba',
+                'tim.ketua',
+                'logbook' => function ($q) {
+                    $q->orderBy('tanggal', 'desc')->orderBy('id_logbook', 'desc');
+                },
+            ])
+            ->withCount('logbook');
+
+        // Pencarian: nama tim / ketua / NIM / dosen
+        if ($search !== '') {
+            $adminQuery->where(function ($q) use ($search) {
+                $q->whereHas('tim', function ($tq) use ($search) {
+                    $tq->where('nama_tim', 'like', "%{$search}%")
+                        ->orWhere('nim', 'like', "%{$search}%")
+                        ->orWhereHas('ketua', function ($kq) use ($search) {
+                            $kq->where('nama', 'like', "%{$search}%")
+                                ->orWhere('nim', 'like', "%{$search}%");
+                        });
+                })->orWhereHas('dosen', function ($dq) use ($search) {
+                    $dq->where('nama', 'like', "%{$search}%");
+                });
+            });
+        }
+
+        // Filter Lomba
+        if ($lombaFilter && $lombaFilter !== 'all') {
+            $adminQuery->whereHas('tim', function ($tq) use ($lombaFilter) {
+                $tq->where('id_lomba', (int) $lombaFilter);
+            });
+        }
+
+        // Filter Dosen Pembimbing
+        if ($dosenFilter && $dosenFilter !== 'all') {
+            $adminQuery->where('nidn', $dosenFilter);
+        }
+
+        // Filter Sudah ada logbook / Belum ada logbook
+        if ($logbookFilter === 'sudah') {
+            $adminQuery->has('logbook');
+        } elseif ($logbookFilter === 'belum') {
+            $adminQuery->doesntHave('logbook');
+        }
+
+        $pengajuanList = $adminQuery
+            ->orderByDesc('tgl_pengajuan')
+            ->orderByDesc('id_pengajuan')
+            ->paginate(10)
+            ->withQueryString();
+
+        // Opsi dropdown filter untuk Admin
+        $lombaOptions = Lomba::whereHas('tim.pengajuanBimbingan', function ($q) {
+            $q->where('status', 'disetujui');
+        })->orderBy('nama_lomba')->get(['id_lomba', 'nama_lomba']);
+
+        $dosenOptions = Dosen::whereHas('pengajuanBimbingan', function ($q) {
+            $q->where('status', 'disetujui');
+        })->orderBy('nama')->get(['nidn', 'nama', 'bidang_keahlian']);
 
         return view('bimbingan.index', [
             'authUser' => $authUser,
             'role' => 'admin',
             'pengajuanList' => $pengajuanList,
             'hasLomba' => true,
+            'totalTimBimbingan' => $totalTimBimbingan,
+            'totalSesiLogbook' => $totalSesiLogbook,
+            'timBelumAdaLogbook' => $timBelumAdaLogbook,
+            'dosenAktifMembimbing' => $dosenAktifMembimbing,
+            'lombaOptions' => $lombaOptions,
+            'dosenOptions' => $dosenOptions,
+            'search' => $search,
+            'lombaFilter' => $lombaFilter,
+            'dosenFilter' => $dosenFilter,
+            'logbookFilter' => $logbookFilter,
         ]);
     }
 
@@ -428,13 +506,13 @@ class BimbinganController extends Controller
         $validated = $request->validated();
 
         $authUser = $this->authUser();
-        if (! $authUser || ! in_array($authUser['role'], ['dosen', 'admin'])) {
-            return back()->with('error', 'Hanya Dosen Pembimbing atau Administrator yang berhak memvalidasi logbook.');
+        if (! $authUser || $authUser['role'] !== 'dosen') {
+            return back()->with('error', 'Hanya Dosen Pembimbing yang berhak memvalidasi logbook.');
         }
 
         $logbook = Logbook::with('pengajuan')->findOrFail($id);
 
-        if ($authUser['role'] === 'dosen' && $logbook->pengajuan->nidn !== $authUser['id']) {
+        if ($logbook->pengajuan->nidn !== $authUser['id']) {
             return back()->with('error', 'Anda hanya dapat memvalidasi logbook untuk tim bimbingan Anda.');
         }
 

@@ -24,6 +24,11 @@ class Mahasiswa extends Model
         'password',
         'prodi',
         'angkatan',
+        'portofolio',
+    ];
+
+    protected $casts = [
+        'portofolio' => 'array',
     ];
 
     protected $hidden = [

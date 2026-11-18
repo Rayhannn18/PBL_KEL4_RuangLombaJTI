@@ -18,6 +18,8 @@ class AnggotaTim extends Model
         'nim',
         'status_gabung',
         'peran',
+        'posisi_dilamar',
+        'pesan',
         'file_cv',
     ];
 

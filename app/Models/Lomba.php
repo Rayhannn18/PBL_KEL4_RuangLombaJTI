@@ -51,9 +51,14 @@ class Lomba extends Model
         'benefit',
         'tautan_daftar',
         'status_verifikasi',
+        'status',
+        'submitted_by',
+        'alasan_penolakan',
         'poster',
         'nim',
         'id_admin',
+        'verified_by',
+        'verified_at',
         'tipe_peserta',
         'mode_pelaksanaan',
         'poster_path',
@@ -63,6 +68,7 @@ class Lomba extends Model
     protected $casts = [
         'tenggat' => 'date',
         'biaya' => 'integer',
+        'verified_at' => 'datetime',
     ];
 
     protected $appends = [

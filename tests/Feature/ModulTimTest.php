@@ -613,4 +613,188 @@ class ModulTimTest extends TestCase
             'peran' => 'Backend Developer',
         ]);
     }
+
+    public function test_pengajuan_gabung_dengan_posisi_dilamar_dan_pesan_opsional_berhasil()
+    {
+        Storage::fake('public');
+        $ketua = $this->createMahasiswaUser('244107060040', 'Ketua Tim Posisi', 'ketuaposisi@polinema.ac.id');
+        $pelamar = $this->createMahasiswaUser('244107060041', 'Pelamar Posisi', 'pelamarposisi@polinema.ac.id');
+        $lomba = $this->createSampleLomba();
+
+        $tim = Tim::create([
+            'nama_tim' => 'Tim Eksplorasi Posisi',
+            'id_lomba' => $lomba->id_lomba,
+            'nim' => $ketua->nim_nip,
+            'kuota_anggota' => 3,
+            'status_tim' => 'disetujui',
+        ]);
+
+        $cvFile = UploadedFile::fake()->create('cv_posisi.pdf', 300, 'application/pdf');
+
+        $response = $this->actingAs($pelamar)->post(route('tim.gabung', $tim->id_tim), [
+            'posisi_dilamar' => 'Backend Developer / Data Analyst',
+            'pesan' => 'Siap berkontribusi penuh dalam pengembangan API.',
+            'cv' => $cvFile,
+        ]);
+
+        $response->assertRedirect(route('tim.lowongan'));
+        $this->assertDatabaseHas('anggota_tim', [
+            'id_tim' => $tim->id_tim,
+            'nim' => $pelamar->nim_nip,
+            'status_gabung' => 'menunggu',
+            'posisi_dilamar' => 'Backend Developer / Data Analyst',
+            'pesan' => 'Siap berkontribusi penuh dalam pengembangan API.',
+        ]);
+    }
+
+    public function test_ketua_tim_tujuan_diizinkan_mengakses_profil_terbatas_pelamar()
+    {
+        $ketua = $this->createMahasiswaUser('244107060050', 'Ketua Tim Tujuan', 'ketua.tujuan@polinema.ac.id');
+        $pelamar = $this->createMahasiswaUser('244107060051', 'Nadia Pelamar', 'nadia.rahasia@polinema.ac.id');
+
+        Mahasiswa::where('nim', $pelamar->nim_nip)->update([
+            'portofolio' => [
+                ['label' => 'GitHub Nadia', 'url' => 'https://github.com/nadiapelamar'],
+            ],
+        ]);
+
+        $lomba = $this->createSampleLomba();
+        $tim = Tim::create([
+            'nama_tim' => 'Tim Garuda Utama',
+            'id_lomba' => $lomba->id_lomba,
+            'nim' => $ketua->nim_nip,
+            'kuota_anggota' => 3,
+            'status_tim' => 'disetujui',
+        ]);
+
+        $permintaan = AnggotaTim::create([
+            'id_tim' => $tim->id_tim,
+            'nim' => $pelamar->nim_nip,
+            'status_gabung' => 'menunggu',
+            'peran' => 'UI/UX Designer',
+            'posisi_dilamar' => 'UI/UX Designer',
+            'pesan' => 'Berpengalaman merancang design system di Figma.',
+            'file_cv' => 'cv/sample_pelamar.pdf',
+        ]);
+
+        $response = $this->actingAs($ketua)->get(route('tim.permintaan.profil', $permintaan->id_anggota));
+
+        $response->assertStatus(200);
+        $response->assertSee('Nadia Pelamar');
+        $response->assertSee('D-IV Sistem Informasi Bisnis');
+        $response->assertSee('2024');
+        $response->assertSee('UI/UX Designer');
+        $response->assertSee('Berpengalaman merancang design system di Figma.');
+        $response->assertSee('GitHub Nadia');
+        $response->assertSee('https://github.com/nadiapelamar');
+        $response->assertSee(route('tim.cv', ['type' => 'anggota', 'id' => $permintaan->id_anggota]));
+
+        // Tidak boleh menampilkan email maupun NIM pelamar sebelum disetujui
+        $response->assertDontSee('nadia.rahasia@polinema.ac.id');
+        $response->assertDontSee('244107060051');
+    }
+
+    public function test_ketua_tim_lain_mahasiswa_biasa_dosen_dan_admin_mendapat_403_pada_profil_terbatas()
+    {
+        $ketuaTujuan = $this->createMahasiswaUser('244107060060', 'Ketua Tujuan', 'ketua60@polinema.ac.id');
+        $ketuaLain = $this->createMahasiswaUser('244107060061', 'Ketua Tim Lain', 'ketua61@polinema.ac.id');
+        $mahasiswaBiasa = $this->createMahasiswaUser('244107060062', 'Mahasiswa Biasa', 'mhs62@polinema.ac.id');
+        $pelamar = $this->createMahasiswaUser('244107060063', 'Pelamar Tim', 'pelamar63@polinema.ac.id');
+
+        $dosenUser = User::create([
+            'name' => 'Dosen Pembimbing Uji',
+            'email' => 'dosen.uji@polinema.ac.id',
+            'nim_nip' => '198501012010121001',
+            'role' => UserRole::Dosen,
+            'password' => Hash::make('password123'),
+        ]);
+
+        $adminUser = User::create([
+            'name' => 'Admin JTI Uji',
+            'email' => 'admin.uji@polinema.ac.id',
+            'nim_nip' => null,
+            'role' => UserRole::Admin,
+            'password' => Hash::make('password123'),
+        ]);
+
+        $lomba = $this->createSampleLomba();
+
+        $timTujuan = Tim::create([
+            'nama_tim' => 'Tim Tujuan Resmi',
+            'id_lomba' => $lomba->id_lomba,
+            'nim' => $ketuaTujuan->nim_nip,
+            'kuota_anggota' => 3,
+            'status_tim' => 'disetujui',
+        ]);
+
+        Tim::create([
+            'nama_tim' => 'Tim Lain Resmi',
+            'id_lomba' => $lomba->id_lomba,
+            'nim' => $ketuaLain->nim_nip,
+            'kuota_anggota' => 3,
+            'status_tim' => 'disetujui',
+        ]);
+
+        $permintaan = AnggotaTim::create([
+            'id_tim' => $timTujuan->id_tim,
+            'nim' => $pelamar->nim_nip,
+            'status_gabung' => 'menunggu',
+            'peran' => 'Data Analyst',
+            'posisi_dilamar' => 'Data Analyst',
+            'pesan' => 'Siap mengolah dataset kompetisi.',
+        ]);
+
+        $url = route('tim.permintaan.profil', $permintaan->id_anggota);
+
+        // 1. Ketua tim lain -> 403
+        $this->actingAs($ketuaLain)->get($url)->assertStatus(403);
+
+        // 2. Mahasiswa biasa -> 403
+        $this->actingAs($mahasiswaBiasa)->get($url)->assertStatus(403);
+
+        // 3. Pelamar sendiri pada endpoint khusus ketua -> 403
+        $this->actingAs($pelamar)->get($url)->assertStatus(403);
+
+        // 4. Dosen -> 403
+        $this->actingAs($dosenUser)->get($url)->assertStatus(403);
+
+        // 5. Admin -> 403
+        $this->actingAs($adminUser)->get($url)->assertStatus(403);
+    }
+
+    public function test_setelah_permintaan_ditolak_atau_dibatalkan_ketua_tim_tujuan_mendapat_403()
+    {
+        $ketuaTujuan = $this->createMahasiswaUser('244107060070', 'Ketua Tim Validasi', 'ketua70@polinema.ac.id');
+        $pelamar = $this->createMahasiswaUser('244107060071', 'Pelamar Validasi', 'pelamar71@polinema.ac.id');
+        $lomba = $this->createSampleLomba();
+
+        $tim = Tim::create([
+            'nama_tim' => 'Tim Seleksi Ketat',
+            'id_lomba' => $lomba->id_lomba,
+            'nim' => $ketuaTujuan->nim_nip,
+            'kuota_anggota' => 3,
+            'status_tim' => 'disetujui',
+        ]);
+
+        $permintaan = AnggotaTim::create([
+            'id_tim' => $tim->id_tim,
+            'nim' => $pelamar->nim_nip,
+            'status_gabung' => 'menunggu',
+            'peran' => 'Backend Developer',
+            'posisi_dilamar' => 'Backend Developer',
+        ]);
+
+        $url = route('tim.permintaan.profil', $permintaan->id_anggota);
+
+        // Saat masih menunggu: diizinkan (200)
+        $this->actingAs($ketuaTujuan)->get($url)->assertStatus(200);
+
+        // Setelah ditolak: ketua mendapat 403
+        $permintaan->update(['status_gabung' => 'ditolak']);
+        $this->actingAs($ketuaTujuan)->get($url)->assertStatus(403);
+
+        // Setelah dibatalkan: ketua mendapat 403
+        $permintaan->update(['status_gabung' => 'dibatalkan']);
+        $this->actingAs($ketuaTujuan)->get($url)->assertStatus(403);
+    }
 }

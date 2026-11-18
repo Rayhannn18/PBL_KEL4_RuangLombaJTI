@@ -463,4 +463,126 @@ class LogbookHakAksesTest extends TestCase
             'id_logbook' => $logbook->id_logbook,
         ]);
     }
+
+    // =========================================================================
+    // 4. ROLE ADMIN - REKAPITULASI LOGBOOK BIMBINGAN (READ-ONLY)
+    // =========================================================================
+
+    private function actingAsAdmin(): User
+    {
+        $user = User::firstOrCreate(
+            ['email' => 'admin.jti@polinema.ac.id'],
+            [
+                'name' => 'Admin Kemahasiswaan JTI',
+                'nim_nip' => 'ADMIN01',
+                'role' => UserRole::Admin,
+                'password' => Hash::make('password123'),
+            ]
+        );
+
+        $this->actingAs($user);
+        session([
+            'auth_user' => [
+                'id' => 1,
+                'nama' => 'Admin Kemahasiswaan JTI',
+                'email' => 'admin.jti@polinema.ac.id',
+                'role' => 'admin',
+                'extra' => 'Kemahasiswaan JTI',
+            ],
+        ]);
+
+        return $user;
+    }
+
+    /**
+     * Admin dapat melihat seluruh rekap logbook bimbingan secara read-only beserta filter,
+     * tanpa tombol/modal tambah, edit, hapus, atau validasi logbook.
+     */
+    public function test_admin_melihat_rekap_logbook_bimbingan_secara_readonly_dan_bisa_filter(): void
+    {
+        Logbook::create([
+            'id_pengajuan' => $this->pengajuan->id_pengajuan,
+            'tanggal' => now()->format('Y-m-d'),
+            'materi' => 'Sesi Konsultasi Monitoring Admin',
+            'tindak_lanjut' => 'Penyempurnaan Laporan Akhir',
+            'status_validasi' => 'disetujui',
+        ]);
+
+        $this->actingAsAdmin();
+
+        $response = $this->get(route('bimbingan.index'));
+
+        $response->assertStatus(200);
+        $response->assertSee('Rekapitulasi Bimbingan Seluruh JTI');
+        $response->assertSee('Mode Admin: Hanya Lihat');
+        $response->assertSee('Total Tim Bimbingan');
+        $response->assertSee('Total Sesi Logbook');
+        $response->assertSee('Tim Belum Ada Logbook');
+        $response->assertSee('Dosen Aktif Membimbing');
+        $response->assertSee('Tim Hak Akses Logbook');
+        $response->assertSee('Sesi Konsultasi Monitoring Admin');
+        $response->assertSee('Penyempurnaan Laporan Akhir');
+
+        // Tidak ada modal atau tombol tulis/validasi logbook untuk Admin
+        $response->assertDontSee('id="modalLogbook"', false);
+        $response->assertDontSee('id="modalEditLogbook"', false);
+        $response->assertDontSee('id="modalRevisiLogbook"', false);
+
+        // Uji filter pencarian & status logbook
+        $filterResponse = $this->get(route('bimbingan.index', [
+            'search' => 'Tim Hak Akses Logbook',
+            'status_logbook' => 'sudah',
+        ]));
+        $filterResponse->assertStatus(200);
+        $filterResponse->assertSee('Tim Hak Akses Logbook');
+    }
+
+    /**
+     * Admin ditolak di sisi server saat mencoba menambah, mengedit, menghapus, atau memvalidasi logbook.
+     */
+    public function test_admin_ditolak_di_server_untuk_semua_aksi_tulis_dan_validasi_logbook(): void
+    {
+        $logbook = Logbook::create([
+            'id_pengajuan' => $this->pengajuan->id_pengajuan,
+            'tanggal' => now()->format('Y-m-d'),
+            'materi' => 'Catatan Awal Tim',
+            'tindak_lanjut' => '-',
+            'status_validasi' => 'menunggu',
+        ]);
+
+        $this->actingAsAdmin();
+
+        // 1. Store Logbook ditolak
+        $storeResponse = $this->post(route('bimbingan.logbook.store'), [
+            'id_pengajuan' => $this->pengajuan->id_pengajuan,
+            'tanggal' => now()->format('Y-m-d'),
+            'materi' => 'Logbook oleh Admin',
+        ]);
+        $storeResponse->assertRedirect();
+        $storeResponse->assertSessionHas('error');
+        $this->assertDatabaseMissing('logbook', ['materi' => 'Logbook oleh Admin']);
+
+        // 2. Update Logbook ditolak
+        $updateResponse = $this->put(route('bimbingan.logbook.update', $logbook->id_logbook), [
+            'tanggal' => now()->format('Y-m-d'),
+            'materi' => 'Diubah oleh Admin',
+        ]);
+        $updateResponse->assertRedirect();
+        $updateResponse->assertSessionHas('error');
+        $this->assertDatabaseMissing('logbook', ['materi' => 'Diubah oleh Admin']);
+
+        // 3. Validasi Logbook ditolak
+        $validasiResponse = $this->post(route('bimbingan.logbook.validasi', $logbook->id_logbook), [
+            'status_validasi' => 'disetujui',
+        ]);
+        $validasiResponse->assertRedirect();
+        $validasiResponse->assertSessionHas('error', 'Hanya Dosen Pembimbing yang berhak memvalidasi logbook.');
+        $this->assertSame('menunggu', $logbook->fresh()->status_validasi);
+
+        // 4. Destroy Logbook ditolak
+        $destroyResponse = $this->delete(route('bimbingan.logbook.destroy', $logbook->id_logbook));
+        $destroyResponse->assertRedirect();
+        $destroyResponse->assertSessionHas('error');
+        $this->assertDatabaseHas('logbook', ['id_logbook' => $logbook->id_logbook]);
+    }
 }

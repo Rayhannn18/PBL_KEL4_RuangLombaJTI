@@ -21,9 +21,16 @@ class Tim extends Model
         'nim',
         'kuota_anggota',
         'status_tim',
+        'alasan_penolakan',
         'id_admin',
+        'verified_by',
+        'verified_at',
         'file_cv',
         'catatan',
+    ];
+
+    protected $casts = [
+        'verified_at' => 'datetime',
     ];
 
     /**

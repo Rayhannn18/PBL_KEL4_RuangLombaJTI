@@ -76,11 +76,15 @@
             font-size: 0.815rem;
             padding: 7px 0;
             border-bottom: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            z-index: 60;
         }
         .topbar-content {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
         }
         .topbar-badge {
             display: inline-flex;
@@ -91,6 +95,76 @@
             border-radius: 999px;
             color: #fff;
             font-weight: 500;
+        }
+        .topbar-user-dropdown {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+        .topbar-user-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 999px;
+            padding: 3px 10px;
+            color: #fff;
+            font-family: inherit;
+            font-size: 0.815rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+        }
+        .topbar-user-chip:hover,
+        .topbar-user-chip[aria-expanded="true"] {
+            background: rgba(255, 255, 255, 0.18);
+            border-color: rgba(255, 255, 255, 0.38);
+        }
+        .topbar-user-arrow {
+            font-size: 0.7rem;
+            opacity: 0.85;
+            transition: transform 0.2s ease;
+            margin-left: 2px;
+        }
+        .topbar-user-chip[aria-expanded="true"] .topbar-user-arrow {
+            transform: rotate(180deg);
+        }
+        .topbar-dropdown-menu {
+            display: none;
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            min-width: 195px;
+            background: var(--surface);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            padding: 6px;
+            z-index: 100;
+        }
+        .topbar-dropdown-menu.open {
+            display: block;
+        }
+        .topbar-dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 8px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 0.84rem;
+            font-weight: 600;
+            color: var(--text-main);
+            transition: background-color 0.15s ease, color 0.15s ease;
+        }
+        .topbar-dropdown-item i {
+            color: var(--primary);
+            font-size: 0.95rem;
+        }
+        .topbar-dropdown-item:hover {
+            background-color: var(--primary-soft);
+            color: var(--primary);
         }
 
         /* Main Navbar */
@@ -459,19 +533,53 @@
                 @auth
                     @php
                         $userRoleVal = auth()->user()->role instanceof \App\Enums\UserRole ? auth()->user()->role->value : (string) auth()->user()->role;
+                        if (! $userRoleVal && session()->has('auth_user')) {
+                            $userRoleVal = session('auth_user.role');
+                        }
                         $userRoleLabel = auth()->user()->role instanceof \App\Enums\UserRole ? auth()->user()->role->label() : ucfirst($userRoleVal);
                         $nim = session('auth_user.id') ?? auth()->user()->nim_nip;
-                        if ($userRoleVal === 'mahasiswa' && \App\Models\Tim::ketuaDisetujui($nim)) {
+                        if (in_array($userRoleVal, ['mahasiswa', 'ketua_tim'], true) && \App\Models\Tim::ketuaDisetujui($nim)) {
+                            $userRoleLabel = 'Ketua Tim';
+                        } elseif ($userRoleVal === 'ketua_tim') {
                             $userRoleLabel = 'Ketua Tim';
                         }
+                        $isMahasiswaOrKetua = in_array($userRoleVal, ['mahasiswa', 'ketua_tim'], true);
                     @endphp
-                    <span style="display: flex; align-items: center; gap: 6px;">
-                        <i class="bi bi-person-check-fill" style="color: #6EE7B7;"></i>
-                        <span>{{ auth()->user()->name }}</span>
-                        <span class="badge {{ $userRoleVal === 'admin' ? 'badge-danger' : ($userRoleVal === 'dosen' ? 'badge-warning' : 'badge-primary') }}" style="font-size: 0.72rem; padding: 2px 8px;">
-                            {{ $userRoleLabel }}
+                    @if($isMahasiswaOrKetua)
+                        <div class="topbar-user-dropdown" id="topbarUserDropdown">
+                            <button type="button"
+                                    class="topbar-user-chip"
+                                    id="topbarUserChipBtn"
+                                    aria-haspopup="true"
+                                    aria-expanded="false"
+                                    title="Menu Profil Saya">
+                                <i class="bi bi-person-check-fill" style="color: #6EE7B7;"></i>
+                                <span>{{ auth()->user()->name }}</span>
+                                <span class="badge badge-primary" style="font-size: 0.72rem; padding: 2px 8px;">
+                                    {{ $userRoleLabel }}
+                                </span>
+                                <i class="bi bi-chevron-down topbar-user-arrow"></i>
+                            </button>
+                            <div class="topbar-dropdown-menu" id="topbarUserMenu" role="menu" aria-labelledby="topbarUserChipBtn">
+                                <a href="{{ route('profil.show') }}" class="topbar-dropdown-item" role="menuitem">
+                                    <i class="bi bi-person-circle"></i>
+                                    <span>Profil Saya</span>
+                                </a>
+                                <a href="{{ route('profil.show') }}#kata-sandi" class="topbar-dropdown-item" role="menuitem" id="topbarLinkKataSandi">
+                                    <i class="bi bi-key-fill"></i>
+                                    <span>Ganti Kata Sandi</span>
+                                </a>
+                            </div>
+                        </div>
+                    @else
+                        <span style="display: flex; align-items: center; gap: 6px;">
+                            <i class="bi bi-person-check-fill" style="color: #6EE7B7;"></i>
+                            <span>{{ auth()->user()->name }}</span>
+                            <span class="badge {{ $userRoleVal === 'admin' ? 'badge-danger' : ($userRoleVal === 'dosen' ? 'badge-warning' : 'badge-primary') }}" style="font-size: 0.72rem; padding: 2px 8px;">
+                                {{ $userRoleLabel }}
+                            </span>
                         </span>
-                    </span>
+                    @endif
                 @else
                     <span style="opacity: 0.85;"><i class="bi bi-person"></i> Tamu / Pengunjung</span>
                 @endauth
@@ -662,6 +770,45 @@
         </div>
     </footer>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const dropdown = document.getElementById('topbarUserDropdown');
+            const chipBtn = document.getElementById('topbarUserChipBtn');
+            const menu = document.getElementById('topbarUserMenu');
+            const linkKataSandi = document.getElementById('topbarLinkKataSandi');
+
+            if (!dropdown || !chipBtn || !menu) return;
+
+            function closeDropdown() {
+                menu.classList.remove('open');
+                chipBtn.setAttribute('aria-expanded', 'false');
+            }
+
+            chipBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                const isOpen = menu.classList.toggle('open');
+                chipBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            });
+
+            if (linkKataSandi) {
+                linkKataSandi.addEventListener('click', function () {
+                    closeDropdown();
+                });
+            }
+
+            document.addEventListener('click', function (e) {
+                if (!dropdown.contains(e.target)) {
+                    closeDropdown();
+                }
+            });
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') {
+                    closeDropdown();
+                }
+            });
+        });
+    </script>
     @stack('scripts')
 </body>
 </html>

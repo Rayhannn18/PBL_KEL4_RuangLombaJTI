@@ -45,7 +45,27 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
 });
 
 // Modul Katalog & Eksplorasi Lomba Mahasiswa
+Route::aliasMiddleware('mahasiswa', function (\Illuminate\Http\Request $request, \Closure $next) {
+    $user = auth()->user();
+    $role = $user
+        ? ($user->role instanceof \App\Enums\UserRole ? $user->role->value : (string) $user->role)
+        : null;
+
+    if (! $role && session()->has('auth_user')) {
+        $role = session('auth_user.role');
+    }
+
+    if (! in_array($role, ['mahasiswa', 'ketua_tim'], true)) {
+        abort(403, 'Hanya Mahasiswa dan Ketua Tim yang dapat mengajukan info lomba.');
+    }
+
+    return $next($request);
+});
+
 Route::get('/lomba', [LombaController::class, 'index'])->name('lomba.index');
+Route::post('/lomba', [LombaController::class, 'store'])
+    ->middleware(['auth', 'mahasiswa', 'throttle:5,1'])
+    ->name('lomba.store');
 Route::get('/lomba/{id}', [LombaController::class, 'show'])->name('lomba.show')->whereNumber('id');
 Route::get('/lomba/{id}/pedoman', [LombaController::class, 'downloadPedoman'])->name('lomba.pedoman.download')->whereNumber('id');
 Route::get('/lomba/{id}/pedoman/view', [LombaController::class, 'viewPedoman'])->name('lomba.pedoman.view')->whereNumber('id');
@@ -63,9 +83,9 @@ Route::middleware('guest')->group(function () {
     Route::post('/register', [RegisterController::class, 'store']);
 });
 
-Route::middleware('auth')->group(function () {
-    Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
+Route::match(['get', 'post'], '/logout', [LoginController::class, 'destroy'])->name('logout');
 
+Route::middleware('auth')->group(function () {
     // Modul Tim Mahasiswa (Papan Lowongan Tim, Form Ketua Tim, & Pengajuan Anggota Tim)
     Route::prefix('tim')->name('tim.')->group(function () {
         Route::get('/', [TimController::class, 'index'])->name('index');
@@ -75,6 +95,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/{id}/gabung', [TimController::class, 'formGabung'])->name('gabung.form');
         Route::post('/{id}/gabung', [TimController::class, 'gabung'])->name('gabung');
         Route::post('/anggota/{id}/respon', [TimController::class, 'responAnggota'])->name('anggota.respon');
+        Route::get('/permintaan/{permintaan}/profil', [TimController::class, 'profilPelamar'])->name('permintaan.profil')->whereNumber('permintaan');
         Route::get('/cv/{type}/{id}', [TimController::class, 'downloadCv'])->name('cv');
     });
 
@@ -96,5 +117,12 @@ Route::middleware('auth')->group(function () {
     Route::middleware('dosen')->prefix('dosen')->name('dosen.')->group(function () {
         Route::get('/profil', [DosenController::class, 'profil'])->name('profil');
         Route::put('/profil', [DosenController::class, 'updateProfil'])->name('profil.update');
+    });
+
+    // Profil Saya (Khusus Mahasiswa & Ketua Tim)
+    Route::middleware('mahasiswa')->group(function () {
+        Route::get('/profil', [TimController::class, 'profil'])->name('profil.show');
+        Route::put('/profil', [TimController::class, 'updateProfil'])->name('profil.update');
+        Route::put('/profil/password', [TimController::class, 'updatePassword'])->name('profil.password');
     });
 });
