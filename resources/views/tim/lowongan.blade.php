@@ -65,6 +65,11 @@
         gap: 22px;
         margin-bottom: 35px;
     }
+    @media (max-width: 640px) {
+        .tim-grid {
+            grid-template-columns: 1fr;
+        }
+    }
     .tim-card {
         background: var(--surface);
         border: 1px solid var(--border);

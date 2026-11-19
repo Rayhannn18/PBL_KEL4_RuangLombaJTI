@@ -167,12 +167,94 @@
         background: #F0F7FF;
     }
 
+    /* Monitoring Layout Grid */
+    .monitoring-grid {
+        display: grid;
+        grid-template-columns: 1.4fr 1fr;
+        gap: 24px;
+        margin-bottom: 30px;
+    }
+
     @media (max-width: 992px) {
-        .charts-grid, .charts-grid-secondary {
+        .charts-grid, .charts-grid-secondary, .monitoring-grid {
             grid-template-columns: 1fr;
+            gap: 20px;
         }
         .dashboard-header {
             padding: 24px 20px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-header {
+            padding: 20px 16px;
+            margin-bottom: 20px;
+        }
+        .dashboard-header h1 {
+            font-size: 1.35rem !important;
+            line-height: 1.25;
+        }
+        .dashboard-header p {
+            font-size: 0.85rem !important;
+        }
+        .dashboard-header-user {
+            text-align: left;
+            width: 100%;
+            padding: 12px 14px;
+        }
+        .kpi-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .kpi-card {
+            padding: 14px 12px;
+            gap: 12px;
+        }
+        .kpi-icon {
+            width: 44px;
+            height: 44px;
+            font-size: 1.3rem;
+        }
+        .kpi-value {
+            font-size: 1.5rem;
+        }
+        .kpi-label {
+            font-size: 0.72rem;
+        }
+        .kpi-sub {
+            font-size: 0.68rem;
+        }
+        .card-header {
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 14px 16px;
+        }
+        .card-body {
+            padding: 16px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .kpi-grid {
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+        .custom-table th, .custom-table td {
+            padding: 10px 12px;
+            font-size: 0.8rem;
+        }
+        .stage-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        .stage-item > div:last-child {
+            text-align: left !important;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
     }
 </style>
@@ -365,7 +447,7 @@
     </div>
 
     <!-- 3. Monitoring & Leaderboard Tables Section -->
-    <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px; margin-bottom: 30px;">
+    <div class="monitoring-grid">
         <!-- Left: Leaderboard Hall of Fame Prestasi -->
         <div class="card">
             <div class="card-header">

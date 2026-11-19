@@ -370,6 +370,17 @@
         gap: 14px;
     }
     @media (max-width: 640px) {
+        .catalog-grid {
+            grid-template-columns: 1fr;
+        }
+        .filter-panel {
+            padding: 16px;
+        }
+        .result-bar {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+        }
         .modal-backdrop-custom {
             padding: 12px;
         }

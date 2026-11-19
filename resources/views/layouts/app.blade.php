@@ -516,10 +516,121 @@
             font-size: 0.8rem;
         }
 
+        /* Mobile Toggle Button */
+        .mobile-toggle-btn {
+            display: none;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 6px 10px;
+            font-size: 1.25rem;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            line-height: 1;
+        }
+        .mobile-toggle-btn:hover {
+            background-color: var(--primary-soft);
+            color: var(--primary);
+            border-color: #BFDBFE;
+        }
+
         /* Responsive */
         @media (max-width: 992px) {
-            .nav-links { display: none; }
-            .footer-content { grid-template-columns: 1fr; gap: 24px; }
+            .mobile-toggle-btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 72px;
+                left: 0;
+                right: 0;
+                background: var(--surface);
+                border-bottom: 1px solid var(--border);
+                box-shadow: 0 12px 28px rgba(15, 39, 68, 0.1);
+                flex-direction: column;
+                align-items: stretch;
+                padding: 16px 20px 20px;
+                gap: 8px;
+                z-index: 100;
+            }
+            .nav-links.mobile-open {
+                display: flex;
+                animation: navSlideDown 0.2s ease-out;
+            }
+            @keyframes navSlideDown {
+                from {
+                    opacity: 0;
+                    transform: translateY(-8px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+            .nav-link {
+                padding: 11px 16px;
+                border-radius: var(--radius-sm);
+                font-size: 0.92rem;
+                background-color: #F8FAFC;
+                border: 1px solid #F1F5F9;
+            }
+            .nav-link.active {
+                background-color: var(--primary-soft);
+                border-color: #BFDBFE;
+            }
+            .footer-content {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .brand-subtitle {
+                display: none;
+            }
+            .brand-title {
+                font-size: 1.15rem;
+            }
+            .brand-logo {
+                width: 38px;
+                height: 38px;
+            }
+            .topbar-content {
+                gap: 6px;
+            }
+            .topbar-univ-long {
+                display: none;
+            }
+            .topbar {
+                font-size: 0.75rem;
+                padding: 5px 0;
+            }
+            .topbar-badge {
+                font-size: 0.7rem;
+                padding: 2px 7px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 14px;
+            }
+            .nav-actions {
+                gap: 8px;
+            }
+            .nav-actions .btn {
+                padding: 6px 10px;
+                font-size: 0.78rem;
+            }
+            .footer-bottom {
+                flex-direction: column;
+                gap: 8px;
+                text-align: center;
+            }
         }
     </style>
     @stack('styles')
@@ -529,8 +640,8 @@
     <!-- Topbar info -->
     <div class="topbar">
         <div class="container topbar-content">
-            <div style="display: flex; align-items: center; gap: 15px;">
-                <span><i class="bi bi-mortarboard-fill"></i> Jurusan Teknologi Informasi - Politeknik Negeri Malang</span>
+            <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                <span><i class="bi bi-mortarboard-fill"></i> <span class="topbar-univ-long">Jurusan Teknologi Informasi - </span>Polinema</span>
                 <span class="topbar-badge"><i class="bi bi-shield-check"></i> RuangLombaJTI v1.0</span>
             </div>
             <div style="display: flex; align-items: center; gap: 15px;">
@@ -680,6 +791,10 @@
                         <i class="bi bi-person-plus-fill"></i> Daftar
                     </a>
                 @endauth
+
+                <button type="button" class="mobile-toggle-btn" id="mobileNavToggle" aria-label="Menu Navigasi" title="Menu Navigasi">
+                    <i class="bi bi-list"></i>
+                </button>
             </div>
         </div>
     </nav>
@@ -812,6 +927,49 @@
                     closeDropdown();
                 }
             });
+
+            // Mobile Navigation Toggle
+            const mobileNavToggle = document.getElementById('mobileNavToggle');
+            const navLinks = document.querySelector('.nav-links');
+
+            if (mobileNavToggle && navLinks) {
+                mobileNavToggle.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    const isOpen = navLinks.classList.toggle('mobile-open');
+                    const icon = mobileNavToggle.querySelector('i');
+                    if (icon) {
+                        if (isOpen) {
+                            icon.classList.remove('bi-list');
+                            icon.classList.add('bi-x-lg');
+                        } else {
+                            icon.classList.remove('bi-x-lg');
+                            icon.classList.add('bi-list');
+                        }
+                    }
+                });
+
+                document.addEventListener('click', function (e) {
+                    if (!navLinks.contains(e.target) && !mobileNavToggle.contains(e.target)) {
+                        navLinks.classList.remove('mobile-open');
+                        const icon = mobileNavToggle.querySelector('i');
+                        if (icon) {
+                            icon.classList.remove('bi-x-lg');
+                            icon.classList.add('bi-list');
+                        }
+                    }
+                });
+
+                navLinks.querySelectorAll('.nav-link').forEach(function (link) {
+                    link.addEventListener('click', function () {
+                        navLinks.classList.remove('mobile-open');
+                        const icon = mobileNavToggle.querySelector('i');
+                        if (icon) {
+                            icon.classList.remove('bi-x-lg');
+                            icon.classList.add('bi-list');
+                        }
+                    });
+                });
+            }
         });
     </script>
     @stack('scripts')
