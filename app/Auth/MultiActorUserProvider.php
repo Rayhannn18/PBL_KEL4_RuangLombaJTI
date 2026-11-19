@@ -198,12 +198,12 @@ class MultiActorUserProvider implements UserProvider
             'name' => $dsn->nama,
             'email' => $dsn->email_kampus,
             'role' => UserRole::Dosen,
-            'nim_nip' => $dsn->nidn,
+            'nim_nip' => $dsn->nip,
             'prodi' => null,
             'angkatan' => null,
             'password' => $dsn->password,
         ]);
-        $user->id = $dsn->nidn;
+        $user->id = $dsn->nip;
         $user->exists = true;
 
         return $user;

@@ -11,7 +11,7 @@ use App\Models\User;
 class ProgresBabakPolicy
 {
     /**
-     * Ambil role dan identitas (NIM/NIDN/ID) aktor yang sedang login.
+     * Ambil role dan identitas (NIM/NIP/ID) aktor yang sedang login.
      *
      * @return array{0: ?string, 1: ?string}
      */
@@ -90,7 +90,7 @@ class ProgresBabakPolicy
             return false;
         }
 
-        return (string) $pengajuan->nidn === $actorId;
+        return (string) $pengajuan->nip === $actorId;
     }
 
     /**
@@ -116,7 +116,7 @@ class ProgresBabakPolicy
         }
 
         if ($role === 'dosen') {
-            return $pengajuan->status === 'disetujui' && (string) $pengajuan->nidn === $actorId;
+            return $pengajuan->status === 'disetujui' && (string) $pengajuan->nip === $actorId;
         }
 
         if (in_array($role, ['mahasiswa', 'ketua_tim'], true)) {

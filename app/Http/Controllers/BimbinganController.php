@@ -153,7 +153,7 @@ class BimbinganController extends Controller
 
                 // Urutkan daftar dosen agar rekomendasi AI teratas tampil paling awal
                 $dosenList = $dosenList->sortByDesc(function (Dosen $d) use ($aiRekomendasi) {
-                    $skor = $aiRekomendasi['map'][(string) $d->nidn]['skor'] ?? 0;
+                    $skor = $aiRekomendasi['map'][(string) $d->nip]['skor'] ?? 0;
 
                     // Dosen yang memiliki kuota diprioritaskan
                     return ($d->sisa_kuota > 0 ? 1000 : 0) + $skor;
@@ -198,14 +198,14 @@ class BimbinganController extends Controller
         }
 
         if ($role === 'dosen') {
-            $nidn = $authUser['id'];
-            $dosen = Dosen::where('nidn', $nidn)->first();
+            $nip = $authUser['id'];
+            $dosen = Dosen::where('nidn', $nip)->first();
 
             $search = $request->query('search');
             $statusFilter = $request->query('status');
             $lombaFilter = $request->query('lomba_id');
 
-            $query = PengajuanBimbingan::where('nidn', $nidn)
+            $query = PengajuanBimbingan::where('nidn', $nip)
                 ->with([
                     'tim.lomba',
                     'tim.ketua',
@@ -246,26 +246,26 @@ class BimbinganController extends Controller
             $pengajuanList = $query->latest()->paginate(10)->withQueryString();
 
             // Statistik Ringkasan Dosen
-            $totalSesiLogbook = Logbook::whereHas('pengajuan', fn ($q) => $q->where('nidn', $nidn))->count();
-            $logbookMenungguValidasi = Logbook::whereHas('pengajuan', fn ($q) => $q->where('nidn', $nidn))
+            $totalSesiLogbook = Logbook::whereHas('pengajuan', fn ($q) => $q->where('nidn', $nip))->count();
+            $logbookMenungguValidasi = Logbook::whereHas('pengajuan', fn ($q) => $q->where('nidn', $nip))
                 ->where('status_validasi', 'menunggu')
                 ->count();
-            $timAktifCount = PengajuanBimbingan::where('nidn', $nidn)->where('status', 'disetujui')->count();
-            $pengajuanMenungguCount = PengajuanBimbingan::where('nidn', $nidn)->where('status', 'menunggu')->count();
-            $riwayatLamaCount = PengajuanBimbingan::where('nidn', $nidn)->where('status', 'ditolak')->count();
+            $timAktifCount = PengajuanBimbingan::where('nidn', $nip)->where('status', 'disetujui')->count();
+            $pengajuanMenungguCount = PengajuanBimbingan::where('nidn', $nip)->where('status', 'menunggu')->count();
+            $riwayatLamaCount = PengajuanBimbingan::where('nidn', $nip)->where('status', 'ditolak')->count();
             $rabMenungguValidasiCount = RabPengajuan::where('status', 'menunggu_validasi')
-                ->whereHas('tim.bimbinganDisetujui', fn ($q) => $q->where('nidn', $nidn))
+                ->whereHas('tim.bimbinganDisetujui', fn ($q) => $q->where('nidn', $nip))
                 ->count();
 
             // Daftar opsi lomba unik yang pernah diajukan ke dosen ini untuk dropdown filter
-            $lombaOptions = Lomba::whereHas('tim.pengajuanBimbingan', function ($q) use ($nidn) {
-                $q->where('nidn', $nidn);
+            $lombaOptions = Lomba::whereHas('tim.pengajuanBimbingan', function ($q) use ($nip) {
+                $q->where('nidn', $nip);
             })->get(['id_lomba', 'nama_lomba']);
 
             // Antrian laporan progres babak berstatus menunggu dari tim bimbingan dosen ini saja
             $progresMenunggu = ProgresBabak::with(['pengajuan.tim.lomba'])
                 ->where('status_setuju', 'menunggu')
-                ->whereHas('pengajuan', fn ($q) => $q->where('nidn', $nidn)->where('status', 'disetujui'))
+                ->whereHas('pengajuan', fn ($q) => $q->where('nidn', $nip)->where('status', 'disetujui'))
                 ->orderBy('tanggal_update')
                 ->orderBy('id_progres')
                 ->get();
@@ -293,7 +293,7 @@ class BimbinganController extends Controller
         // Role Admin: Rekapitulasi Bimbingan Seluruh JTI (Read-Only)
         $search = trim((string) $request->query('search', ''));
         $lombaFilter = $request->query('lomba_id');
-        $dosenFilter = $request->query('nidn');
+        $dosenFilter = $request->query('nip', $request->query('nidn'));
         $logbookFilter = $request->query('status_logbook');
 
         // Base query: semua tim yang punya pengajuan bimbingan berstatus disetujui
@@ -393,9 +393,13 @@ class BimbinganController extends Controller
      */
     public function ajukan(Request $request)
     {
+        if (! $request->filled('nip') && $request->filled('nidn')) {
+            $request->merge(['nip' => $request->input('nidn')]);
+        }
+
         $validated = $request->validate([
             'id_tim' => 'required|exists:tim,id_tim',
-            'nidn' => 'required|exists:dosen,nidn',
+            'nip' => 'required|exists:dosen,nidn',
             'catatan' => 'nullable|string|max:500',
         ]);
 
@@ -426,14 +430,14 @@ class BimbinganController extends Controller
         }
 
         // Cek kuota bimbingan dosen
-        $dosen = Dosen::where('nidn', $validated['nidn'])->first();
+        $dosen = Dosen::where('nidn', $validated['nip'])->first();
         if ($dosen && $dosen->sisa_kuota <= 0) {
             return back()->with('error', 'Kuota bimbingan untuk '.$dosen->nama.' sudah penuh. Silakan pilih dosen lain.');
         }
 
         PengajuanBimbingan::create([
             'id_tim' => $tim->id_tim,
-            'nidn' => $validated['nidn'],
+            'nip' => $validated['nip'],
             'tgl_pengajuan' => Carbon::now()->toDateString(),
             'status' => 'menunggu',
             'catatan' => $validated['catatan'] ?? 'Pengajuan bimbingan persiapan kompetisi.',
@@ -492,7 +496,7 @@ class BimbinganController extends Controller
             $statusValidasi = 'menunggu';
             $catatanDosen = null;
         } elseif ($authUser['role'] === 'dosen') {
-            if ($pengajuan->nidn !== $authUser['id']) {
+            if ($pengajuan->nip !== $authUser['id']) {
                 return back()->with('error', 'Anda hanya dapat menambahkan logbook untuk tim yang Anda bimbing.');
             }
 
@@ -529,7 +533,7 @@ class BimbinganController extends Controller
 
         $logbook = Logbook::with('pengajuan')->findOrFail($id);
 
-        if ($logbook->pengajuan->nidn !== $authUser['id']) {
+        if ($logbook->pengajuan->nip !== $authUser['id']) {
             return back()->with('error', 'Anda hanya dapat memvalidasi logbook untuk tim bimbingan Anda.');
         }
 
@@ -588,7 +592,7 @@ class BimbinganController extends Controller
                 'status_validasi' => 'menunggu',
             ]);
         } elseif ($authUser['role'] === 'dosen') {
-            if ($logbook->pengajuan->nidn !== $authUser['id']) {
+            if ($logbook->pengajuan->nip !== $authUser['id']) {
                 return back()->with('error', 'Anda hanya dapat memperbarui logbook untuk tim yang Anda bimbing.');
             }
 
@@ -643,7 +647,7 @@ class BimbinganController extends Controller
 
             $logbook->delete();
         } elseif ($authUser['role'] === 'dosen') {
-            if ($logbook->pengajuan->nidn !== $authUser['id']) {
+            if ($logbook->pengajuan->nip !== $authUser['id']) {
                 return back()->with('error', 'Anda hanya dapat menghapus logbook untuk tim yang Anda bimbing.');
             }
 
@@ -1118,14 +1122,14 @@ class BimbinganController extends Controller
             return back()->with('error', 'Hanya Dosen Pembimbing yang berhak memvalidasi atau meminta revisi RAB.');
         }
 
-        $nidn = $authUser['id'];
+        $nip = $authUser['id'];
 
         /** @var RabPengajuan $rab */
         $rab = RabPengajuan::with('tim')->findOrFail($id);
 
         // Pastikan dosen adalah pembimbing resmi untuk tim yang mengajukan RAB ini
         $isPembimbingResmi = PengajuanBimbingan::where('id_tim', $rab->tim_id)
-            ->where('nidn', $nidn)
+            ->where('nidn', $nip)
             ->where('status', 'disetujui')
             ->exists();
 
@@ -1141,7 +1145,7 @@ class BimbinganController extends Controller
             return back()->with('error', 'RAB berstatus draft belum dikirim oleh mahasiswa untuk divalidasi.');
         }
 
-        return DB::transaction(function () use ($rab, $validated, $nidn) {
+        return DB::transaction(function () use ($rab, $validated, $nip) {
             $statusSebelum = $rab->status;
             $statusBaru = $validated['status'];
             $catatan = isset($validated['catatan_dosen']) && trim((string) $validated['catatan_dosen']) !== ''
@@ -1151,7 +1155,7 @@ class BimbinganController extends Controller
             $rab->update([
                 'status' => $statusBaru,
                 'catatan_dosen' => $catatan,
-                'divalidasi_oleh' => $nidn,
+                'divalidasi_oleh' => $nip,
                 'divalidasi_pada' => Carbon::now(),
             ]);
 
@@ -1161,7 +1165,7 @@ class BimbinganController extends Controller
                 'status_dari' => $statusSebelum,
                 'status_ke' => $statusBaru,
                 'catatan' => $catatan,
-                'user_id' => $nidn,
+                'user_id' => $nip,
                 'total_anggaran' => (float) $rab->total_anggaran,
                 'created_at' => Carbon::now(),
             ]);
@@ -1194,7 +1198,7 @@ class BimbinganController extends Controller
             $pengajuan = PengajuanBimbingan::with('tim')->lockForUpdate()->findOrFail($id);
 
             // 1. Otorisasi per dosen pembimbing
-            if ($authUser['role'] === 'dosen' && $pengajuan->nidn !== $authUser['id']) {
+            if ($authUser['role'] === 'dosen' && $pengajuan->nip !== $authUser['id']) {
                 return back()->with('error', 'Anda hanya dapat merespons pengajuan bimbingan yang ditujukan kepada Anda.');
             }
 
@@ -1205,13 +1209,13 @@ class BimbinganController extends Controller
 
             // 3. Jika menyetujui: cek sisa kuota bimbingan dosen dengan lockForUpdate
             if ($validated['status'] === 'disetujui') {
-                $dosen = Dosen::where('nidn', $pengajuan->nidn)->lockForUpdate()->first();
+                $dosen = Dosen::where('nidn', $pengajuan->nip)->lockForUpdate()->first();
 
                 if (! $dosen) {
                     return back()->with('error', 'Data Dosen Pembimbing tidak ditemukan.');
                 }
 
-                $bimbinganAktifCount = PengajuanBimbingan::where('nidn', $dosen->nidn)
+                $bimbinganAktifCount = PengajuanBimbingan::where('nidn', $dosen->nip)
                     ->where('status', 'disetujui')
                     ->count();
 

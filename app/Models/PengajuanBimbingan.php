@@ -16,6 +16,7 @@ class PengajuanBimbingan extends Model
     protected $fillable = [
         'id_tim',
         'nidn',
+        'nip',
         'tgl_pengajuan',
         'status',
         'catatan',
@@ -24,6 +25,26 @@ class PengajuanBimbingan extends Model
     protected $casts = [
         'tgl_pengajuan' => 'date',
     ];
+
+    protected $appends = [
+        'nip',
+    ];
+
+    /**
+     * Accessor: $pengajuan->nip mengembalikan nilai kolom nidn.
+     */
+    public function getNipAttribute(): ?string
+    {
+        return $this->attributes['nidn'] ?? null;
+    }
+
+    /**
+     * Mutator: $pengajuan->nip menyimpan nilai ke kolom nidn.
+     */
+    public function setNipAttribute(?string $value): void
+    {
+        $this->attributes['nidn'] = $value;
+    }
 
     public function tim()
     {

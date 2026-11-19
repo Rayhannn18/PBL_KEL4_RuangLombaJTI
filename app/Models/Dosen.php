@@ -19,6 +19,7 @@ class Dosen extends Model
 
     protected $fillable = [
         'nidn',
+        'nip',
         'nama',
         'email_kampus',
         'password',
@@ -30,13 +31,25 @@ class Dosen extends Model
         'password',
     ];
 
+    protected $appends = [
+        'nip',
+    ];
+
     /**
      * Accessor: $dosen->nip mengembalikan nilai kolom nidn.
-     * Berguna untuk tampilan yang memakai istilah "NIP".
+     * Berguna untuk tampilan dan kode yang memakai istilah "NIP".
      */
     public function getNipAttribute(): ?string
     {
         return $this->attributes['nidn'] ?? null;
+    }
+
+    /**
+     * Mutator: $dosen->nip menyimpan nilai ke kolom nidn.
+     */
+    public function setNipAttribute(?string $value): void
+    {
+        $this->attributes['nidn'] = $value;
     }
 
     public function pengajuanBimbingan()

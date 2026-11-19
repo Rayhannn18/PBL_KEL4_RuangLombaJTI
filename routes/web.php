@@ -37,8 +37,8 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
 
     // 3. Kelola Data Dosen
     Route::post('/dosen', [AdminController::class, 'storeDosen'])->name('dosen.store');
-    Route::put('/dosen/{nidn}', [AdminController::class, 'updateDosen'])->name('dosen.update');
-    Route::delete('/dosen/{nidn}', [AdminController::class, 'destroyDosen'])->name('dosen.destroy');
+    Route::put('/dosen/{nip}', [AdminController::class, 'updateDosen'])->name('dosen.update');
+    Route::delete('/dosen/{nip}', [AdminController::class, 'destroyDosen'])->name('dosen.destroy');
 
     // 4. Kelola Data Mahasiswa
     Route::post('/mahasiswa', [AdminController::class, 'storeMahasiswa'])->name('mahasiswa.store');

@@ -17,7 +17,7 @@ class DosenRecommendationService
      * @param  Collection<int, Dosen>  $dosenList
      * @return array{
      *     map: array<string, array{skor: int, alasan: string, is_top: bool}>,
-     *     top: array<int, array{nidn: string, nama: string, bidang_keahlian: string, sisa_kuota: int, skor: int, alasan: string}>,
+     *     top: array<int, array{nip: string, nama: string, bidang_keahlian: string, sisa_kuota: int, skor: int, alasan: string}>,
      *     source: string
      * }
      */
@@ -63,7 +63,7 @@ class DosenRecommendationService
      * Panggil Google Gemini API untuk menganalisis kecocokan bidang lomba dengan dosen.
      *
      * @param  Collection<int, Dosen>  $dosenList
-     * @return array<int, array{nidn: string, skor: int, alasan: string}>
+     * @return array<int, array{nip: string, skor: int, alasan: string}>
      */
     protected function callGeminiApi(Lomba $lomba, Collection $dosenList): array
     {
@@ -76,7 +76,7 @@ class DosenRecommendationService
 
         $candidates = $dosenList->map(function (Dosen $d) {
             return [
-                'nidn' => (string) $d->nidn,
+                'nip' => (string) $d->nip,
                 'nama' => $d->nama,
                 'keahlian' => $d->bidang_keahlian,
                 'sisa_kuota' => $d->sisa_kuota,
@@ -95,7 +95,7 @@ class DosenRecommendationService
             ."1. Beri skor kecocokan 40 - 99 untuk setiap dosen berdasarkan relevansi bidang keahlian dengan kategori/lingkup lomba.\n"
             ."2. Buat alasan singkat (1-2 kalimat) yang persuasif dan spesifik menjelaskan mengapa keahlian dosen tersebut mendukung keberhasilan karya di lomba ini.\n"
             ."3. Kembalikan HANYA JSON array murni tanpa markdown triple-backtick, berformat:\n"
-            .'[{"nidn":"...","skor":95,"alasan":"..."}]';
+            .'[{"nip":"...","skor":95,"alasan":"..."}]';
 
         try {
             $response = Http::withHeaders(['x-goog-api-key' => $apiKey])
@@ -143,7 +143,7 @@ class DosenRecommendationService
      * Fallback pencocokan berbasis kata kunci dan relevansi teks jika Gemini API berhalangan.
      *
      * @param  Collection<int, Dosen>  $dosenList
-     * @return array<int, array{nidn: string, skor: int, alasan: string}>
+     * @return array<int, array{nip: string, skor: int, alasan: string}>
      */
     protected function heuristicFallback(Lomba $lomba, Collection $dosenList): array
     {
@@ -174,7 +174,7 @@ class DosenRecommendationService
             }
 
             $results[] = [
-                'nidn' => (string) $dosen->nidn,
+                'nip' => (string) $dosen->nip,
                 'skor' => $skor,
                 'alasan' => $alasan,
             ];
@@ -190,14 +190,14 @@ class DosenRecommendationService
      * @param  Collection<int, Dosen>  $dosenList
      * @return array{
      *     map: array<string, array{skor: int, alasan: string, is_top: bool}>,
-     *     top: array<int, array{nidn: string, nama: string, bidang_keahlian: string, sisa_kuota: int, skor: int, alasan: string}>,
+     *     top: array<int, array{nip: string, nama: string, bidang_keahlian: string, sisa_kuota: int, skor: int, alasan: string}>,
      *     source: string
      * }
      */
     protected function formatRecommendations(array $rawItems, Collection $dosenList, string $source): array
     {
         $dosenMap = $dosenList->keyBy(function (Dosen $d) {
-            return (string) $d->nidn;
+            return (string) $d->nip;
         });
 
         // Urutkan berdasarkan skor tertinggi
@@ -210,17 +210,17 @@ class DosenRecommendationService
         $rank = 0;
 
         foreach ($rawItems as $item) {
-            $nidn = (string) ($item['nidn'] ?? '');
-            if (! isset($dosenMap[$nidn])) {
+            $nip = (string) ($item['nip'] ?? $item['nidn'] ?? '');
+            if (! isset($dosenMap[$nip])) {
                 continue;
             }
 
-            $dosen = $dosenMap[$nidn];
+            $dosen = $dosenMap[$nip];
             $skor = (int) ($item['skor'] ?? 70);
             $alasan = (string) ($item['alasan'] ?? 'Relevan dengan kategori lomba tim.');
             $isTop = ($rank < 3) && ($dosen->sisa_kuota > 0);
 
-            $map[$nidn] = [
+            $map[$nip] = [
                 'skor' => $skor,
                 'alasan' => $alasan,
                 'is_top' => $isTop,
@@ -228,7 +228,7 @@ class DosenRecommendationService
 
             if ($isTop) {
                 $top[] = [
-                    'nidn' => $nidn,
+                    'nip' => $nip,
                     'nama' => $dosen->nama,
                     'bidang_keahlian' => $dosen->bidang_keahlian,
                     'sisa_kuota' => $dosen->sisa_kuota,

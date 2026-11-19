@@ -917,7 +917,7 @@
                                             </div>
                                             <div style="text-align: right;">
                                                 @if($isKetua ?? ($selectedTim->nim === $authUser['id']))
-                                                    <button type="button" class="ai-rec-btn" onclick="pilihDosenAi('{{ $recDsn['nidn'] }}')">
+                                                    <button type="button" class="ai-rec-btn" onclick="pilihDosenAi('{{ $recDsn['nip'] }}')">
                                                         <i class="bi bi-check2-circle"></i> Pilih Dosen Ini
                                                     </button>
                                                 @else
@@ -938,13 +938,13 @@
 
                                     <div class="form-group" style="margin-bottom: 14px;">
                                         <label class="form-label">Pilih Dosen Pembimbing *</label>
-                                        <select name="nidn" id="dosenSelect" class="form-select" required>
+                                        <select name="nip" id="dosenSelect" class="form-select" required>
                                             <option value="" disabled selected>-- Pilih Dosen JTI --</option>
                                             @foreach($dosenList as $dsn)
                                                 @php
-                                                    $recItem = $aiRekomendasi['map'][(string) $dsn->nidn] ?? null;
+                                                    $recItem = $aiRekomendasi['map'][(string) $dsn->nip] ?? null;
                                                 @endphp
-                                                <option value="{{ $dsn->nidn }}" {{ $dsn->sisa_kuota <= 0 ? 'disabled' : '' }}>
+                                                <option value="{{ $dsn->nip }}" {{ $dsn->sisa_kuota <= 0 ? 'disabled' : '' }}>
                                                     @if($recItem && $recItem['is_top']) [⭐ AI Match: {{ $recItem['skor'] }}%] @endif
                                                     {{ $dsn->nama }} (Keahlian: {{ $dsn->bidang_keahlian }}) — Sisa Kuota: {{ $dsn->sisa_kuota }}
                                                 </option>
@@ -976,7 +976,7 @@
                                     {{ $pengajuan->dosen->nama ?? '-' }}
                                 </h4>
                                 <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">
-                                    NIP: {{ $pengajuan->nidn }} &bull; Diajukan pada: {{ $pengajuan->tgl_pengajuan ? $pengajuan->tgl_pengajuan->format('d M Y') : '-' }}
+                                    NIP: {{ $pengajuan->nip }} &bull; Diajukan pada: {{ $pengajuan->tgl_pengajuan ? $pengajuan->tgl_pengajuan->format('d M Y') : '-' }}
                                 </div>
                                 <p style="font-size: 0.83rem; background: #F8FAFC; border: 1px solid var(--border); border-radius: 8px; padding: 10px; color: var(--text-main); margin: 0;">
                                     "{{ $pengajuan->catatan ?? 'Menunggu konfirmasi penerimaan bimbingan oleh dosen.' }}"
@@ -999,13 +999,13 @@
 
                                     <div class="form-group" style="margin-bottom: 14px;">
                                         <label class="form-label">Pilih Dosen Pengganti *</label>
-                                        <select name="nidn" id="dosenSelectPengganti" class="form-select" required>
+                                        <select name="nip" id="dosenSelectPengganti" class="form-select" required>
                                             <option value="" disabled selected>-- Pilih Dosen JTI --</option>
                                             @foreach($dosenList as $dsn)
                                                 @php
-                                                    $recItem = $aiRekomendasi['map'][(string) $dsn->nidn] ?? null;
+                                                    $recItem = $aiRekomendasi['map'][(string) $dsn->nip] ?? null;
                                                 @endphp
-                                                <option value="{{ $dsn->nidn }}" {{ $dsn->sisa_kuota <= 0 ? 'disabled' : '' }}>
+                                                <option value="{{ $dsn->nip }}" {{ $dsn->sisa_kuota <= 0 ? 'disabled' : '' }}>
                                                     @if($recItem && $recItem['is_top']) [⭐ AI Match: {{ $recItem['skor'] }}%] @endif
                                                     {{ $dsn->nama }} (Keahlian: {{ $dsn->bidang_keahlian }}) — Sisa Kuota: {{ $dsn->sisa_kuota }}
                                                 </option>
@@ -1040,7 +1040,7 @@
                                         {{ $pengajuan->dosen->nama }}
                                     </div>
                                     <div style="font-size: 0.78rem; color: var(--text-muted);">
-                                        NIP: {{ $pengajuan->dosen->nidn }} &bull; {{ $pengajuan->dosen->email_kampus }}
+                                        NIP: {{ $pengajuan->dosen->nip }} &bull; {{ $pengajuan->dosen->email_kampus }}
                                     </div>
                                 </div>
                             </div>
@@ -2255,10 +2255,10 @@
                         <label class="form-label" style="font-size: 0.76rem; color: var(--text-muted); margin-bottom: 4px;">
                             <i class="bi bi-person-badge"></i> Filter Dosen Pembimbing
                         </label>
-                        <select name="nidn" class="form-select" style="font-size: 0.85rem; padding: 8px 12px;">
+                        <select name="nip" class="form-select" style="font-size: 0.85rem; padding: 8px 12px;">
                             <option value="">Semua Dosen</option>
                             @foreach($dosenOptions ?? [] as $dopt)
-                                <option value="{{ $dopt->nidn }}" {{ (string) ($dosenFilter ?? request('nidn')) === (string) $dopt->nidn ? 'selected' : '' }}>
+                                <option value="{{ $dopt->nip }}" {{ (string) ($dosenFilter ?? request('nip')) === (string) $dopt->nip ? 'selected' : '' }}>
                                     {{ $dopt->nama }}
                                 </option>
                             @endforeach
@@ -2282,7 +2282,7 @@
                         <button type="submit" class="btn btn-primary btn-sm" style="padding: 9px 16px; font-size: 0.85rem;">
                             <i class="bi bi-funnel-fill"></i> Terapkan
                         </button>
-                        @if(request()->filled('search') || request()->filled('lomba_id') || request()->filled('nidn') || request()->filled('status_logbook'))
+                        @if(request()->filled('search') || request()->filled('lomba_id') || request()->filled('nip') || request()->filled('status_logbook'))
                             <a href="{{ route('bimbingan.index') }}" class="btn btn-secondary btn-sm" style="padding: 9px 14px; font-size: 0.85rem;" title="Reset Filter">
                                 <i class="bi bi-arrow-counterclockwise"></i> Reset
                             </a>
@@ -2321,13 +2321,13 @@
                             Tidak Ada Tim Bimbingan yang Ditemukan
                         </div>
                         <p style="font-size: 0.86rem; max-width: 460px; margin: 0 auto 16px; line-height: 1.6;">
-                            @if(request()->filled('search') || request()->filled('lomba_id') || request()->filled('nidn') || request()->filled('status_logbook'))
+                            @if(request()->filled('search') || request()->filled('lomba_id') || request()->filled('nip') || request()->filled('status_logbook'))
                                 Tidak ada tim bimbingan yang cocok dengan kriteria pencarian atau filter yang Anda pilih.
                             @else
                                 Belum ada tim mahasiswa dengan pengajuan bimbingan berstatus disetujui yang tercatat saat ini.
                             @endif
                         </p>
-                        @if(request()->filled('search') || request()->filled('lomba_id') || request()->filled('nidn') || request()->filled('status_logbook'))
+                        @if(request()->filled('search') || request()->filled('lomba_id') || request()->filled('nip') || request()->filled('status_logbook'))
                             <a href="{{ route('bimbingan.index') }}" class="btn btn-outline-primary btn-sm">
                                 <i class="bi bi-arrow-counterclockwise"></i> Tampilkan Semua Tim
                             </a>
@@ -3057,8 +3057,23 @@
 
 @endsection
 
+@php
+    $bimbinganScriptPayload = [
+        'progresHasilNonFinal' => \App\Models\ProgresBabak::HASIL_NON_FINAL,
+        'progresHasilFinal' => \App\Models\ProgresBabak::HASIL_FINAL,
+        'progresHasilWajibBukti' => \App\Models\ProgresBabak::HASIL_PRESTASI,
+        'sbmTarifList' => $sbmTarifList ?? [],
+        'babakValidRab' => $babakRabTervalidasi ?? [],
+        'existingRabBabak' => isset($rabList) ? $rabList->pluck('babak')->values() : [],
+        'defaultJumlahPeserta' => (int) ($jumlahPesertaTim ?? 1),
+    ];
+@endphp
+
 @push('scripts')
+<script id="bimbingan-page-data" type="application/json">{!! json_encode($bimbinganScriptPayload) !!}</script>
 <script>
+    const BIMBINGAN_PAGE_DATA = JSON.parse(document.getElementById('bimbingan-page-data')?.textContent || '{}');
+
     function toggleAdminAccordion(btnEl) {
         const card = btnEl.closest('.admin-accordion-card');
         if (!card) return;
@@ -3160,9 +3175,9 @@
     // =========================================================================
     // FORM LAPOR PROGRES BABAK (dropdown dinamis; divalidasi ulang di server)
     // =========================================================================
-    const PROGRES_HASIL_NON_FINAL = @json(\App\Models\ProgresBabak::HASIL_NON_FINAL);
-    const PROGRES_HASIL_FINAL = @json(\App\Models\ProgresBabak::HASIL_FINAL);
-    const PROGRES_HASIL_WAJIB_BUKTI = @json(\App\Models\ProgresBabak::HASIL_PRESTASI);
+    const PROGRES_HASIL_NON_FINAL = BIMBINGAN_PAGE_DATA.progresHasilNonFinal || [];
+    const PROGRES_HASIL_FINAL = BIMBINGAN_PAGE_DATA.progresHasilFinal || [];
+    const PROGRES_HASIL_WAJIB_BUKTI = BIMBINGAN_PAGE_DATA.progresHasilWajibBukti || [];
 
     function populateProgresHasil(selectedHasil = null) {
         const babak = document.getElementById('progresBabak')?.value;
@@ -3345,10 +3360,10 @@
         if (modal) modal.style.display = 'none';
     }
 
-    function pilihDosenAi(nidn) {
+    function pilihDosenAi(nip) {
         const select = document.getElementById('dosenSelect') || document.getElementById('dosenSelectPengganti');
         if (select) {
-            select.value = nidn;
+            select.value = nip;
             select.focus();
             select.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
@@ -3357,10 +3372,10 @@
     // =========================================================================
     // LOGIKA MODAL PENGAJUAN RAB (SBM TA 2026 - PMK 32/2025)
     // =========================================================================
-    const SBM_TARIF_LIST = @json($sbmTarifList ?? []);
-    const BABAK_VALID_RAB = @json($babakRabTervalidasi ?? []);
-    const EXISTING_RAB_BABAK = @json(isset($rabList) ? $rabList->pluck('babak')->values() : []);
-    const DEFAULT_JUMLAH_PESERTA = {{ (int) ($jumlahPesertaTim ?? 1) }};
+    const SBM_TARIF_LIST = BIMBINGAN_PAGE_DATA.sbmTarifList || [];
+    const BABAK_VALID_RAB = BIMBINGAN_PAGE_DATA.babakValidRab || [];
+    const EXISTING_RAB_BABAK = BIMBINGAN_PAGE_DATA.existingRabBabak || [];
+    const DEFAULT_JUMLAH_PESERTA = BIMBINGAN_PAGE_DATA.defaultJumlahPeserta || 1;
 
     const KATEGORI_RAB_OPTIONS = [
         { value: 'uang_harian_luar_kota', label: 'Uang Harian Luar Kota', satuan: 'OH', sifat: 'batas_tertinggi', freqLabel: 'Jml Hari *' },

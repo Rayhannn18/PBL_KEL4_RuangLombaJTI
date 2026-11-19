@@ -109,7 +109,7 @@ class AuthController extends Controller
         // Simpan sesi autentikasi
         session([
             'auth_user' => [
-                'id' => $detectedRole === 'admin' ? $user->id_admin : ($detectedRole === 'dosen' ? $user->nidn : $user->nim),
+                'id' => $detectedRole === 'admin' ? $user->id_admin : ($detectedRole === 'dosen' ? $user->nip : $user->nim),
                 'nama' => $user->nama,
                 'email' => $user->email_kampus ?? $user->email,
                 'role' => $detectedRole,

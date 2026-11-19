@@ -16,8 +16,8 @@ class DosenController extends Controller
      */
     public function profil(Request $request): View|RedirectResponse
     {
-        $nidn = session('auth_user.id') ?? auth()->user()?->nim_nip ?? auth()->id();
-        $dosen = Dosen::with(['bimbinganAktif.tim.lomba'])->where('nidn', $nidn)->first();
+        $nip = session('auth_user.id') ?? auth()->user()?->nim_nip ?? auth()->id();
+        $dosen = Dosen::with(['bimbinganAktif.tim.lomba'])->where('nidn', $nip)->first();
 
         if (! $dosen) {
             return redirect()->route('dashboard')->with('error', 'Data Dosen Pembimbing tidak ditemukan.');
@@ -36,8 +36,8 @@ class DosenController extends Controller
      */
     public function updateProfil(UpdateProfilDosenRequest $request): RedirectResponse
     {
-        $nidn = session('auth_user.id') ?? auth()->user()?->nim_nip ?? auth()->id();
-        $dosen = Dosen::where('nidn', $nidn)->firstOrFail();
+        $nip = session('auth_user.id') ?? auth()->user()?->nim_nip ?? auth()->id();
+        $dosen = Dosen::where('nidn', $nip)->firstOrFail();
 
         $dosen->update([
             'bidang_keahlian' => $request->validated('bidang_keahlian'),

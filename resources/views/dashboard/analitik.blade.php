@@ -423,7 +423,7 @@
                                             {{ $prestasi->nama_dosen ?? '-' }}
                                         </div>
                                         <div style="font-size: 0.72rem; color: var(--text-muted);">
-                                            NIP: {{ $prestasi->nidn_dosen ?? '-' }}
+                                            NIP: {{ $prestasi->nip_dosen ?? '-' }}
                                         </div>
                                     </td>
                                     <td style="font-size: 0.8rem; color: var(--text-muted);">
@@ -493,20 +493,37 @@
 
 @endsection
 
+@php
+    $analitikChartPayload = [
+        'prodiJuaraData' => [
+            (int) ($prestasiPerProdi['D-IV Sistem Informasi Bisnis'] ?? 0),
+            (int) ($prestasiPerProdi['D-IV Teknik Informatika'] ?? 0),
+        ],
+        'prodiTimData' => [
+            (int) ($prodiStats->firstWhere('prodi', 'D-IV Sistem Informasi Bisnis')->total_mahasiswa ?? 0),
+            (int) ($prodiStats->firstWhere('prodi', 'D-IV Teknik Informatika')->total_mahasiswa ?? 0),
+        ],
+        'tingkatLabels' => array_keys($tingkatStats),
+        'tingkatData' => array_values($tingkatStats),
+        'angkatanLabels' => $angkatanStats->pluck('angkatan')->values(),
+        'angkatanData' => $angkatanStats->pluck('total_juara')->values(),
+        'katLabels' => $kategoriStats->pluck('kategori')->values(),
+        'katData' => $kategoriStats->pluck('count')->values(),
+    ];
+@endphp
+
 @push('scripts')
+<script id="analitik-chart-data" type="application/json">{!! json_encode($analitikChartPayload) !!}</script>
 <script>
     // Initialize Chart.js when DOM is ready
     document.addEventListener('DOMContentLoaded', function () {
         // Data from PHP Controller
+        const chartPayloadEl = document.getElementById('analitik-chart-data');
+        const chartPayload = chartPayloadEl ? JSON.parse(chartPayloadEl.textContent || '{}') : {};
+
         const prodiLabels = ['D-IV Sistem Informasi Bisnis', 'D-IV Teknik Informatika'];
-        const prodiJuaraData = [
-            {{ $prestasiPerProdi['D-IV Sistem Informasi Bisnis'] ?? 0 }},
-            {{ $prestasiPerProdi['D-IV Teknik Informatika'] ?? 0 }}
-        ];
-        const prodiTimData = [
-            {{ $prodiStats->firstWhere('prodi', 'D-IV Sistem Informasi Bisnis')->total_mahasiswa ?? 0 }},
-            {{ $prodiStats->firstWhere('prodi', 'D-IV Teknik Informatika')->total_mahasiswa ?? 0 }}
-        ];
+        const prodiJuaraData = chartPayload.prodiJuaraData || [0, 0];
+        const prodiTimData = chartPayload.prodiTimData || [0, 0];
 
         // 1. Chart Prodi (Bar Chart: Prestasi vs Partisipasi per Mahasiswa)
         const ctxProdi = document.getElementById('chartProdi').getContext('2d');
@@ -548,8 +565,8 @@
         });
 
         // 2. Chart Tingkat Lomba (Doughnut)
-        const tingkatLabels = {!! json_encode(array_keys($tingkatStats)) !!};
-        const tingkatData = {!! json_encode(array_values($tingkatStats)) !!};
+        const tingkatLabels = chartPayload.tingkatLabels || [];
+        const tingkatData = chartPayload.tingkatData || [];
         const ctxTingkat = document.getElementById('chartTingkat').getContext('2d');
         new Chart(ctxTingkat, {
             type: 'doughnut',
@@ -575,8 +592,8 @@
         });
 
         // 3. Chart Angkatan - Paling Sering Juara (Curva Hijau 4 Angkatan)
-        const angkatanLabels = {!! json_encode($angkatanStats->pluck('angkatan')) !!};
-        const angkatanData = {!! json_encode($angkatanStats->pluck('total_juara')) !!};
+        const angkatanLabels = chartPayload.angkatanLabels || [];
+        const angkatanData = chartPayload.angkatanData || [];
         const ctxAngkatan = document.getElementById('chartAngkatan').getContext('2d');
         new Chart(ctxAngkatan, {
             type: 'line',
@@ -619,8 +636,8 @@
         });
 
         // 4. Chart Kategori (Horizontal Bar)
-        const katLabels = {!! json_encode($kategoriStats->pluck('kategori')) !!};
-        const katData = {!! json_encode($kategoriStats->pluck('count')) !!};
+        const katLabels = chartPayload.katLabels || [];
+        const katData = chartPayload.katData || [];
         const ctxKategori = document.getElementById('chartKategori').getContext('2d');
         new Chart(ctxKategori, {
             type: 'bar',

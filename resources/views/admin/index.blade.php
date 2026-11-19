@@ -1208,7 +1208,7 @@
                 <tbody>
                     @forelse($dosenList as $d)
                         <tr>
-                            <td style="font-weight: 700; color: var(--primary);">{{ $d->nip ?? $d->nidn }}</td>
+                            <td style="font-weight: 700; color: var(--primary);">{{ $d->nip }}</td>
                             <td>
                                 <div style="font-weight: 700; color: var(--primary-dark);">{{ $d->nama }}</div>
                             </td>
@@ -1240,7 +1240,7 @@
                                     <button type="button" class="btn btn-secondary btn-sm" title="Ubah Data Dosen" onclick="editDosen({{ json_encode($d) }})">
                                         <i class="bi bi-pencil"></i>
                                     </button>
-                                    <form action="{{ route('admin.dosen.destroy', $d->nidn) }}" method="POST" onsubmit="return confirm('Hapus data dosen ini?');" style="margin: 0;">
+                                    <form action="{{ route('admin.dosen.destroy', $d->nip) }}" method="POST" onsubmit="return confirm('Hapus data dosen ini?');" style="margin: 0;">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-secondary btn-sm" style="color: var(--danger);" title="Hapus Dosen">
@@ -1911,7 +1911,7 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
                     <div class="form-group">
                         <label class="form-label">NIP (Kunci Primer)</label>
-                        <input type="text" id="edit_dosen_nidn_view" class="form-control" disabled>
+                        <input type="text" id="edit_dosen_nip_view" class="form-control" disabled>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Kuota Bimbingan <span style="color: var(--danger);">*</span></label>
@@ -2451,8 +2451,8 @@
 
     // Isi Data Modal Edit Dosen
     function editDosen(item) {
-        document.getElementById('formEditDosen').action = '/admin/dosen/' + item.nidn;
-        document.getElementById('edit_dosen_nidn_view').value = item.nidn || '';
+        document.getElementById('formEditDosen').action = '/admin/dosen/' + item.nip;
+        document.getElementById('edit_dosen_nip_view').value = item.nip || '';
         document.getElementById('edit_dosen_nama').value = item.nama || '';
         document.getElementById('edit_dosen_email').value = item.email_kampus || '';
         document.getElementById('edit_dosen_keahlian').value = item.bidang_keahlian || '';

@@ -103,7 +103,7 @@ class DashboardController extends Controller
                 'nama_lomba' => $prog?->pengajuan?->tim?->lomba?->nama_lomba ?? '-',
                 'prodi_ketua' => $prog?->pengajuan?->tim?->ketua?->prodi ?? 'JTI Polinema',
                 'nama_dosen' => $prog?->pengajuan?->dosen?->nama ?? '-',
-                'nidn_dosen' => $prog?->pengajuan?->dosen?->nidn ?? '-',
+                'nip_dosen' => $prog?->pengajuan?->dosen?->nip ?? '-',
             ];
         });
 

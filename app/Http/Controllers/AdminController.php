@@ -807,7 +807,7 @@ class AdminController extends Controller
         ]);
 
         Dosen::create([
-            'nidn' => $validated['nip'],
+            'nip' => $validated['nip'],
             'nama' => $validated['nama'],
             'email_kampus' => $validated['email_kampus'],
             'password' => Hash::make($validated['password']),
@@ -823,13 +823,13 @@ class AdminController extends Controller
     /**
      * Update Data Dosen
      */
-    public function updateDosen(Request $request, $nidn)
+    public function updateDosen(Request $request, $nip)
     {
-        $dosen = Dosen::findOrFail($nidn);
+        $dosen = Dosen::findOrFail($nip);
 
         $validated = $request->validate([
             'nama' => 'required|string|max:150',
-            'email_kampus' => 'required|email|max:150|unique:dosen,email_kampus,'.$nidn.',nidn',
+            'email_kampus' => 'required|email|max:150|unique:dosen,email_kampus,'.$nip.',nidn',
             'bidang_keahlian' => 'required|string|max:255',
             'kuota_bimbingan' => 'required|integer|min:1|max:20',
             'password' => 'nullable|string|min:6',
@@ -857,9 +857,9 @@ class AdminController extends Controller
     /**
      * Hapus Data Dosen
      */
-    public function destroyDosen($nidn)
+    public function destroyDosen($nip)
     {
-        $dosen = Dosen::findOrFail($nidn);
+        $dosen = Dosen::findOrFail($nip);
         $namaDosen = $dosen->nama;
         $dosen->delete();
 
