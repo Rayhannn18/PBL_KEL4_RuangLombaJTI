@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pendaftaran Akun Mahasiswa - RuangLombaJTI Polinema</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-ruanglombajti.png') }}">
     <!-- Google Fonts: Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -102,14 +103,15 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 58px;
-            height: 58px;
-            border-radius: var(--radius-md);
-            background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%);
-            color: #fff;
-            font-size: 1.7rem;
-            margin-bottom: 12px;
-            box-shadow: 0 8px 16px rgba(30, 64, 175, 0.25);
+            width: 68px;
+            height: 68px;
+            background: transparent;
+            margin-bottom: 10px;
+        }
+        .brand-logo-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
         }
         .brand-title {
             font-size: 1.45rem;
@@ -265,7 +267,7 @@
             <!-- Header Brand -->
             <div class="brand-header">
                 <div class="brand-logo-wrap">
-                    <i class="bi bi-person-plus-fill"></i>
+                    <img src="{{ asset('images/logo-ruanglombajti.png') }}" alt="Logo RuangLombaJTI">
                 </div>
                 <div class="brand-title">Pendaftaran Akun <span>Mahasiswa</span></div>
                 <div class="brand-subtitle">Daftarkan akun mahasiswa Anda untuk berkolaborasi dan berkompetisi</div>
@@ -341,8 +343,6 @@
                                 <option value="" disabled {{ old('prodi') ? '' : 'selected' }}>Pilih Program Studi</option>
                                 <option value="D-IV Sistem Informasi Bisnis" {{ old('prodi') == 'D-IV Sistem Informasi Bisnis' ? 'selected' : '' }}>D-IV Sistem Informasi Bisnis</option>
                                 <option value="D-IV Teknik Informatika" {{ old('prodi') == 'D-IV Teknik Informatika' ? 'selected' : '' }}>D-IV Teknik Informatika</option>
-                                <option value="D-III Manajemen Informatika" {{ old('prodi') == 'D-III Manajemen Informatika' ? 'selected' : '' }}>D-III Manajemen Informatika</option>
-                                <option value="D-III Teknik Informatika" {{ old('prodi') == 'D-III Teknik Informatika' ? 'selected' : '' }}>D-III Teknik Informatika</option>
                             </select>
                         </div>
                     </div>

@@ -121,27 +121,29 @@ class AuthenticationTest extends TestCase
     {
         $this->post('/register', $this->mahasiswaPayload(['prodi' => null]))->assertSessionHasErrors('prodi');
         $this->post('/register', $this->mahasiswaPayload(['prodi' => 'S2 Informatika']))->assertSessionHasErrors('prodi');
+        $this->post('/register', $this->mahasiswaPayload(['prodi' => 'D-III Manajemen Informatika']))->assertSessionHasErrors('prodi');
+        $this->post('/register', $this->mahasiswaPayload(['prodi' => 'D-III Teknik Informatika']))->assertSessionHasErrors('prodi');
         $this->post('/register', $this->mahasiswaPayload(['angkatan' => null]))->assertSessionHasErrors('angkatan');
         $this->post('/register', $this->mahasiswaPayload(['angkatan' => '2021']))->assertSessionHasErrors('angkatan');
         $this->post('/register', $this->mahasiswaPayload(['angkatan' => '2027']))->assertSessionHasErrors('angkatan');
         $this->assertDatabaseCount('users', 0);
     }
 
-    public function test_all_four_prodi_and_angkatan_range_are_accepted(): void
+    public function test_d4_prodi_and_angkatan_range_are_accepted(): void
     {
-        $prodi = ['D-IV Sistem Informasi Bisnis', 'D-IV Teknik Informatika', 'D-III Manajemen Informatika', 'D-III Teknik Informatika'];
+        $prodi = ['D-IV Sistem Informasi Bisnis', 'D-IV Teknik Informatika'];
 
         foreach ($prodi as $i => $nama) {
             $this->post('/register', $this->mahasiswaPayload([
                 'nim_nip' => '22417200'.(10 + $i),
-                'email' => "mhs{$i}@gmail.com",
+                'email' => "mhs{$i}@student.polinema.ac.id",
                 'prodi' => $nama,
                 'angkatan' => (string) (2022 + $i),
             ]))->assertRedirect('/dashboard');
             auth()->logout();
         }
 
-        $this->assertDatabaseCount('users', 4);
+        $this->assertDatabaseCount('users', 2);
     }
 
     public function test_duplicate_nim_or_email_is_rejected(): void

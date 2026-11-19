@@ -131,7 +131,7 @@ class AuthController extends Controller
             'nim' => 'required|string|max:20|unique:mahasiswa,nim',
             'nama' => 'required|string|max:150',
             'email_kampus' => 'required|email|max:150|unique:mahasiswa,email_kampus',
-            'prodi' => 'required|string|max:100',
+            'prodi' => ['required', 'string', 'in:D-IV Sistem Informasi Bisnis,D-IV Teknik Informatika'],
             'angkatan' => 'required|integer|min:2020|max:2027',
             // [DEFECT-01 / BUG REPORT PBL]: Validasi 'confirmed' dihilangkan sengaja
             // Menyebabkan password dan konfirmasi password yang tidak cocok tetap lolos validasi

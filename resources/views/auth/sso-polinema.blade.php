@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Single Sign-On (SSO) — Politeknik Negeri Malang</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-ruanglombajti.png') }}">
     <!-- Google Fonts: Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -152,16 +153,19 @@
             gap: 12px;
         }
         .target-app-icon {
-            width: 36px;
-            height: 36px;
+            width: 40px;
+            height: 40px;
             border-radius: 8px;
-            background: #002B66;
-            color: #fff;
+            background: transparent;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.15rem;
             flex-shrink: 0;
+        }
+        .target-app-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
         }
         .target-app-info {
             flex: 1;
@@ -385,7 +389,7 @@
             <!-- Target App Info Banner -->
             <div class="target-app-box">
                 <div class="target-app-icon">
-                    <i class="bi bi-trophy-fill"></i>
+                    <img src="{{ asset('images/logo-ruanglombajti.png') }}" alt="Logo RuangLombaJTI">
                 </div>
                 <div class="target-app-info">
                     <div class="target-app-label">Aplikasi yang Dituju</div>

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'RuangLombaJTI') - Polinema</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-ruanglombajti.png') }}">
     <!-- Google Fonts: Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -188,16 +189,19 @@
             gap: 12px;
         }
         .brand-logo {
-            width: 44px;
-            height: 44px;
+            width: 46px;
+            height: 46px;
             border-radius: var(--radius-md);
-            background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%);
+            background: transparent;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #fff;
-            font-size: 1.3rem;
-            box-shadow: 0 4px 10px rgba(30, 64, 175, 0.3);
+            flex-shrink: 0;
+        }
+        .brand-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
         }
         .brand-title {
             font-size: 1.25rem;
@@ -592,7 +596,7 @@
         <div class="container nav-content">
             <a href="{{ route('dashboard.analitik') }}" class="brand">
                 <div class="brand-logo">
-                    <i class="bi bi-trophy-fill"></i>
+                    <img src="{{ asset('images/logo-ruanglombajti.png') }}" alt="Logo RuangLombaJTI">
                 </div>
                 <div>
                     <div class="brand-title">RuangLomba<span>JTI</span></div>
@@ -729,8 +733,9 @@
         <div class="container">
             <div class="footer-content">
                 <div>
-                    <div class="footer-brand">
-                        <i class="bi bi-trophy-fill" style="color: #60A5FA;"></i> RuangLomba<span>JTI</span>
+                    <div class="footer-brand" style="display: inline-flex; align-items: center; gap: 10px;">
+                        <img src="{{ asset('images/logo-ruanglombajti.png') }}" alt="Logo RuangLombaJTI" style="width: 30px; height: 30px; object-fit: contain; filter: drop-shadow(0 0 6px rgba(96, 165, 250, 0.35));">
+                        <span>RuangLomba<span>JTI</span></span>
                     </div>
                     <p style="margin-bottom: 12px; max-width: 480px; line-height: 1.7;">
                         Sistem Informasi Monitoring Lomba dan Prestasi Mahasiswa Jurusan Teknologi Informasi Politeknik Negeri Malang berbasis kerangka kerja Laravel MVC.
