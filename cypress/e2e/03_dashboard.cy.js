@@ -9,7 +9,7 @@ describe('Modul Dashboard & Analitik - RuangLombaJTI', () => {
   it('TC_DASH_001 - Memeriksa dashboard setelah login mahasiswa', () => {
     cy.visit('/login');
     cy.contains('.role-tab-btn', 'Mahasiswa').click();
-    cy.get('input[name="identifier"]').type('244107060116');
+    cy.get('input[name="login"]').type('244107060116');
     cy.get('input[name="password"]').type('password123');
     cy.get('button[type="submit"]').click();
 
@@ -21,7 +21,7 @@ describe('Modul Dashboard & Analitik - RuangLombaJTI', () => {
   it('TC_DASH_002 - Memeriksa informasi akun pada dashboard', () => {
     // Sesi login aktif mahasiswa
     cy.visit('/login');
-    cy.get('input[name="identifier"]').type('244107060116');
+    cy.get('input[name="login"]').type('244107060116');
     cy.get('input[name="password"]').type('password123');
     cy.get('button[type="submit"]').click();
 
@@ -81,7 +81,7 @@ describe('Modul Dashboard & Analitik - RuangLombaJTI', () => {
 
   it('TC_DASH_008 - Memeriksa navigasi menu dashboard', () => {
     cy.visit('/login');
-    cy.get('input[name="identifier"]').type('244107060116');
+    cy.get('input[name="login"]').type('244107060116');
     cy.get('input[name="password"]').type('password123');
     cy.get('button[type="submit"]').click();
 
@@ -97,7 +97,7 @@ describe('Modul Dashboard & Analitik - RuangLombaJTI', () => {
 
   it('TC_DASH_009 - Memeriksa logout dari dashboard', () => {
     cy.visit('/login');
-    cy.get('input[name="identifier"]').type('244107060116');
+    cy.get('input[name="login"]').type('244107060116');
     cy.get('input[name="password"]').type('password123');
     cy.get('button[type="submit"]').click();
 
