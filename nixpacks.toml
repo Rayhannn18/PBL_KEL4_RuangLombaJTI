@@ -3,3 +3,10 @@
 NIXPACKS_PHP_VERSION = "8.4"
 NIXPACKS_PHP_ROOT_DIR = "/app/public"
 NIXPACKS_NODE_VERSION = "22"
+
+[phases.install]
+cmds = [
+    "mkdir -p /var/log/nginx && mkdir -p /var/cache/nginx",
+    "composer install --ignore-platform-reqs",
+    "npm install"
+]
