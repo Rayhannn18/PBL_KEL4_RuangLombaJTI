@@ -31,7 +31,7 @@ class DosenProfilTest extends TestCase
             ['email' => $d->email_kampus],
             [
                 'name' => $d->nama,
-                'nim_nip' => $d->nidn,
+                'nim_nip' => $d->nip,
                 'role' => UserRole::Dosen,
                 'password' => Hash::make('password123'),
             ]
@@ -40,7 +40,7 @@ class DosenProfilTest extends TestCase
         $this->actingAs($user);
         session([
             'auth_user' => [
-                'id' => $d->nidn,
+                'id' => $d->nip,
                 'nama' => $d->nama,
                 'email' => $d->email_kampus,
                 'role' => 'dosen',
@@ -92,7 +92,7 @@ class DosenProfilTest extends TestCase
         $response->assertOk();
         $response->assertSee('Profil Dosen Pembimbing');
         $response->assertSee($dosen->nama);
-        $response->assertSee($dosen->nidn);
+        $response->assertSee($dosen->nip);
         $response->assertSee('Batas Maksimal Kuota Bimbingan');
     }
 
@@ -176,7 +176,7 @@ class DosenProfilTest extends TestCase
 
             PengajuanBimbingan::create([
                 'id_tim' => $tim->id_tim,
-                'nidn' => $dosen->nidn,
+                'nip' => $dosen->nip,
                 'tgl_pengajuan' => now(),
                 'status' => 'disetujui',
             ]);

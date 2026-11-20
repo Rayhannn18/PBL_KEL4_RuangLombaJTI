@@ -143,7 +143,7 @@ class AdminController extends Controller
             if (! empty($dosenSearch)) {
                 $dosenQuery->where(function ($q) use ($dosenSearch) {
                     $q->where('nama', 'like', '%'.$dosenSearch.'%')
-                        ->orWhere('nidn', 'like', '%'.$dosenSearch.'%')
+                        ->orWhere('nip', 'like', '%'.$dosenSearch.'%')
                         ->orWhere('bidang_keahlian', 'like', '%'.$dosenSearch.'%');
                 });
             }
@@ -779,12 +779,12 @@ class AdminController extends Controller
 
     /**
      * Tambah Dosen Baru
-     * Form menggunakan field "nip" (18 digit angka), disimpan ke kolom "nidn".
+     * Form menggunakan field "nip" (18 digit angka).
      */
     public function storeDosen(Request $request)
     {
         $validated = $request->validate([
-            'nip' => 'required|string|size:18|regex:/^[0-9]{18}$/|unique:dosen,nidn',
+            'nip' => 'required|string|size:18|regex:/^[0-9]{18}$/|unique:dosen,nip',
             'nama' => 'required|string|max:150',
             'email_kampus' => 'required|email|max:150|unique:dosen,email_kampus',
             'password' => 'required|string|min:6',
@@ -829,7 +829,7 @@ class AdminController extends Controller
 
         $validated = $request->validate([
             'nama' => 'required|string|max:150',
-            'email_kampus' => 'required|email|max:150|unique:dosen,email_kampus,'.$nip.',nidn',
+            'email_kampus' => 'required|email|max:150|unique:dosen,email_kampus,'.$nip.',nip',
             'bidang_keahlian' => 'required|string|max:255',
             'kuota_bimbingan' => 'required|integer|min:1|max:20',
             'password' => 'nullable|string|min:6',

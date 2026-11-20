@@ -59,7 +59,7 @@ class DosenRoleBaselineTest extends TestCase
             ['email' => $d->email_kampus],
             [
                 'name' => $d->nama,
-                'nim_nip' => $d->nidn,
+                'nim_nip' => $d->nip,
                 'role' => UserRole::Dosen,
                 'password' => Hash::make('password123'),
             ]
@@ -68,7 +68,7 @@ class DosenRoleBaselineTest extends TestCase
         $this->actingAs($user);
         session([
             'auth_user' => [
-                'id' => $d->nidn,
+                'id' => $d->nip,
                 'nama' => $d->nama,
                 'email' => $d->email_kampus,
                 'role' => 'dosen',
@@ -80,10 +80,10 @@ class DosenRoleBaselineTest extends TestCase
     }
 
     /**
-     * Verifikasi alur login Dosen seeder (NIDN 10 digit):
-     * auth_user id selalu sama dengan dosen.nidn
+     * Verifikasi alur login Dosen seeder (NIP 10 digit):
+     * auth_user id selalu sama dengan dosen.nip
      */
-    public function test_dosen_seeder_nidn_login_sets_correct_auth_id(): void
+    public function test_dosen_seeder_nip_login_sets_correct_auth_id(): void
     {
         $response = $this->post('/login', [
             'role' => 'dosen',
@@ -100,7 +100,7 @@ class DosenRoleBaselineTest extends TestCase
 
     /**
      * Verifikasi alur registrasi & login Dosen NIP 18 digit:
-     * auth_user id selalu sama dengan dosen.nidn
+     * auth_user id selalu sama dengan dosen.nip
      */
     public function test_dosen_nip_18_digit_registration_and_login_sets_correct_auth_id(): void
     {
@@ -121,7 +121,7 @@ class DosenRoleBaselineTest extends TestCase
         $regResponse->assertRedirect(route('dosen.profil'));
         $this->assertAuthenticated();
         $this->assertSame($nip, session('auth_user')['id']);
-        $this->assertDatabaseHas('dosen', ['nidn' => $nip]);
+        $this->assertDatabaseHas('dosen', ['nip' => $nip]);
         $this->assertDatabaseHas('users', ['nim_nip' => $nip]);
 
         // Uji coba login ulang dengan NIP 18 digit
@@ -195,7 +195,7 @@ class DosenRoleBaselineTest extends TestCase
 
         $pengajuan = PengajuanBimbingan::create([
             'id_tim' => $tim->id_tim,
-            'nidn' => $dosen->nidn,
+            'nip' => $dosen->nip,
             'tgl_pengajuan' => now(),
             'status' => 'menunggu',
         ]);

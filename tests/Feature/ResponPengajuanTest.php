@@ -30,7 +30,7 @@ class ResponPengajuanTest extends TestCase
             ['email' => $d->email_kampus],
             [
                 'name' => $d->nama,
-                'nim_nip' => $d->nidn,
+                'nim_nip' => $d->nip,
                 'role' => UserRole::Dosen,
                 'password' => Hash::make('password123'),
             ]
@@ -39,7 +39,7 @@ class ResponPengajuanTest extends TestCase
         $this->actingAs($user);
         session([
             'auth_user' => [
-                'id' => $d->nidn,
+                'id' => $d->nip,
                 'nama' => $d->nama,
                 'email' => $d->email_kampus,
                 'role' => 'dosen',
@@ -65,7 +65,7 @@ class ResponPengajuanTest extends TestCase
 
         return PengajuanBimbingan::create([
             'id_tim' => $tim->id_tim,
-            'nidn' => $dosen->nidn,
+            'nip' => $dosen->nip,
             'tgl_pengajuan' => now(),
             'status' => $status,
             'catatan' => null,
@@ -167,7 +167,7 @@ class ResponPengajuanTest extends TestCase
     {
         // Buat dosen khusus dengan kuota 1
         $dosen = Dosen::create([
-            'nidn' => '0099887766',
+            'nip' => '0099887766',
             'nama' => 'Dosen Kuota Terbatas, M.T.',
             'email_kampus' => 'terbatas@polinema.ac.id',
             'password' => Hash::make('password123'),

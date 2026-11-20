@@ -41,7 +41,7 @@ class LogbookHakAksesTest extends TestCase
 
         // 1. Dosen Pembimbing & Dosen Lain
         $this->dosenPembimbing = Dosen::first();
-        $this->dosenLain = Dosen::where('nidn', '!=', $this->dosenPembimbing->nidn)->first();
+        $this->dosenLain = Dosen::where('nip', '!=', $this->dosenPembimbing->nip)->first();
 
         // 2. Mahasiswa: Ketua, Anggota Resmi, dan Mahasiswa Asing
         $this->ketua = Mahasiswa::create([
@@ -98,7 +98,7 @@ class LogbookHakAksesTest extends TestCase
         // 4. Bimbingan Resmi Disetujui
         $this->pengajuan = PengajuanBimbingan::create([
             'id_tim' => $this->tim->id_tim,
-            'nidn' => $this->dosenPembimbing->nidn,
+            'nip' => $this->dosenPembimbing->nip,
             'tgl_pengajuan' => now()->toDateString(),
             'status' => 'disetujui',
         ]);
@@ -110,7 +110,7 @@ class LogbookHakAksesTest extends TestCase
             ['email' => $d->email_kampus],
             [
                 'name' => $d->nama,
-                'nim_nip' => $d->nidn,
+                'nim_nip' => $d->nip,
                 'role' => UserRole::Dosen,
                 'password' => Hash::make('password123'),
             ]
@@ -119,7 +119,7 @@ class LogbookHakAksesTest extends TestCase
         $this->actingAs($user);
         session([
             'auth_user' => [
-                'id' => $d->nidn,
+                'id' => $d->nip,
                 'nama' => $d->nama,
                 'email' => $d->email_kampus,
                 'role' => 'dosen',

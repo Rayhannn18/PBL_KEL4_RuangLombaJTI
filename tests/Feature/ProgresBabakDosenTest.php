@@ -34,7 +34,7 @@ class ProgresBabakDosenTest extends TestCase
             ['email' => $d->email_kampus],
             [
                 'name' => $d->nama,
-                'nim_nip' => $d->nidn,
+                'nim_nip' => $d->nip,
                 'role' => UserRole::Dosen,
                 'password' => Hash::make('password123'),
             ]
@@ -43,7 +43,7 @@ class ProgresBabakDosenTest extends TestCase
         $this->actingAs($user);
         session([
             'auth_user' => [
-                'id' => $d->nidn,
+                'id' => $d->nip,
                 'nama' => $d->nama,
                 'email' => $d->email_kampus,
                 'role' => 'dosen',
@@ -95,7 +95,7 @@ class ProgresBabakDosenTest extends TestCase
 
         $pengajuan = PengajuanBimbingan::create([
             'id_tim' => $tim->id_tim,
-            'nidn' => $dosen->nidn,
+            'nip' => $dosen->nip,
             'tgl_pengajuan' => now(),
             'status' => 'disetujui',
         ]);
@@ -258,7 +258,7 @@ class ProgresBabakDosenTest extends TestCase
     public function test_dosen_bukan_pembimbing_ditolak_merespon_progres_babak(): void
     {
         $dosenPembimbing = Dosen::first();
-        $dosenLain = Dosen::where('nidn', '!=', $dosenPembimbing->nidn)->first();
+        $dosenLain = Dosen::where('nip', '!=', $dosenPembimbing->nip)->first();
 
         $this->actingAsDosen($dosenLain);
         [, $progres] = $this->createBimbinganWithProgres($dosenPembimbing);
@@ -528,7 +528,7 @@ class ProgresBabakDosenTest extends TestCase
         $this->actingAsMahasiswa($luar);
         $this->get(route('bimbingan.progres.bukti', $progres->id_progres))->assertForbidden();
 
-        $dosenLain = Dosen::where('nidn', '!=', $dosen->nidn)->first();
+        $dosenLain = Dosen::where('nip', '!=', $dosen->nip)->first();
         $this->actingAsDosen($dosenLain);
         $this->get(route('bimbingan.progres.bukti', $progres->id_progres))->assertForbidden();
 

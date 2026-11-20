@@ -32,7 +32,7 @@ class LogbookFeedbackTest extends TestCase
             ['email' => $d->email_kampus],
             [
                 'name' => $d->nama,
-                'nim_nip' => $d->nidn,
+                'nim_nip' => $d->nip,
                 'role' => UserRole::Dosen,
                 'password' => Hash::make('password123'),
             ]
@@ -41,7 +41,7 @@ class LogbookFeedbackTest extends TestCase
         $this->actingAs($user);
         session([
             'auth_user' => [
-                'id' => $d->nidn,
+                'id' => $d->nip,
                 'nama' => $d->nama,
                 'email' => $d->email_kampus,
                 'role' => 'dosen',
@@ -107,7 +107,7 @@ class LogbookFeedbackTest extends TestCase
 
         $pengajuan = PengajuanBimbingan::create([
             'id_tim' => $tim->id_tim,
-            'nidn' => $dosen->nidn,
+            'nip' => $dosen->nip,
             'tgl_pengajuan' => now(),
             'status' => 'disetujui',
         ]);
@@ -192,7 +192,7 @@ class LogbookFeedbackTest extends TestCase
     public function test_dosen_bukan_pembimbing_tim_ditolak_saat_validasi_logbook(): void
     {
         $dosenPembimbing = Dosen::first();
-        $dosenLain = Dosen::where('nidn', '!=', $dosenPembimbing->nidn)->first();
+        $dosenLain = Dosen::where('nip', '!=', $dosenPembimbing->nip)->first();
 
         $this->actingAsDosen($dosenLain);
         [, $logbook] = $this->createBimbinganWithLogbook($dosenPembimbing);

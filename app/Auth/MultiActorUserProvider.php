@@ -31,7 +31,7 @@ class MultiActorUserProvider implements UserProvider
             return $this->userFromMahasiswa($mhs);
         }
 
-        $dsn = Dosen::where('nidn', (string) $identifier)->first();
+        $dsn = Dosen::where('nip', (string) $identifier)->first();
         if ($dsn) {
             return $this->userFromDosen($dsn);
         }
@@ -107,7 +107,7 @@ class MultiActorUserProvider implements UserProvider
         }
 
         if ($role === 'dosen') {
-            $dsn = Dosen::where('nidn', $login)
+            $dsn = Dosen::where('nip', $login)
                 ->orWhereRaw('LOWER(email_kampus) = ?', [strtolower($login)])
                 ->first();
 
@@ -140,7 +140,7 @@ class MultiActorUserProvider implements UserProvider
             return $this->userFromAdmin($adm);
         }
 
-        $dsn = Dosen::whereRaw('LOWER(email_kampus) = ?', [strtolower($login)])->orWhere('nidn', $login)->first();
+        $dsn = Dosen::whereRaw('LOWER(email_kampus) = ?', [strtolower($login)])->orWhere('nip', $login)->first();
         if ($dsn) {
             return $this->userFromDosen($dsn);
         }

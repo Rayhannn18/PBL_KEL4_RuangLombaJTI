@@ -55,7 +55,7 @@ class UpdateProfilDosenRequest extends FormRequest
     {
         $validator->after(function ($validator) {
             $nip = session('auth_user.id') ?? auth()->user()?->nim_nip ?? auth()->id();
-            $dosen = Dosen::where('nidn', $nip)->first();
+            $dosen = Dosen::where('nip', $nip)->first();
 
             if ($dosen) {
                 $aktifCount = $dosen->bimbinganAktif()->count();

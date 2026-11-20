@@ -58,7 +58,7 @@ class AuthController extends Controller
             $user = Admin::where('email', $identifier)->first();
             $extraInfo = 'Kemahasiswaan JTI';
         } elseif ($role === 'dosen') {
-            $user = Dosen::where('nidn', $identifier)
+            $user = Dosen::where('nip', $identifier)
                 ->orWhere('email_kampus', $identifier)
                 ->first();
             $extraInfo = $user ? $user->bidang_keahlian : '';
@@ -82,7 +82,7 @@ class AuthController extends Controller
 
         if (! $user) {
             $dosenCheck = Dosen::where('email_kampus', $identifier)
-                ->orWhere('nidn', $identifier)
+                ->orWhere('nip', $identifier)
                 ->first();
             if ($dosenCheck) {
                 $user = $dosenCheck;

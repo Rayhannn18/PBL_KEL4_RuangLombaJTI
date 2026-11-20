@@ -63,12 +63,12 @@ class PrestasiAnalitikTest extends TestCase
         return $user;
     }
 
-    private function createDosen(string $nidn, string $nama): Dosen
+    private function createDosen(string $nip, string $nama): Dosen
     {
         return Dosen::create([
-            'nidn' => $nidn,
+            'nip' => $nip,
             'nama' => $nama,
-            'email_kampus' => $nidn.'@polinema.ac.id',
+            'email_kampus' => $nip.'@polinema.ac.id',
             'password' => Hash::make('password123'),
             'bidang_keahlian' => 'Software Engineering',
             'kuota_bimbingan' => 5,
@@ -81,7 +81,7 @@ class PrestasiAnalitikTest extends TestCase
             ['email' => $d->email_kampus],
             [
                 'name' => $d->nama,
-                'nim_nip' => $d->nidn,
+                'nim_nip' => $d->nip,
                 'role' => UserRole::Dosen,
                 'password' => Hash::make('password123'),
             ]
@@ -90,7 +90,7 @@ class PrestasiAnalitikTest extends TestCase
         $this->actingAs($user);
         session([
             'auth_user' => [
-                'id' => $d->nidn,
+                'id' => $d->nip,
                 'nama' => $d->nama,
                 'email' => $d->email_kampus,
                 'role' => 'dosen',
@@ -182,7 +182,7 @@ class PrestasiAnalitikTest extends TestCase
 
         $pengajuan = PengajuanBimbingan::create([
             'id_tim' => $tim->id_tim,
-            'nidn' => $dosen->nidn,
+            'nip' => $dosen->nip,
             'tgl_pengajuan' => now(),
             'status' => $statusPengajuan,
         ]);

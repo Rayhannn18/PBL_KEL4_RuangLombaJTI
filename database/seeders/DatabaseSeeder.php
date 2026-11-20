@@ -33,7 +33,7 @@ class DatabaseSeeder extends Seeder
         // 2. Dosen Pembimbing
         $dosenList = [
             [
-                'nidn' => '0012058501',
+                'nip' => '0012058501',
                 'nama' => 'Ade Ismail, S.Kom., M.T.I.',
                 'email_kampus' => 'ade.ismail@polinema.ac.id',
                 'password' => Hash::make('password123'),
@@ -41,7 +41,7 @@ class DatabaseSeeder extends Seeder
                 'kuota_bimbingan' => 6,
             ],
             [
-                'nidn' => '0015088202',
+                'nip' => '0015088202',
                 'nama' => 'Rudy Ariyanto, S.T., M.Cs.',
                 'email_kampus' => 'rudy.ariyanto@polinema.ac.id',
                 'password' => Hash::make('password123'),
@@ -49,7 +49,7 @@ class DatabaseSeeder extends Seeder
                 'kuota_bimbingan' => 5,
             ],
             [
-                'nidn' => '0020048603',
+                'nip' => '0020048603',
                 'nama' => 'Usman Nurhasan, S.Kom., M.T.',
                 'email_kampus' => 'usman.nurhasan@polinema.ac.id',
                 'password' => Hash::make('password123'),
@@ -57,7 +57,7 @@ class DatabaseSeeder extends Seeder
                 'kuota_bimbingan' => 5,
             ],
             [
-                'nidn' => '0024098904',
+                'nip' => '0024098904',
                 'nama' => 'Dr. Eng. Rosa Andrie Asmara, S.T., M.T.',
                 'email_kampus' => 'rosa.andrie@polinema.ac.id',
                 'password' => Hash::make('password123'),
@@ -65,7 +65,7 @@ class DatabaseSeeder extends Seeder
                 'kuota_bimbingan' => 4,
             ],
             [
-                'nidn' => '0019038705',
+                'nip' => '0019038705',
                 'nama' => 'Mimi Nur Hajizah, S.Kom., M.Sc.',
                 'email_kampus' => 'mimi.nur@polinema.ac.id',
                 'password' => Hash::make('password123'),
@@ -394,7 +394,7 @@ class DatabaseSeeder extends Seeder
         // Bimbingan Tim 1 -> Ade Ismail
         $pengajuan1 = PengajuanBimbingan::create([
             'id_tim' => $tim1->id_tim,
-            'nidn' => '0012058501',
+            'nip' => '0012058501',
             'tgl_pengajuan' => Carbon::now()->subDays(20),
             'status' => 'disetujui',
             'catatan' => 'Ide arsitektur sistem sangat baik. Silakan lanjutkan ke tahap implementasi MVP dan lakukan bimbingan rutin tiap pekan.',
@@ -403,7 +403,7 @@ class DatabaseSeeder extends Seeder
         // Bimbingan Tim 2 -> Rudy Ariyanto
         $pengajuan2 = PengajuanBimbingan::create([
             'id_tim' => $tim2->id_tim,
-            'nidn' => '0015088202',
+            'nip' => '0015088202',
             'tgl_pengajuan' => Carbon::now()->subDays(15),
             'status' => 'disetujui',
             'catatan' => 'Fokus pada business model dan user adoption saat pitch deck.',
@@ -412,7 +412,7 @@ class DatabaseSeeder extends Seeder
         // Bimbingan Tim 3 -> Rosa Andrie Asmara
         $pengajuan3 = PengajuanBimbingan::create([
             'id_tim' => $tim3->id_tim,
-            'nidn' => '0024098904',
+            'nip' => '0024098904',
             'tgl_pengajuan' => Carbon::now()->subDays(10),
             'status' => 'disetujui',
             'catatan' => 'Perhatikan latency pengiriman data sensor ke cloud broker.',
@@ -421,7 +421,7 @@ class DatabaseSeeder extends Seeder
         // Bimbingan Tim 4 -> Usman Nurhasan
         $pengajuan4 = PengajuanBimbingan::create([
             'id_tim' => $tim4->id_tim,
-            'nidn' => '0020048603',
+            'nip' => '0020048603',
             'tgl_pengajuan' => Carbon::now()->subMonths(2),
             'status' => 'disetujui',
             'catatan' => 'Latihan penetrasi payload web dan kernel exploit diperdalam.',
@@ -430,7 +430,7 @@ class DatabaseSeeder extends Seeder
         // Bimbingan Tim 5 -> Mimi Nur Hajizah
         $pengajuan5 = PengajuanBimbingan::create([
             'id_tim' => $tim5->id_tim,
-            'nidn' => '0019038705',
+            'nip' => '0019038705',
             'tgl_pengajuan' => Carbon::now()->subDays(8),
             'status' => 'disetujui',
             'catatan' => 'Ide kreatif untuk kompetisi tingkat pemula.',
@@ -439,7 +439,7 @@ class DatabaseSeeder extends Seeder
         // Bimbingan Tim 6 -> Mimi Nur Hajizah
         $pengajuan6 = PengajuanBimbingan::create([
             'id_tim' => $tim6->id_tim,
-            'nidn' => '0019038705',
+            'nip' => '0019038705',
             'tgl_pengajuan' => Carbon::now()->subDays(12),
             'status' => 'disetujui',
             'catatan' => 'Design thinking dan user flow sangat matang.',
@@ -448,7 +448,7 @@ class DatabaseSeeder extends Seeder
         // Bimbingan Tim 7 -> Rosa Andrie Asmara
         $pengajuan7 = PengajuanBimbingan::create([
             'id_tim' => $tim7->id_tim,
-            'nidn' => '0024098904',
+            'nip' => '0024098904',
             'tgl_pengajuan' => Carbon::now()->subDays(14),
             'status' => 'disetujui',
             'catatan' => 'Metode prediksi dan akurasi model data sudah teruji.',

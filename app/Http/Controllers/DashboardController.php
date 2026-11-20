@@ -41,7 +41,7 @@ class DashboardController extends Controller
             SELECT 
                 (SELECT COUNT(*) FROM tim WHERE status_tim = 'disetujui') as total_tim,
                 (SELECT COUNT(DISTINCT nim) FROM anggota_tim WHERE status_gabung = 'diterima') as total_mhs,
-                (SELECT COUNT(DISTINCT nidn) FROM pengajuan_bimbingan WHERE status = 'disetujui') as total_dosen,
+                (SELECT COUNT(DISTINCT nip) FROM pengajuan_bimbingan WHERE status = 'disetujui') as total_dosen,
                 (SELECT COUNT(*) FROM prestasi_mahasiswa) as total_prestasi
         ");
 

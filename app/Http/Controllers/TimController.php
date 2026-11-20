@@ -623,7 +623,7 @@ class TimController extends Controller
             // Hanya Admin, Ketua Tim, Anggota Tim bersangkutan, atau Dosen Pembimbing yang boleh melihat
             $isKetua = ($tim->nim === $nim);
             $isAnggota = $tim->anggota()->where('nim', $nim)->exists();
-            $isPembimbing = $tim->pengajuanBimbingan()->where('nidn', $nim)->exists();
+            $isPembimbing = $tim->pengajuanBimbingan()->where('nip', $nim)->exists();
             $isAdmin = ($role === 'admin');
 
             if (! ($isKetua || $isAnggota || $isPembimbing || $isAdmin)) {
@@ -640,7 +640,7 @@ class TimController extends Controller
             $isSelf = ($anggota->nim === $nim);
             $isKetua = ($anggota->tim && $anggota->tim->nim === $nim);
             $isSesamaAnggota = ($anggota->tim && $anggota->tim->anggotaDiterima()->where('nim', $nim)->exists());
-            $isPembimbing = ($anggota->tim && $anggota->tim->pengajuanBimbingan()->where('nidn', $nim)->exists());
+            $isPembimbing = ($anggota->tim && $anggota->tim->pengajuanBimbingan()->where('nip', $nim)->exists());
             $isAdmin = ($role === 'admin');
 
             if (! ($isSelf || $isKetua || $isSesamaAnggota || $isPembimbing || $isAdmin)) {

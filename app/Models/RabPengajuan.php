@@ -65,7 +65,7 @@ class RabPengajuan extends Model
 
     public function validatorDosen()
     {
-        return $this->belongsTo(Dosen::class, 'divalidasi_oleh', 'nidn');
+        return $this->belongsTo(Dosen::class, 'divalidasi_oleh', 'nip');
     }
 
     public function isEditable(): bool

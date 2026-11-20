@@ -30,7 +30,7 @@ class RegisterRequest extends FormRequest
                 'required',
                 // Mahasiswa: NIM 8–15 digit. Dosen: NIP tepat 18 digit.
                 $isMahasiswa ? 'digits_between:8,15' : 'digits:18',
-                $isMahasiswa ? 'unique:mahasiswa,nim' : 'unique:dosen,nidn',
+                $isMahasiswa ? 'unique:mahasiswa,nim' : 'unique:dosen,nip',
                 'unique:users,nim_nip',
             ],
             'email' => [
@@ -56,7 +56,7 @@ class RegisterRequest extends FormRequest
                 Rule::requiredIf($isMahasiswa),
                 'nullable',
                 'integer',
-                'between:'.self::ANGKATAN_MIN.','.self::ANGKATAN_MAX,
+                'between:' . self::ANGKATAN_MIN . ',' . self::ANGKATAN_MAX,
             ],
             // Min. 6 karakter, mengandung huruf dan karakter khusus. 'bail' = tampilkan 1 pesan saja.
             'password' => [
@@ -64,10 +64,10 @@ class RegisterRequest extends FormRequest
                 'required',
                 'string',
                 'min:6',
-                fn (string $attribute, mixed $value, \Closure $fail) => preg_match('/\pL/u', (string) $value)
+                fn(string $attribute, mixed $value, \Closure $fail) => preg_match('/\pL/u', (string) $value)
                     ? null
                     : $fail('Kata sandi harus mengandung huruf.'),
-                fn (string $attribute, mixed $value, \Closure $fail) => preg_match('/[^\pL\pN\s]/u', (string) $value)
+                fn(string $attribute, mixed $value, \Closure $fail) => preg_match('/[^\pL\pN\s]/u', (string) $value)
                     ? null
                     : $fail('Kata sandi harus mengandung karakter khusus (contoh: ! @ # $ %).'),
                 'confirmed',
@@ -95,7 +95,7 @@ class RegisterRequest extends FormRequest
             'prodi.in' => 'Program studi tidak valid. Pilih salah satu dari daftar.',
             'angkatan.required' => 'Tahun angkatan wajib dipilih.',
             'angkatan.integer' => 'Tahun angkatan tidak valid.',
-            'angkatan.between' => 'Tahun angkatan harus antara '.self::ANGKATAN_MIN.' dan '.self::ANGKATAN_MAX.'.',
+            'angkatan.between' => 'Tahun angkatan harus antara ' . self::ANGKATAN_MIN . ' dan ' . self::ANGKATAN_MAX . '.',
             'password.required' => 'Kata sandi wajib diisi.',
             'password.min' => 'Kata sandi minimal 6 karakter.',
             'password.confirmed' => 'Konfirmasi kata sandi tidak cocok.',

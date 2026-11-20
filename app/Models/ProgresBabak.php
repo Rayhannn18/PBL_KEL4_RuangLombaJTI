@@ -134,7 +134,7 @@ class ProgresBabak extends Model
 
     public function verifikatorDosen()
     {
-        return $this->belongsTo(Dosen::class, 'diverifikasi_oleh', 'nidn');
+        return $this->belongsTo(Dosen::class, 'diverifikasi_oleh', 'nip');
     }
 
     /**

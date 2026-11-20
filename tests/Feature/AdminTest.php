@@ -307,7 +307,7 @@ class AdminTest extends TestCase
 
         $response->assertRedirect(route('admin.index', ['tab' => 'dosen']));
         $this->assertDatabaseHas('dosen', [
-            'nidn' => '009988776600112233',
+            'nip' => '009988776600112233',
             'nama' => 'Dosen Baru S.Kom., M.T.',
         ]);
 
@@ -321,7 +321,7 @@ class AdminTest extends TestCase
 
         $responseUpdate->assertRedirect(route('admin.index', ['tab' => 'dosen']));
         $this->assertDatabaseHas('dosen', [
-            'nidn' => '009988776600112233',
+            'nip' => '009988776600112233',
             'nama' => 'Dosen Baru S.Kom., M.T., Ph.D.',
             'kuota_bimbingan' => 8,
         ]);
@@ -329,7 +329,7 @@ class AdminTest extends TestCase
         // Delete
         $responseDelete = $this->delete('/admin/dosen/009988776600112233');
         $responseDelete->assertRedirect(route('admin.index', ['tab' => 'dosen']));
-        $this->assertDatabaseMissing('dosen', ['nidn' => '009988776600112233']);
+        $this->assertDatabaseMissing('dosen', ['nip' => '009988776600112233']);
     }
 
     /**

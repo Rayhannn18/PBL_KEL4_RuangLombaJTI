@@ -322,7 +322,7 @@ class PendaftaranKetuaTimTest extends TestCase
         // 3. Mahasiswa tidak bisa mengajukan bimbingan dosen untuk tim yang belum disetujui
         $bimbinganAjukan = $this->post(route('bimbingan.ajukan'), [
             'id_tim' => $tim->id_tim,
-            'nidn' => $dosen->nidn,
+            'nip' => $dosen->nip,
             'pesan_pengantar' => 'Mohon kesediaannya membimbing tim kami.',
         ]);
         $bimbinganAjukan->assertRedirect();
@@ -331,7 +331,7 @@ class PendaftaranKetuaTimTest extends TestCase
         // 4. Mahasiswa tidak bisa mengisi logbook bimbingan jika tim belum disetujui admin
         $pengajuanBimbingan = PengajuanBimbingan::create([
             'id_tim' => $tim->id_tim,
-            'nidn' => $dosen->nidn,
+            'nip' => $dosen->nip,
             'tgl_pengajuan' => now()->toDateString(),
             'status' => 'disetujui',
         ]);

@@ -59,7 +59,7 @@ class BimbinganTest extends TestCase
             ['email' => $d->email_kampus],
             [
                 'name' => $d->nama,
-                'nim_nip' => $d->nidn,
+                'nim_nip' => $d->nip,
                 'role' => UserRole::Dosen,
                 'password' => Hash::make('password123'),
             ]
@@ -68,7 +68,7 @@ class BimbinganTest extends TestCase
         $this->actingAs($user);
         session([
             'auth_user' => [
-                'id' => $d->nidn,
+                'id' => $d->nip,
                 'nama' => $d->nama,
                 'email' => $d->email_kampus,
                 'role' => 'dosen',
@@ -191,12 +191,12 @@ class BimbinganTest extends TestCase
                                 [
                                     'text' => json_encode([
                                         [
-                                            'nidn' => '0012058501',
+                                            'nip' => '0012058501',
                                             'skor' => 96,
                                             'alasan' => 'Sangat ahli di Software Engineering untuk lomba Web & Mobile.',
                                         ],
                                         [
-                                            'nidn' => '0019038705',
+                                            'nip' => '0019038705',
                                             'skor' => 91,
                                             'alasan' => 'Keahlian UI/UX sangat membantu antarmuka aplikasi lomba.',
                                         ],
@@ -293,7 +293,7 @@ class BimbinganTest extends TestCase
         // 2. Pada submit POST, anggota ditolak dengan pesan error
         $postResponse = $this->post('/bimbingan/ajukan', [
             'id_tim' => $tim->id_tim,
-            'nidn' => $dosen->nidn,
+            'nip' => $dosen->nip,
         ]);
 
         $postResponse->assertRedirect();

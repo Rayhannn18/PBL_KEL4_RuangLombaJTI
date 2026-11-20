@@ -24,18 +24,18 @@ class EnsureDosen
             $roleVal = $user->role instanceof UserRole ? $user->role->value : (string) $user->role;
 
             if (in_array($roleVal, ['dosen', 'admin'])) {
-                $nidn = $user->nim_nip ?? (string) $user->id;
+                $nip = $user->nim_nip ?? (string) $user->id;
                 $extra = 'Dosen Pembimbing';
 
                 if ($roleVal === 'dosen') {
-                    $dosen = Dosen::where('nidn', $nidn)->first();
+                    $dosen = Dosen::where('nip', $nip)->first();
                     $extra = $dosen->bidang_keahlian ?? 'Dosen Pembimbing';
                 } else {
                     $extra = 'Kemahasiswaan JTI';
                 }
 
                 $authUser = [
-                    'id' => $nidn,
+                    'id' => $nip,
                     'nama' => $user->name,
                     'email' => $user->email,
                     'role' => $roleVal,

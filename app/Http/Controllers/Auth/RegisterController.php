@@ -59,7 +59,7 @@ class RegisterController extends Controller
             Auth::loginUsingId($mahasiswa->nim);
         } elseif ($data['role'] === UserRole::Dosen->value) {
             $dosen = Dosen::create([
-                'nidn' => $data['nim_nip'],
+                'nip' => $data['nim_nip'],
                 'nama' => $data['name'],
                 'email_kampus' => $data['email'],
                 'password' => Hash::make($data['password']),
@@ -79,7 +79,7 @@ class RegisterController extends Controller
 
             session([
                 'auth_user' => [
-                    'id' => $dosen->nidn,
+                    'id' => $dosen->nip,
                     'nama' => $dosen->nama,
                     'email' => $dosen->email_kampus,
                     'role' => 'dosen',
@@ -87,7 +87,7 @@ class RegisterController extends Controller
                 ],
             ]);
 
-            Auth::loginUsingId($dosen->nidn);
+            Auth::loginUsingId($dosen->nip);
 
             $request->session()->regenerate();
 
