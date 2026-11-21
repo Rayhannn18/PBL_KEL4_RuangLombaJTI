@@ -280,7 +280,7 @@
                 <i class="bi bi-plus-circle-fill"></i> Bentuk Tim Baru (/tim/buat)
             </a>
             <a href="{{ route('lomba.index') }}" class="btn btn-outline-primary btn-sm" style="font-weight: 600; text-align: center;">
-                <i class="bi bi-award"></i> Cari Ide Lomba di Katalog
+                <i class="bi bi-award"></i> Cari Lomba di Katalog
             </a>
         </div>
     </div>

@@ -483,37 +483,130 @@
             padding: 30px 0 60px;
         }
 
-        /* Footer */
-        footer {
-            background-color: #0F172A;
-            color: #94A3B8;
-            padding: 40px 0 20px;
+        /* ========================================================================= */
+        /* Redesigned Site Footers (Guest & Authenticated with Header Gradient)     */
+        /* ========================================================================= */
+        .site-footer-guest {
+            background: linear-gradient(135deg, #0F2744 0%, #142F5B 50%, #1E3A8A 100%);
+            color: #CBD5E1;
+            border-top: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 48px 0 24px;
             font-size: 0.88rem;
-            border-top: 1px solid #1E293B;
+            width: 100%;
+            margin-top: auto;
+            position: relative;
         }
-        .footer-content {
+        .site-footer-guest .footer-container {
+            width: 100%;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        .site-footer-guest .footer-grid {
             display: grid;
-            grid-template-columns: 2fr 1fr 1fr;
+            grid-template-columns: 2fr 1fr 1.15fr;
             gap: 40px;
-            margin-bottom: 30px;
+            padding-bottom: 32px;
         }
-        .footer-brand {
-            color: #fff;
-            font-size: 1.2rem;
+        .site-footer-guest .footer-brand-title {
+            color: #FFFFFF;
+            font-size: 1.25rem;
             font-weight: 800;
+            letter-spacing: -0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
             margin-bottom: 12px;
+        }
+        .site-footer-guest .footer-brand-title span {
+            color: #60A5FA;
+        }
+        .site-footer-guest .footer-heading {
+            color: #FFFFFF;
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 14px;
+        }
+        .site-footer-guest .footer-nav-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
             display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .site-footer-guest .footer-nav-link {
+            color: #CBD5E1;
+            text-decoration: none;
+            display: inline-flex;
             align-items: center;
             gap: 8px;
+            font-size: 0.86rem;
+            transition: all 0.2s ease;
         }
-        .footer-brand span { color: #60A5FA; }
-        .footer-bottom {
+        .site-footer-guest .footer-nav-link:hover {
+            color: #FFFFFF;
+            transform: translateX(3px);
+        }
+        .site-footer-guest .footer-info-item {
+            color: #CBD5E1;
+            font-size: 0.86rem;
+            line-height: 1.6;
+            margin-bottom: 6px;
+        }
+        .site-footer-guest .footer-external-link {
+            color: #CBD5E1;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.82rem;
+            transition: color 0.2s ease;
+        }
+        .site-footer-guest .footer-external-link:hover {
+            color: #FFFFFF;
+        }
+        .site-footer-guest .footer-bottom-bar {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
             padding-top: 20px;
-            border-top: 1px solid #1E293B;
             display: flex;
             justify-content: space-between;
             align-items: center;
             font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Authenticated Footer (Compact with Topbar Gradient) */
+        .site-footer-auth {
+            background: linear-gradient(90deg, #0F2744 0%, #1E3A8A 100%);
+            color: rgba(255, 255, 255, 0.85);
+            border-top: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 12px 0;
+            font-size: 0.78rem;
+            width: 100%;
+            margin-top: auto;
+        }
+        .site-footer-auth .footer-container {
+            width: 100%;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+        .site-footer-auth .footer-auth-left {
+            color: rgba(255, 255, 255, 0.95);
+            font-weight: 500;
+        }
+        .site-footer-auth .footer-auth-right {
+            color: rgba(255, 255, 255, 0.75);
+            text-align: right;
+            font-size: 0.76rem;
         }
 
         /* Mobile Toggle Button */
@@ -582,9 +675,9 @@
                 background-color: var(--primary-soft);
                 border-color: #BFDBFE;
             }
-            .footer-content {
+            .site-footer-guest .footer-grid {
                 grid-template-columns: 1fr;
-                gap: 24px;
+                gap: 28px;
             }
         }
 
@@ -626,9 +719,17 @@
                 padding: 6px 10px;
                 font-size: 0.78rem;
             }
-            .footer-bottom {
+            .site-footer-guest .footer-bottom-bar {
                 flex-direction: column;
                 gap: 8px;
+                text-align: center;
+            }
+            .site-footer-auth .footer-container {
+                flex-direction: column;
+                gap: 6px;
+                text-align: center;
+            }
+            .site-footer-auth .footer-auth-right {
                 text-align: center;
             }
         }
@@ -843,52 +944,8 @@
         </div>
     </main>
 
-    <!-- Footer -->
-    <footer>
-        <div class="container">
-            <div class="footer-content">
-                <div>
-                    <div class="footer-brand" style="display: inline-flex; align-items: center; gap: 10px;">
-                        <img src="{{ asset('images/logo-ruanglombajti.png') }}" alt="Logo RuangLombaJTI" style="width: 30px; height: 30px; object-fit: contain; filter: drop-shadow(0 0 6px rgba(96, 165, 250, 0.35));">
-                        <span>RuangLomba<span>JTI</span></span>
-                    </div>
-                    <p style="margin-bottom: 12px; max-width: 480px; line-height: 1.7;">
-                        Sistem Informasi Monitoring Lomba dan Prestasi Mahasiswa Jurusan Teknologi Informasi Politeknik Negeri Malang berbasis kerangka kerja Laravel MVC.
-                    </p>
-                    <div style="display: flex; gap: 10px; font-size: 0.8rem; color: #94A3B8;">
-                        <span><i class="bi bi-geo-alt"></i> Gedung Sipil & JTI Polinema, Jl. Soekarno-Hatta No. 9 Malang</span>
-                    </div>
-                </div>
-
-                <div>
-                    <h4 style="color: #fff; font-size: 0.95rem; margin-bottom: 14px; font-weight: 700;">Navigasi Sistem</h4>
-                    <ul style="list-style: none; display: flex; flex-direction: column; gap: 8px;">
-                        <li><a href="{{ route('dashboard.analitik') }}" style="color: #94A3B8;"><i class="bi bi-chevron-right"></i> Dashboard Analitik</a></li>
-                        @guest
-                            <li><a href="{{ route('login') }}" style="color: #94A3B8;"><i class="bi bi-chevron-right"></i> Masuk Sistem</a></li>
-                            <li><a href="{{ route('register') }}" style="color: #94A3B8;"><i class="bi bi-chevron-right"></i> Pendaftaran Akun</a></li>
-                        @endguest
-                    </ul>
-                </div>
-
-                <div>
-                    <h4 style="color: #fff; font-size: 0.95rem; margin-bottom: 14px; font-weight: 700;">Tim Pengembang PBL</h4>
-                    <p style="font-size: 0.82rem; line-height: 1.6;">
-                        <strong>Program Studi:</strong> D-IV Sistem Informasi Bisnis (SIB-3F)<br>
-                        <strong>Sastra Maheva Zaky</strong> (Backend & DB)<br>
-                        <strong>Nadya Syantika Naraya</strong> (Backend Lomba & Tim)<br>
-                        <strong>Gempita Fitri Nurdini</strong> (Frontend & QA)<br>
-                        <strong>Rayhan Giri Putra</strong> (UI/UX & PM)
-                    </p>
-                </div>
-            </div>
-
-            <div class="footer-bottom">
-                <div>&copy; 2026 RuangLombaJTI - Politeknik Negeri Malang. All rights reserved.</div>
-                <div>Arsitektur Model-View-Controller (MVC) Laravel Framework</div>
-            </div>
-        </div>
-    </footer>
+    <!-- Site Footer (Guest & Authenticated Component) -->
+    <x-footer />
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
