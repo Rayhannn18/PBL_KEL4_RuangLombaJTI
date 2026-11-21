@@ -3,12 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Enums\UserRole;
+use App\Models\Admin;
 use App\Models\AnggotaTim;
+use App\Models\Dosen;
 use App\Models\Lomba;
 use App\Models\Mahasiswa;
 use App\Models\ProgresBabak;
 use App\Models\Tim;
 use App\Models\User;
+use App\Services\DosenRecommendationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -704,78 +707,129 @@ class TimController extends Controller
     }
 
     /**
-     * Halaman Profil Saya (Khusus Mahasiswa dan Ketua Tim).
+     * Halaman Profil Saya (Tersedia untuk Mahasiswa, Dosen, dan Admin).
      */
     public function profil(): View
     {
-        $mahasiswa = $this->resolveCurrentMahasiswa();
-        $nim = $mahasiswa->nim;
-
-        $roleLabel = Tim::ketuaDisetujui($nim) ? 'Ketua Tim' : 'Mahasiswa';
-
-        // Portofolio (maks 3 tautan {label, url})
-        $rawPortofolio = Schema::hasColumn('mahasiswa', 'portofolio')
-            ? $mahasiswa->portofolio
-            : session("profil_portofolio_{$nim}", []);
-
-        if (is_string($rawPortofolio)) {
-            $rawPortofolio = json_decode($rawPortofolio, true) ?: [];
+        $authUser = $this->authUser();
+        if (! $authUser) {
+            abort(401, 'Silakan login terlebih dahulu.');
         }
 
-        $portofolio = [];
-        if (is_array($rawPortofolio)) {
-            foreach (array_slice($rawPortofolio, 0, 3) as $item) {
-                if (is_array($item) && ! empty($item['url'])) {
-                    $portofolio[] = [
-                        'label' => trim((string) ($item['label'] ?? '')),
-                        'url' => trim((string) $item['url']),
-                    ];
+        $role = $authUser['role'] ?? 'mahasiswa';
+
+        if (in_array($role, ['mahasiswa', 'ketua_tim'], true)) {
+            $mahasiswa = $this->resolveCurrentMahasiswa();
+            $nim = $mahasiswa->nim;
+
+            $roleLabel = Tim::ketuaDisetujui($nim) ? 'Ketua Tim' : 'Mahasiswa';
+
+            // Portofolio (maks 3 tautan {label, url})
+            $rawPortofolio = Schema::hasColumn('mahasiswa', 'portofolio')
+                ? $mahasiswa->portofolio
+                : session("profil_portofolio_{$nim}", []);
+
+            if (is_string($rawPortofolio)) {
+                $rawPortofolio = json_decode($rawPortofolio, true) ?: [];
+            }
+
+            $portofolio = [];
+            if (is_array($rawPortofolio)) {
+                foreach (array_slice($rawPortofolio, 0, 3) as $item) {
+                    if (is_array($item) && ! empty($item['url'])) {
+                        $portofolio[] = [
+                            'label' => trim((string) ($item['label'] ?? '')),
+                            'url' => trim((string) $item['url']),
+                        ];
+                    }
                 }
             }
-        }
 
-        // Ringkasan Aktivitas: Tim yang diikuti (sebagai Ketua Tim atau Anggota)
-        // Hanya mengambil keanggotaan milik mahasiswa yang sedang login (tidak memuat NIM/email mahasiswa lain)
-        $timDiikuti = Tim::query()
-            ->where(function ($q) use ($nim) {
-                $q->where('nim', $nim)
-                    ->orWhereHas('anggotaDiterima', function ($sub) use ($nim) {
-                        $sub->where('nim', $nim);
-                    });
-            })
-            ->with([
-                'lomba',
-                'anggota' => function ($q) use ($nim) {
-                    $q->where('nim', $nim);
-                },
-            ])
-            ->latest()
-            ->get();
-
-        // Prestasi pada tim yang diikuti mahasiswa ini
-        $timDisetujuiIds = $timDiikuti->where('status_tim', 'disetujui')->pluck('id_tim');
-        $daftarPrestasi = collect();
-
-        if ($timDisetujuiIds->isNotEmpty()) {
-            $daftarPrestasi = ProgresBabak::with(['pengajuan.tim.lomba', 'pengajuan.dosen'])
-                ->where('status_setuju', 'disetujui')
-                ->whereHas('pengajuan', function ($q) use ($timDisetujuiIds) {
-                    $q->whereIn('id_tim', $timDisetujuiIds);
+            // Ringkasan Aktivitas: Tim yang diikuti (sebagai Ketua Tim atau Anggota)
+            // Hanya mengambil keanggotaan milik mahasiswa yang sedang login (tidak memuat NIM/email mahasiswa lain)
+            $timDiikuti = Tim::query()
+                ->where(function ($q) use ($nim) {
+                    $q->where('nim', $nim)
+                        ->orWhereHas('anggotaDiterima', function ($sub) use ($nim) {
+                            $sub->where('nim', $nim);
+                        });
                 })
-                ->orderByDesc('tanggal_update')
-                ->get()
-                ->filter(fn (ProgresBabak $progres) => $progres->isJuara())
-                ->values();
+                ->with([
+                    'lomba',
+                    'anggota' => function ($q) use ($nim) {
+                        $q->where('nim', $nim);
+                    },
+                ])
+                ->latest()
+                ->get();
+
+            // Prestasi pada tim yang diikuti mahasiswa ini
+            $timDisetujuiIds = $timDiikuti->where('status_tim', 'disetujui')->pluck('id_tim');
+            $daftarPrestasi = collect();
+
+            if ($timDisetujuiIds->isNotEmpty()) {
+                $daftarPrestasi = ProgresBabak::with(['pengajuan.tim.lomba', 'pengajuan.dosen'])
+                    ->where('status_setuju', 'disetujui')
+                    ->whereHas('pengajuan', function ($q) use ($timDisetujuiIds) {
+                        $q->whereIn('id_tim', $timDisetujuiIds);
+                    })
+                    ->orderByDesc('tanggal_update')
+                    ->get()
+                    ->filter(fn (ProgresBabak $progres) => $progres->isJuara())
+                    ->values();
+            }
+
+            return view('profil', [
+                'isLimitedView' => false,
+                'role' => $role,
+                'mahasiswa' => $mahasiswa,
+                'roleLabel' => $roleLabel,
+                'portofolio' => $portofolio,
+                'timDiikuti' => $timDiikuti,
+                'daftarPrestasi' => $daftarPrestasi,
+            ]);
+        } elseif ($role === 'dosen') {
+            $nip = session('auth_user.id') ?? auth()->user()?->nim_nip ?? auth()->id();
+            $dosen = Dosen::with(['bimbinganAktif.tim.lomba'])->where('nip', $nip)->first();
+
+            if (! $dosen) {
+                $dosen = new Dosen([
+                    'nip' => $nip,
+                    'nama' => $authUser['nama'] ?? auth()->user()?->name ?? 'Dosen',
+                    'email_kampus' => $authUser['email'] ?? auth()->user()?->email ?? '',
+                    'bidang_keahlian' => 'Umum',
+                    'kuota_bimbingan' => 10,
+                ]);
+            }
+
+            return view('profil', [
+                'isLimitedView' => false,
+                'role' => 'dosen',
+                'dosen' => $dosen,
+                'roleLabel' => 'Dosen Pembimbing',
+                'bimbinganAktif' => $dosen->bimbinganAktif ?? collect(),
+            ]);
+        } elseif ($role === 'admin') {
+            $adminId = session('auth_user.id') ?? auth()->user()?->nim_nip ?? auth()->id();
+            $admin = Admin::where('id_admin', $adminId)->first();
+
+            if (! $admin) {
+                $admin = new Admin([
+                    'id_admin' => $adminId,
+                    'nama' => $authUser['nama'] ?? auth()->user()?->name ?? 'Administrator',
+                    'email' => $authUser['email'] ?? auth()->user()?->email ?? '',
+                ]);
+            }
+
+            return view('profil', [
+                'isLimitedView' => false,
+                'role' => 'admin',
+                'admin' => $admin,
+                'roleLabel' => 'Administrator',
+            ]);
         }
 
-        return view('profil', [
-            'isLimitedView' => false,
-            'mahasiswa' => $mahasiswa,
-            'roleLabel' => $roleLabel,
-            'portofolio' => $portofolio,
-            'timDiikuti' => $timDiikuti,
-            'daftarPrestasi' => $daftarPrestasi,
-        ]);
+        abort(403, 'Akses peran tidak dikenali.');
     }
 
     /**
@@ -829,71 +883,108 @@ class TimController extends Controller
     }
 
     /**
-     * Simpan perubahan Portofolio milik mahasiswa yang sedang login.
+     * Simpan perubahan Portofolio / Profil milik akun yang sedang login (Mahasiswa / Dosen).
      */
     public function updateProfil(Request $request): RedirectResponse
     {
-        $mahasiswa = $this->resolveCurrentMahasiswa();
+        $authUser = $this->authUser();
+        if (! $authUser) {
+            abort(401, 'Silakan login terlebih dahulu.');
+        }
 
-        // Filter baris portofolio yang benar-benar kosong (label & url sama-sama kosong)
-        if ($request->has('portofolio') && is_array($request->input('portofolio'))) {
-            $filteredPortofolio = [];
-            foreach ($request->input('portofolio') as $item) {
-                if (! is_array($item)) {
-                    continue;
+        $role = $authUser['role'] ?? 'mahasiswa';
+
+        if (in_array($role, ['mahasiswa', 'ketua_tim'], true)) {
+            $mahasiswa = $this->resolveCurrentMahasiswa();
+
+            // Filter baris portofolio yang benar-benar kosong (label & url sama-sama kosong)
+            if ($request->has('portofolio') && is_array($request->input('portofolio'))) {
+                $filteredPortofolio = [];
+                foreach ($request->input('portofolio') as $item) {
+                    if (! is_array($item)) {
+                        continue;
+                    }
+                    $label = trim((string) ($item['label'] ?? ''));
+                    $url = trim((string) ($item['url'] ?? ''));
+                    if ($label === '' && $url === '') {
+                        continue;
+                    }
+                    $filteredPortofolio[] = [
+                        'label' => $label,
+                        'url' => $url,
+                    ];
                 }
-                $label = trim((string) ($item['label'] ?? ''));
-                $url = trim((string) ($item['url'] ?? ''));
-                if ($label === '' && $url === '') {
-                    continue;
-                }
-                $filteredPortofolio[] = [
-                    'label' => $label,
-                    'url' => $url,
+                $request->merge(['portofolio' => array_values($filteredPortofolio)]);
+            }
+
+            $validated = $request->validate([
+                'portofolio' => ['nullable', 'array', 'max:3'],
+                'portofolio.*.label' => ['nullable', 'string', 'max:40'],
+                'portofolio.*.url' => ['required', 'url', 'starts_with:https://', 'max:255'],
+            ], [
+                'portofolio.array' => 'Format daftar portofolio tidak valid.',
+                'portofolio.max' => 'Portofolio maksimal terdiri dari 3 tautan.',
+                'portofolio.*.label.max' => 'Label tautan portofolio maksimal 40 karakter.',
+                'portofolio.*.url.required' => 'URL portofolio wajib diisi pada setiap baris yang ditambahkan.',
+                'portofolio.*.url.url' => 'Format URL portofolio tidak valid.',
+                'portofolio.*.url.starts_with' => 'URL portofolio wajib diawali dengan https://.',
+                'portofolio.*.url.max' => 'URL portofolio maksimal 255 karakter.',
+            ]);
+
+            $portofolio = [];
+            foreach ($validated['portofolio'] ?? [] as $item) {
+                $portofolio[] = [
+                    'label' => trim((string) ($item['label'] ?? '')),
+                    'url' => trim((string) $item['url']),
                 ];
             }
-            $request->merge(['portofolio' => array_values($filteredPortofolio)]);
+
+            if (Schema::hasColumn('mahasiswa', 'portofolio')) {
+                $mahasiswa->update(['portofolio' => $portofolio]);
+            } else {
+                session(["profil_portofolio_{$mahasiswa->nim}" => $portofolio]);
+            }
+
+            return redirect()
+                ->route('profil.show')
+                ->with('success', 'Portofolio Anda berhasil diperbarui.');
+        } elseif ($role === 'dosen') {
+            $nip = session('auth_user.id') ?? auth()->user()?->nim_nip ?? auth()->id();
+            $dosen = Dosen::where('nip', $nip)->firstOrFail();
+
+            $validated = $request->validate([
+                'bidang_keahlian' => ['required', 'string', 'max:255'],
+                'kuota_bimbingan' => ['required', 'integer', 'min:1', 'max:30'],
+            ]);
+
+            $dosen->update([
+                'bidang_keahlian' => $validated['bidang_keahlian'],
+                'kuota_bimbingan' => (int) $validated['kuota_bimbingan'],
+            ]);
+
+            if (session()->has('auth_user')) {
+                $sessionUser = session('auth_user');
+                $sessionUser['extra'] = $dosen->bidang_keahlian;
+                session(['auth_user' => $sessionUser]);
+            }
+
+            DosenRecommendationService::clearAllRecommendationsCache();
+
+            return redirect()->route('profil.show')->with('success', 'Profil dan kuota bimbingan berhasil diperbarui.');
         }
 
-        $validated = $request->validate([
-            'portofolio' => ['nullable', 'array', 'max:3'],
-            'portofolio.*.label' => ['nullable', 'string', 'max:40'],
-            'portofolio.*.url' => ['required', 'url', 'starts_with:https://', 'max:255'],
-        ], [
-            'portofolio.array' => 'Format daftar portofolio tidak valid.',
-            'portofolio.max' => 'Portofolio maksimal terdiri dari 3 tautan.',
-            'portofolio.*.label.max' => 'Label tautan portofolio maksimal 40 karakter.',
-            'portofolio.*.url.required' => 'URL portofolio wajib diisi pada setiap baris yang ditambahkan.',
-            'portofolio.*.url.url' => 'Format URL portofolio tidak valid.',
-            'portofolio.*.url.starts_with' => 'URL portofolio wajib diawali dengan https://.',
-            'portofolio.*.url.max' => 'URL portofolio maksimal 255 karakter.',
-        ]);
-
-        $portofolio = [];
-        foreach ($validated['portofolio'] ?? [] as $item) {
-            $portofolio[] = [
-                'label' => trim((string) ($item['label'] ?? '')),
-                'url' => trim((string) $item['url']),
-            ];
-        }
-
-        if (Schema::hasColumn('mahasiswa', 'portofolio')) {
-            $mahasiswa->update(['portofolio' => $portofolio]);
-        } else {
-            session(["profil_portofolio_{$mahasiswa->nim}" => $portofolio]);
-        }
-
-        return redirect()
-            ->route('profil.show')
-            ->with('success', 'Portofolio Anda berhasil diperbarui.');
+        return redirect()->route('profil.show');
     }
 
     /**
-     * Ganti kata sandi akun mahasiswa yang sedang login.
+     * Ganti kata sandi akun pengguna yang sedang login (Mahasiswa, Dosen, Admin).
      */
     public function updatePassword(Request $request): RedirectResponse
     {
-        $mahasiswa = $this->resolveCurrentMahasiswa();
+        $authUser = $this->authUser();
+        if (! $authUser) {
+            abort(401, 'Silakan login terlebih dahulu.');
+        }
 
         // Normalisasi nama field jika dikirim dengan current_password / password
         $merge = [];
@@ -928,14 +1019,36 @@ class TimController extends Controller
 
         $passwordLama = (string) $request->input('password_lama');
         $passwordBaru = (string) $request->input('password_baru');
+        $role = $authUser['role'] ?? 'mahasiswa';
+        $userId = $authUser['id'] ?? (string) auth()->id();
 
-        // Verifikasi kata sandi lama terhadap record Mahasiswa (atau User jika disinkronkan)
-        $userRecord = User::where('nim_nip', $mahasiswa->nim)
-            ->orWhereRaw('LOWER(email) = ?', [strtolower($mahasiswa->email_kampus)])
+        $validOldPassword = false;
+        $targetModel = null;
+        $userRecord = User::where('nim_nip', $userId)
+            ->orWhere('id', $userId)
+            ->orWhereRaw('LOWER(email) = ?', [strtolower($authUser['email'] ?? '')])
             ->first();
 
-        $validOldPassword = Hash::check($passwordLama, $mahasiswa->password)
-            || ($userRecord && Hash::check($passwordLama, $userRecord->password));
+        if (in_array($role, ['mahasiswa', 'ketua_tim'], true)) {
+            $targetModel = Mahasiswa::where('nim', $userId)->first();
+            if ($targetModel && ! empty($targetModel->password)) {
+                $validOldPassword = Hash::check($passwordLama, $targetModel->password);
+            }
+        } elseif ($role === 'dosen') {
+            $targetModel = Dosen::where('nip', $userId)->first();
+            if ($targetModel && ! empty($targetModel->password)) {
+                $validOldPassword = Hash::check($passwordLama, $targetModel->password);
+            }
+        } elseif ($role === 'admin') {
+            $targetModel = Admin::where('id_admin', $userId)->first();
+            if ($targetModel && ! empty($targetModel->password)) {
+                $validOldPassword = Hash::check($passwordLama, $targetModel->password);
+            }
+        }
+
+        if (! $validOldPassword && $userRecord && ! empty($userRecord->password)) {
+            $validOldPassword = Hash::check($passwordLama, $userRecord->password);
+        }
 
         if (! $validOldPassword) {
             return redirect(route('profil.show').'#kata-sandi')
@@ -945,9 +1058,11 @@ class TimController extends Controller
 
         $hashedPassword = Hash::make($passwordBaru);
 
-        $mahasiswa->update([
-            'password' => $hashedPassword,
-        ]);
+        if ($targetModel) {
+            $targetModel->update([
+                'password' => $hashedPassword,
+            ]);
+        }
 
         if ($userRecord) {
             $userRecord->update([

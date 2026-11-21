@@ -117,16 +117,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/bimbingan/pengajuan/{id}/respon', [BimbinganController::class, 'responPengajuan'])->middleware('dosen')->name('bimbingan.pengajuan.respon');
     Route::post('/bimbingan/daftar-tim-cepat', [BimbinganController::class, 'gabungLombaCepat'])->name('bimbingan.daftar_tim');
 
-    // Profil & Pengaturan Kuota Dosen Pembimbing
+    // Profil & Pengaturan Kuota Dosen Pembimbing (Dipertahankan untuk kompatibilitas route internal)
     Route::middleware('dosen')->prefix('dosen')->name('dosen.')->group(function () {
         Route::get('/profil', [DosenController::class, 'profil'])->name('profil');
         Route::put('/profil', [DosenController::class, 'updateProfil'])->name('profil.update');
     });
 
-    // Profil Saya (Khusus Mahasiswa & Ketua Tim)
-    Route::middleware('mahasiswa')->group(function () {
-        Route::get('/profil', [TimController::class, 'profil'])->name('profil.show');
-        Route::put('/profil', [TimController::class, 'updateProfil'])->name('profil.update');
-        Route::put('/profil/password', [TimController::class, 'updatePassword'])->name('profil.password');
-    });
+    // Profil Saya & Ganti Kata Sandi (Tersedia untuk Seluruh Role yang Sudah Login: Mahasiswa, Dosen, Admin)
+    Route::get('/profil', [TimController::class, 'profil'])->name('profil.show');
+    Route::put('/profil', [TimController::class, 'updateProfil'])->name('profil.update');
+    Route::put('/profil/password', [TimController::class, 'updatePassword'])->name('profil.password');
 });
