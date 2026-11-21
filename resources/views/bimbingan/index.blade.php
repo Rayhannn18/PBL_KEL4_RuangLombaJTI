@@ -176,6 +176,69 @@
         border: 1px solid var(--border);
         border-radius: var(--radius-md);
         padding: 16px 18px;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .timeline-content.status-disetujui {
+        background: #F0FDF4;
+        border: 1px solid #BBF7D0;
+        border-left: 4px solid #10B981;
+    }
+    .timeline-content.status-menunggu {
+        background: #FFFBEB;
+        border: 1px solid #FDE68A;
+        border-left: 4px solid #F59E0B;
+    }
+    .timeline-content.status-revisi,
+    .timeline-content.status-ditolak {
+        background: #FEF2F2;
+        border: 1px solid #FECACA;
+        border-left: 4px solid #EF4444;
+    }
+
+    /* Progres Babak Item Styles */
+    .progres-item {
+        padding: 12px 14px;
+        border-radius: 8px;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .progres-item.status-disetujui {
+        background: #F0FDF4;
+        border: 1px solid #BBF7D0;
+        border-left: 4px solid #10B981;
+    }
+    .progres-item.status-menunggu {
+        background: #FFFBEB;
+        border: 1px solid #FDE68A;
+        border-left: 4px solid #F59E0B;
+    }
+    .progres-item.status-ditolak,
+    .progres-item.status-revisi {
+        background: #FEF2F2;
+        border: 1px solid #FECACA;
+        border-left: 4px solid #EF4444;
+    }
+
+    /* RAB Card Item Styles */
+    .rab-card-item {
+        padding: 14px 16px;
+        border-radius: 10px;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .rab-card-item.status-disetujui {
+        background: #F0FDF4;
+        border: 1px solid #BBF7D0;
+        border-left: 4px solid #10B981;
+    }
+    .rab-card-item.status-menunggu {
+        background: #FFFBEB;
+        border: 1px solid #FDE68A;
+        border-left: 4px solid #F59E0B;
+    }
+    .rab-card-item.status-revisi,
+    .rab-card-item.status-ditolak {
+        background: #FEF2F2;
+        border: 1px solid #FECACA;
+        border-left: 4px solid #EF4444;
     }
 
     /* Modal Form */
@@ -701,7 +764,7 @@
             <div style="display: flex; flex-direction: column; gap: 24px;">
 
                 <!-- Kartu Identitas Tim & Lomba -->
-                <div class="card">
+                <div class="card" style="border-left: 4px solid var(--primary);">
                     <div class="card-header" style="background: linear-gradient(90deg, #F8FAFC 0%, #EFF6FF 100%);">
                         <div>
                             <div class="card-title">
@@ -721,8 +784,8 @@
                             </div>
                         </div>
 
-                        <div style="background: #F8FAFC; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 16px;">
-                            <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 4px;">KOMPETISI YANG DIIKUTI</div>
+                        <div style="background: #EFF6FF; border: 1px solid #DBEAFE; border-left: 3px solid var(--primary); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 16px;">
+                            <div style="font-size: 0.75rem; font-weight: 700; color: var(--primary); margin-bottom: 4px;">KOMPETISI YANG DIIKUTI</div>
                             <div style="font-weight: 700; color: var(--text-main); font-size: 0.95rem; margin-bottom: 4px;">
                                 {{ $selectedTim->lomba->nama_lomba ?? 'Kompetisi JTI' }}
                             </div>
@@ -856,7 +919,7 @@
                 </div>
 
                 <!-- Kartu Status Dosen Pembimbing -->
-                <div class="card">
+                <div class="card" style="border-left: 4px solid var(--primary);">
                     <div class="card-header">
                         <div>
                             <div class="card-title">
@@ -1045,7 +1108,7 @@
                                 </div>
                             </div>
 
-                            <div style="background: #F8FAFC; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; font-size: 0.83rem; margin-bottom: 12px;">
+                            <div style="background: #EFF6FF; border: 1px solid #DBEAFE; border-left: 3px solid var(--primary); border-radius: var(--radius-sm); padding: 12px; font-size: 0.83rem; margin-bottom: 12px;">
                                 <strong>Bidang Keahlian:</strong><br>
                                 <span style="color: var(--primary); font-weight: 600;">{{ $pengajuan->dosen->bidang_keahlian }}</span>
                             </div>
@@ -1065,7 +1128,7 @@
             <div style="display: flex; flex-direction: column; gap: 24px;">
 
                 <!-- Kartu Logbook Konsultasi -->
-                <div class="card">
+                <div class="card" style="border-left: 4px solid var(--primary);">
                     <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <div class="card-title">
@@ -1100,7 +1163,7 @@
                                 $logbooks = $pengajuan->logbook ?? collect();
                             @endphp
 
-                            <div style="display: flex; justify-content: space-between; align-items: center; background: #F8FAFC; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 18px; font-size: 0.82rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; background: #EFF6FF; border: 1px solid #DBEAFE; border-left: 3px solid var(--primary); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 18px; font-size: 0.82rem;">
                                 <span>Total Sesi Konsultasi: <strong>{{ $logbooks->count() }} Kali</strong></span>
                                 <span class="badge badge-success">{{ $logbooks->where('status_validasi', 'disetujui')->count() }} Divalidasi</span>
                             </div>
@@ -1117,9 +1180,16 @@
                             @else
                                 <div class="timeline-wrap">
                                     @foreach($logbooks as $log)
+                                        @php
+                                            $logStatusClass = match($log->status_validasi) {
+                                                'disetujui', 'valid' => 'status-disetujui',
+                                                'revisi', 'ditolak' => 'status-revisi',
+                                                default => 'status-menunggu',
+                                            };
+                                        @endphp
                                         <div class="timeline-item">
                                             <div class="timeline-point"></div>
-                                            <div class="timeline-content">
+                                            <div class="timeline-content {{ $logStatusClass }}">
                                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
                                                     <span style="font-size: 0.78rem; font-weight: 700; color: var(--primary);">
                                                         <i class="bi bi-calendar-event"></i> {{ $log->tanggal ? $log->tanggal->format('d F Y') : '-' }}
@@ -1186,7 +1256,7 @@
 
                 <!-- Kartu Monitoring Progres Babak Tim -->
                 @if($pengajuan && $pengajuan->status === 'disetujui')
-                    <div class="card">
+                    <div class="card" style="border-left: 4px solid var(--primary);">
                         <div class="card-header">
                             <div>
                                 <div class="card-title">
@@ -1221,7 +1291,14 @@
                             @else
                                 <div style="display: flex; flex-direction: column; gap: 10px;">
                                     @foreach($pengajuan->progresBabak as $prog)
-                                        <div style="padding: 12px 14px; background: #F8FAFC; border: 1px solid var(--border); border-radius: 8px;">
+                                        @php
+                                            $progStatusClass = match($prog->status_setuju) {
+                                                'disetujui' => 'status-disetujui',
+                                                'ditolak' => 'status-ditolak',
+                                                default => 'status-menunggu',
+                                            };
+                                        @endphp
+                                        <div class="progres-item {{ $progStatusClass }}">
                                             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
                                                 <div>
                                                     <div style="font-weight: 700; font-size: 0.9rem; color: var(--primary-dark);">
@@ -1307,7 +1384,7 @@
                         $bisaAjukanRabBaru = ! ($kompetisiSelesai ?? false) && ! empty($babakValidRab) && ! empty($babakTersediaBuatBaru);
                         $semuaBabakValidSudahAdaRab = !empty($babakValidRab) && empty($babakTersediaBuatBaru);
                     @endphp
-                    <div class="card">
+                    <div class="card" style="border-left: 4px solid var(--primary);">
                         <div class="card-header" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
                             <div style="flex: 1; min-width: 0;">
                                 <div class="card-title">
@@ -1359,6 +1436,11 @@
                                             $jmlHariRab = ($rab->tanggal_mulai && $rab->tanggal_selesai)
                                                 ? ($rab->tanggal_mulai->diffInDays($rab->tanggal_selesai) + 1)
                                                 : 1;
+                                            $rabStatusClass = match($rab->status) {
+                                                'disetujui' => 'status-disetujui',
+                                                'perlu_revisi', 'ditolak' => 'status-revisi',
+                                                default => 'status-menunggu',
+                                            };
                                             $rabJsonPayload = [
                                                 'id' => $rab->id,
                                                 'babak' => $rab->babak,
@@ -1383,7 +1465,7 @@
                                                 ])->values()->all(),
                                             ];
                                         @endphp
-                                        <div style="padding: 14px 16px; background: #F8FAFC; border: 1px solid var(--border); border-radius: 10px;">
+                                        <div class="rab-card-item {{ $rabStatusClass }}">
                                             <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
                                                 <div>
                                                     <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
