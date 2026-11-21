@@ -393,6 +393,113 @@
             grid-template-columns: 1fr;
             gap: 0;
         }
+        .lomba-poster-card {
+            height: 175px;
+        }
+    }
+
+    /* Dual-Layer Poster Container (Blurred Background + Object Contain) */
+    .lomba-poster-card {
+        position: relative;
+        display: block;
+        width: 100%;
+        height: 190px;
+        margin-bottom: 14px;
+        border-radius: var(--radius-sm);
+        overflow: hidden;
+        background: #0B132B;
+        text-decoration: none;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+        isolation: isolate;
+    }
+    .lomba-poster-media {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+    /* Layer 1: Blurred Backdrop (fills container, 12px blur, darkened) */
+    .lomba-poster-bg {
+        position: absolute;
+        top: -16px;
+        left: -16px;
+        width: calc(100% + 32px);
+        height: calc(100% + 32px);
+        object-fit: cover;
+        object-position: center;
+        filter: blur(12px) brightness(0.6) saturate(1.25);
+        transform: scale(1.1);
+        pointer-events: none;
+        user-select: none;
+        z-index: 1;
+    }
+    /* Dark gradient overlay for visual depth and contrast */
+    .lomba-poster-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(15, 23, 42, 0.25) 0%, rgba(15, 23, 42, 0.5) 100%);
+        pointer-events: none;
+        z-index: 2;
+    }
+    /* Layer 2: Foreground Poster (object-contain, centered, uncropped) */
+    .lomba-poster-fg {
+        position: relative;
+        max-width: 100%;
+        max-height: 100%;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+        object-position: center;
+        z-index: 3;
+        display: block;
+        margin: auto;
+        filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.45));
+        transition: transform 0.25s ease;
+    }
+    .lomba-box:hover .lomba-poster-fg {
+        transform: scale(1.02);
+    }
+    /* Floating Status Badge at Top-Right Corner of Poster */
+    .lomba-poster-status {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 4;
+        pointer-events: none;
+    }
+    .lomba-poster-status .badge {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        font-weight: 700;
+        letter-spacing: 0.2px;
+        padding: 4px 10px;
+        font-size: 0.72rem;
+        backdrop-filter: blur(4px);
+    }
+    /* Fallback Placeholder when image is missing or fails to load */
+    .lomba-poster-fallback {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 100%);
+        color: var(--text-muted);
+        border: 1px dashed var(--border);
+        border-radius: var(--radius-sm);
+    }
+    .lomba-poster-fallback i {
+        font-size: 2.2rem;
+        color: #94A3B8;
+        margin-bottom: 4px;
+    }
+    .lomba-poster-fallback span {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-muted);
     }
 </style>
 @endpush
@@ -687,33 +794,58 @@
                                     </span>
                                 @endif
                             </div>
-
-                            @if($lomba->tenggat)
-                                @if($lomba->tenggat->isPast())
-                                    <span class="badge badge-danger">Tutup</span>
-                                @elseif($lomba->sisa_hari <= 7)
-                                    <span class="badge badge-danger" title="{{ $lomba->sisa_hari }} hari tersisa">
-                                        <i class="bi bi-clock-history"></i> Sisa {{ $lomba->sisa_hari }} Hari
-                                    </span>
-                                @else
-                                    <span class="badge badge-success">
-                                        <i class="bi bi-check2-circle"></i> Buka
-                                    </span>
-                                @endif
-                            @endif
                         </div>
 
-                        <a href="{{ route('lomba.show', $lomba->id_lomba) }}" style="display: block; margin-bottom: 12px; border-radius: var(--radius-sm); overflow: hidden; background: #F1F5F9; height: 140px; text-align: center; text-decoration: none; position: relative;">
+                        <!-- Poster Card (Dual Layer: Blurred Backdrop + Object Contain) -->
+                        <a href="{{ route('lomba.show', $lomba->id_lomba) }}"
+                           class="lomba-poster-card"
+                           aria-label="Lihat detail {{ $lomba->nama_lomba }}">
                             @if($lomba->poster_url)
-                                <img src="{{ $lomba->poster_url }}" alt="Poster {{ $lomba->nama_lomba }}" style="width: 100%; height: 140px; object-fit: cover; display: block;" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                <div style="display: none; width: 100%; height: 140px; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 100%); color: var(--text-muted); border: 1px dashed var(--border); border-radius: var(--radius-sm);">
-                                    <i class="bi bi-trophy" style="font-size: 2rem; color: #94A3B8; margin-bottom: 4px;"></i>
-                                    <span style="font-size: 0.74rem; font-weight: 600; color: var(--text-muted);">Pamflet Kompetisi</span>
+                                <div class="lomba-poster-media">
+                                    <!-- Layer 1: Blurred Background -->
+                                    <img src="{{ $lomba->poster_url }}"
+                                         alt=""
+                                         aria-hidden="true"
+                                         class="lomba-poster-bg"
+                                         loading="lazy">
+                                    <div class="lomba-poster-overlay"></div>
+
+                                    <!-- Layer 2: Foreground Image (Object Contain) -->
+                                    <img src="{{ $lomba->poster_url }}"
+                                         alt="Poster {{ $lomba->nama_lomba }}"
+                                         class="lomba-poster-fg"
+                                         loading="lazy"
+                                         onerror="handlePosterError(this)">
+                                </div>
+
+                                <!-- Fallback jika gambar gagal dimuat -->
+                                <div class="lomba-poster-fallback" style="display: none;">
+                                    <i class="bi bi-trophy"></i>
+                                    <span>Pamflet Kompetisi</span>
                                 </div>
                             @else
-                                <div style="display: flex; width: 100%; height: 140px; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 100%); color: var(--text-muted); border: 1px dashed var(--border); border-radius: var(--radius-sm);">
-                                    <i class="bi bi-trophy" style="font-size: 2rem; color: #94A3B8; margin-bottom: 4px;"></i>
-                                    <span style="font-size: 0.74rem; font-weight: 600; color: var(--text-muted);">Pamflet Kompetisi</span>
+                                <div class="lomba-poster-fallback">
+                                    <i class="bi bi-trophy"></i>
+                                    <span>Pamflet Kompetisi</span>
+                                </div>
+                            @endif
+
+                            <!-- Floating Badge Status Pendaftaran di Pojok Kanan Atas Poster -->
+                            @if($lomba->tenggat)
+                                <div class="lomba-poster-status">
+                                    @if($lomba->tenggat->isPast())
+                                        <span class="badge badge-danger">
+                                            <i class="bi bi-x-circle-fill"></i> Tutup
+                                        </span>
+                                    @elseif($lomba->sisa_hari <= 7)
+                                        <span class="badge badge-danger" title="{{ $lomba->sisa_hari }} hari tersisa">
+                                            <i class="bi bi-clock-history"></i> Sisa {{ $lomba->sisa_hari }} Hari
+                                        </span>
+                                    @else
+                                        <span class="badge badge-success">
+                                            <i class="bi bi-check2-circle"></i> Buka
+                                        </span>
+                                    @endif
                                 </div>
                             @endif
                         </a>
@@ -852,6 +984,28 @@
                                             </span>
                                         @endif
                                     </div>
+
+                                    @if($itemPengajuan->poster_url)
+                                        <div class="lomba-poster-card" style="margin-bottom: 12px;">
+                                            <div class="lomba-poster-media">
+                                                <img src="{{ $itemPengajuan->poster_url }}"
+                                                     alt=""
+                                                     aria-hidden="true"
+                                                     class="lomba-poster-bg"
+                                                     loading="lazy">
+                                                <div class="lomba-poster-overlay"></div>
+                                                <img src="{{ $itemPengajuan->poster_url }}"
+                                                     alt="Poster {{ $itemPengajuan->nama_lomba }}"
+                                                     class="lomba-poster-fg"
+                                                     loading="lazy"
+                                                     onerror="handlePosterError(this)">
+                                            </div>
+                                            <div class="lomba-poster-fallback" style="display: none;">
+                                                <i class="bi bi-trophy"></i>
+                                                <span>Pamflet Kompetisi</span>
+                                            </div>
+                                        </div>
+                                    @endif
 
                                     <h2 class="lomba-title">
                                         @if($statusItem === 'terverifikasi')
@@ -1203,3 +1357,25 @@
 </script>
 @endpush
 @endif
+
+@push('scripts')
+<script>
+    /**
+     * Fallback handler apabila poster lomba gagal dimuat dari server/URL eksternal.
+     * Otomatis menyembunyikan media container dan menampilkan fallback placeholder.
+     */
+    function handlePosterError(img) {
+        if (!img) return;
+        const card = img.closest('.lomba-poster-card');
+        if (!card) return;
+        const media = card.querySelector('.lomba-poster-media');
+        const fallback = card.querySelector('.lomba-poster-fallback');
+        if (media) {
+            media.style.display = 'none';
+        }
+        if (fallback) {
+            fallback.style.display = 'flex';
+        }
+    }
+</script>
+@endpush

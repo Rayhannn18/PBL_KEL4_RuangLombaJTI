@@ -764,7 +764,7 @@
                 </div>
                 <div>
                     <div class="brand-title">RuangLomba<span>JTI</span></div>
-                    <div class="brand-subtitle">Monitoring Lomba & Analitik Prestasi Mahasiswa</div>
+                    <div class="brand-subtitle">Pengelolaan Lomba, Tim & Bimbingan Mahasiswa</div>
                 </div>
             </a>
 
