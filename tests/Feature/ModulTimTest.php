@@ -92,7 +92,7 @@ class ModulTimTest extends TestCase
         $response = $this->actingAs($user)->get('/tim');
 
         $response->assertStatus(200);
-        $response->assertSee('Bagian A &bull; Inisiasi Tim Baru', false);
+        $response->assertSee('Bentuk Tim Kompetisi Baru');
         $response->assertSee(route('tim.create'));
         $response->assertDontSee('Bagian B &bull; Eksplorasi Tim', false);
         $response->assertDontSee('Cari & Gabung Tim Kompetisi', false);

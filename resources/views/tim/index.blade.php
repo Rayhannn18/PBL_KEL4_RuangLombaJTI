@@ -5,37 +5,89 @@
 @push('styles')
 <style>
 
-    /* Bagian A: Banner Bentuk Tim */
+    /* Banner Bentuk Tim Baru */
     .section-create-team {
-        background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
-        border: 1.5px solid #BFDBFE;
+        background: linear-gradient(135deg, #F0F7FF 0%, #E0EDFD 100%);
+        border: 1px solid #BFDBFE;
         border-radius: var(--radius-lg);
-        padding: 24px 28px;
-        margin-bottom: 30px;
+        padding: 18px 24px;
+        margin-bottom: 22px;
         display: flex;
         justify-content: space-between;
         align-items: center;
         flex-wrap: wrap;
-        gap: 20px;
-        box-shadow: var(--shadow-sm);
+        gap: 16px;
+        box-shadow: 0 2px 8px rgba(30, 64, 175, 0.05);
     }
     .section-create-info {
         flex: 1;
         min-width: 280px;
     }
-    .section-create-tag {
+    .section-create-title {
+        font-size: 1.18rem;
+        font-weight: 800;
+        color: var(--primary-dark);
+        margin: 0 0 4px 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .section-create-subtitle {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: var(--primary);
+        margin-bottom: 4px;
+    }
+    .section-create-desc {
+        font-size: 0.84rem;
+        color: #475569;
+        line-height: 1.55;
+        margin: 0;
+        max-width: 680px;
+    }
+    .section-create-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .btn-create-team-primary {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        background: #1D4ED8;
-        color: #fff;
-        font-size: 0.72rem;
+        padding: 9px 18px;
         font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        padding: 3px 10px;
-        border-radius: 999px;
-        margin-bottom: 10px;
+        font-size: 0.88rem;
+        box-shadow: 0 4px 12px rgba(30, 64, 175, 0.2);
+        white-space: nowrap;
+        border-radius: var(--radius-sm);
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .btn-create-team-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(30, 64, 175, 0.3);
+    }
+    .btn-create-team-secondary {
+        font-weight: 600;
+        font-size: 0.82rem;
+        padding: 8px 14px;
+        white-space: nowrap;
+        border-radius: var(--radius-sm);
+    }
+    @media (max-width: 640px) {
+        .section-create-team {
+            padding: 16px;
+            gap: 14px;
+        }
+        .section-create-actions {
+            width: 100%;
+        }
+        .btn-create-team-primary,
+        .btn-create-team-secondary {
+            width: 100%;
+            justify-content: center;
+            text-align: center;
+        }
     }
 
     /* Tim yang Diikuti Mahasiswa */
@@ -255,31 +307,26 @@
     </div>
 
     {{-- ========================================================================= --}}
-    {{-- BAGIAN A: BENTUK TIM BARU (JALUR KETUA TIM)                               --}}
+    {{-- INISIASI BENTUK TIM BARU (JALUR KETUA TIM)                                --}}
     {{-- ========================================================================= --}}
     <div class="section-create-team">
         <div class="section-create-info">
-            <span class="section-create-tag">
-                <i class="bi bi-flag-fill"></i> Bagian A &bull; Inisiasi Tim Baru
-            </span>
-            <h2 style="font-size: 1.35rem; font-weight: 800; color: var(--primary-dark); margin-bottom: 6px;">
-                Ingin Memimpin Tim Delegasi? Bentuk Tim Baru
+            <h2 class="section-create-title">
+                <i class="bi bi-people-fill" style="color: var(--primary);"></i> Bentuk Tim Kompetisi Baru
             </h2>
-            <p style="font-size: 0.9rem; color: #334155; line-height: 1.6; margin-bottom: 12px;">
-                Sebagai inisiator dan <strong>Ketua Tim</strong>, tentukan nama tim, pilih kompetisi yang ingin diikuti, atur kuota anggota, dan unggah berkas CV Anda. Setelah tim resmi dibentuk, Anda dapat merekrut anggota dan mengajukan Dosen Pembimbing di Modul Bimbingan.
-            </p>
-            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 0.8rem; color: var(--text-muted);">
-                <span><i class="bi bi-check-circle-fill" style="color: var(--success);"></i> Kuota tim fleksibel (2-5 orang)</span>
-                <span>&bull;</span>
-                <span><i class="bi bi-file-earmark-pdf" style="color: var(--primary);"></i> Wajib unggah CV Ketua (PDF maks. 2MB)</span>
+            <div class="section-create-subtitle">
+                Ingin Memimpin Tim Delegasi? Bentuk Tim Baru!
             </div>
+            <p class="section-create-desc">
+                Bentuk tim kompetisimu sendiri dengan menentukan nama tim, memilih lomba, dan mengatur kuota anggota. Setelah tim terbentuk, kamu dapat merekrut anggota dan mengajukan Dosen Pembimbing melalui Modul Bimbingan.
+            </p>
         </div>
 
-        <div style="display: flex; flex-direction: column; gap: 8px; min-width: 240px;">
-            <a href="{{ route('tim.create') }}" class="btn btn-primary" style="padding: 12px 22px; font-weight: 700; font-size: 0.92rem; box-shadow: var(--shadow-md);">
-                <i class="bi bi-plus-circle-fill"></i> Bentuk Tim Baru (/tim/buat)
+        <div class="section-create-actions">
+            <a href="{{ route('tim.create') }}" class="btn btn-primary btn-create-team-primary">
+                <i class="bi bi-plus-lg"></i> Bentuk Tim Baru
             </a>
-            <a href="{{ route('lomba.index') }}" class="btn btn-outline-primary btn-sm" style="font-weight: 600; text-align: center;">
+            <a href="{{ route('lomba.index') }}" class="btn btn-outline-primary btn-create-team-secondary">
                 <i class="bi bi-award"></i> Cari Lomba di Katalog
             </a>
         </div>

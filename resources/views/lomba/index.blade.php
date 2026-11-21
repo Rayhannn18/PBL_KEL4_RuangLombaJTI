@@ -998,9 +998,6 @@
                     <i class="bi bi-info-circle-fill" style="color: var(--primary); margin-right: 4px;"></i>
                     Daftar pengajuan info lomba yang Anda kirimkan. Pengajuan yang sedang <strong>menunggu verifikasi</strong> bersifat <em>read-only</em> dan hanya dapat dikelola oleh Administrator Kemahasiswaan JTI.
                 </div>
-                <button type="button" class="btn btn-primary btn-sm" onclick="openModalAjukanLomba()">
-                    <i class="bi bi-plus-circle-fill"></i> Ajukan Info Lomba
-                </button>
             </div>
 
             @if(!$hasActiveCatalogQuery || $activeTab === 'pengajuan_saya')
