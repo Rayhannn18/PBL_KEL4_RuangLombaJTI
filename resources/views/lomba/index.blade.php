@@ -276,12 +276,25 @@
     }
 
     /* Tab Navigasi Katalog & Pengajuan Saya */
+    .lomba-tabs-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid var(--border);
+        margin-bottom: 24px;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
     .lomba-tabs {
         display: flex;
         gap: 8px;
-        border-bottom: 2px solid var(--border);
-        margin-bottom: 22px;
-        overflow-x: auto;
+        overflow: visible;
+        margin-bottom: -2px;
+    }
+    .lomba-tabs::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
     }
     .lomba-tab-btn {
         padding: 11px 18px;
@@ -310,6 +323,27 @@
         background: rgba(30, 64, 175, 0.04);
         border-top-left-radius: 8px;
         border-top-right-radius: 8px;
+    }
+    .lomba-tabs-action {
+        display: flex;
+        align-items: center;
+        margin-bottom: 6px;
+    }
+    .btn-ajukan-lomba {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 700;
+        font-size: 0.815rem;
+        padding: 6px 14px;
+        border-radius: var(--radius-sm);
+        white-space: nowrap;
+        box-shadow: 0 1px 3px rgba(30, 64, 175, 0.18);
+        transition: all 0.15s ease;
+    }
+    .btn-ajukan-lomba:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 3px 8px rgba(30, 64, 175, 0.28);
     }
 
     /* Modal Form (Seragam dengan Modal Logbook Bimbingan) */
@@ -395,6 +429,29 @@
         }
         .lomba-poster-card {
             height: 175px;
+        }
+        .lomba-tabs-bar {
+            gap: 12px;
+        }
+        .lomba-tabs {
+            width: 100%;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .lomba-tabs::-webkit-scrollbar {
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
+        }
+        .lomba-tabs-action {
+            width: 100%;
+            margin-bottom: 12px;
+        }
+        .btn-ajukan-lomba {
+            width: 100%;
+            justify-content: center;
         }
     }
 
@@ -544,14 +601,6 @@
                     <span class="badge" style="background: rgba(255,255,255,0.2); color: #fff; padding: 6px 14px; font-size: 0.82rem;">
                         <i class="bi bi-shield-check" style="color: #93C5FD;"></i> Terverifikasi Jurusan TI
                     </span>
-                    @if($canAjukanLomba)
-                        <button type="button"
-                                onclick="openModalAjukanLomba()"
-                                class="btn btn-sm"
-                                style="background: #FFFFFF; color: var(--primary-dark); font-weight: 700; padding: 7px 16px; border-radius: var(--radius-full); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); border: 1px solid rgba(255, 255, 255, 0.9);">
-                            <i class="bi bi-plus-circle-fill" style="color: var(--primary);"></i> Ajukan Info Lomba
-                        </button>
-                    @endif
                 </div>
             </div>
             @if($userName)
@@ -569,24 +618,35 @@
     </div>
 
     @if($canAjukanLomba)
-        <!-- Navigasi Tab Katalog Lomba & Pengajuan Saya -->
-        <div class="lomba-tabs" role="tablist">
-            <button type="button"
-                    id="tabBtnKatalog"
-                    class="lomba-tab-btn {{ $activeTab === 'katalog' ? 'active' : '' }}"
-                    onclick="switchLombaTab('katalog')">
-                <i class="bi bi-grid-fill"></i> Katalog Lomba
-                <span class="badge badge-primary" style="font-size: 0.7rem; padding: 2px 8px;">{{ $lombaList->total() }}</span>
-            </button>
-            <button type="button"
-                    id="tabBtnPengajuanSaya"
-                    class="lomba-tab-btn {{ $activeTab === 'pengajuan_saya' ? 'active' : '' }}"
-                    onclick="switchLombaTab('pengajuan_saya')">
-                <i class="bi bi-send-check-fill"></i> Pengajuan Saya
-                <span class="badge {{ ($pengajuanSaya ?? collect())->count() > 0 ? 'badge-warning' : 'badge-gray' }}" style="font-size: 0.7rem; padding: 2px 8px;">
-                    {{ ($pengajuanSaya ?? collect())->count() }}
-                </span>
-            </button>
+        <!-- Navigasi Tab Katalog Lomba & Pengajuan Saya + Tombol Aksi Ajukan Info Lomba -->
+        <div class="lomba-tabs-bar">
+            <div class="lomba-tabs" role="tablist">
+                <button type="button"
+                        id="tabBtnKatalog"
+                        class="lomba-tab-btn {{ $activeTab === 'katalog' ? 'active' : '' }}"
+                        onclick="switchLombaTab('katalog')">
+                    <i class="bi bi-grid-fill"></i> Katalog Lomba
+                    <span class="badge badge-primary" style="font-size: 0.7rem; padding: 2px 8px;">{{ $lombaList->total() }}</span>
+                </button>
+                <button type="button"
+                        id="tabBtnPengajuanSaya"
+                        class="lomba-tab-btn {{ $activeTab === 'pengajuan_saya' ? 'active' : '' }}"
+                        onclick="switchLombaTab('pengajuan_saya')">
+                    <i class="bi bi-send-check-fill"></i> Pengajuan Saya
+                    <span class="badge {{ ($pengajuanSaya ?? collect())->count() > 0 ? 'badge-warning' : 'badge-gray' }}" style="font-size: 0.7rem; padding: 2px 8px;">
+                        {{ ($pengajuanSaya ?? collect())->count() }}
+                    </span>
+                </button>
+            </div>
+
+            <div class="lomba-tabs-action">
+                <button type="button"
+                        onclick="openModalAjukanLomba()"
+                        class="btn btn-primary btn-ajukan-lomba"
+                        id="btnAjukanLombaTop">
+                    <i class="bi bi-plus-lg"></i> Ajukan Info Lomba
+                </button>
+            </div>
         </div>
     @endif
 
