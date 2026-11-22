@@ -18,6 +18,8 @@ class DashboardController extends Controller
      */
     public function index(Request $request)
     {
+        @set_time_limit(120);
+
         $tahunFilter = $request->query('tahun', 'semua');
         $prodiFilter = $request->query('prodi', 'semua');
         $tingkatFilter = $request->query('tingkat', 'semua');
