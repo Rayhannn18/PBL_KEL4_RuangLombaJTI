@@ -39,6 +39,155 @@
         font-size: 2.8rem;
         box-shadow: 0 10px 20px rgba(30, 64, 175, 0.1);
     }
+
+    /* Workflow Sequence Strip (Visual Urutan Alur Bimbingan) */
+    .bimbingan-flow-strip {
+        background: #FFFFFF;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 14px 20px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        box-shadow: var(--shadow-sm);
+    }
+    @media (max-width: 768px) {
+        .bimbingan-flow-strip {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 10px;
+            padding: 12px 14px;
+        }
+        .flow-divider {
+            display: none;
+        }
+    }
+    .flow-step {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex: 1;
+    }
+    .flow-step .step-num {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 0.85rem;
+        flex-shrink: 0;
+        transition: all 0.2s;
+    }
+    .flow-step.completed .step-num {
+        background: #D1FAE5;
+        color: #059669;
+        border: 1px solid #A7F3D0;
+    }
+    .flow-step.active .step-num {
+        background: #DBEAFE;
+        color: #1E40AF;
+        border: 2px solid #3B82F6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+    .flow-step.pending .step-num {
+        background: #F1F5F9;
+        color: #94A3B8;
+        border: 1px solid #E2E8F0;
+    }
+    .flow-step .step-info {
+        display: flex;
+        flex-direction: column;
+    }
+    .flow-step .step-title {
+        font-size: 0.82rem;
+        font-weight: 800;
+        color: var(--primary-dark);
+        line-height: 1.2;
+    }
+    .flow-step .step-desc {
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        margin-top: 2px;
+    }
+    .flow-divider {
+        color: #CBD5E1;
+        font-size: 0.9rem;
+    }
+
+    /* Bullet List in Guide & Cards */
+    .guide-bullet-list {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 16px 0;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .guide-bullet-list li {
+        font-size: 0.8rem;
+        color: #475569;
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        line-height: 1.4;
+    }
+    .guide-bullet-list li i {
+        color: var(--primary);
+        font-size: 0.88rem;
+        margin-top: 1px;
+        flex-shrink: 0;
+    }
+
+    /* Info Pills */
+    .info-pills-wrap {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin: 8px 0 12px 0;
+    }
+    .info-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #EFF6FF;
+        border: 1px solid #BFDBFE;
+        border-radius: 999px;
+        padding: 4px 12px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #1E40AF;
+    }
+
+    /* Step Badge for Cards */
+    .card-step-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 3px 8px;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .card-step-badge.blue {
+        background: #DBEAFE;
+        color: #1E40AF;
+    }
+    .card-step-badge.purple {
+        background: #EDE9FE;
+        color: #6D28D9;
+    }
+    .card-step-badge.green {
+        background: #D1FAE5;
+        color: #065F46;
+    }
+
     .guide-cards-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
@@ -571,7 +720,7 @@
                     @if($role === 'admin')
                         Pantau seluruh rekam jejak sesi konsultasi dan logbook bimbingan dari semua tim kompetisi mahasiswa JTI secara terpusat (read-only).
                     @else
-                        Pantau proses pengajuan dosen pembimbing, konsultasi, logbook, dan progres keikutsertaan tim dalam kompetisi.
+                        Alur terpadu pengajuan dosen pembimbing, konsultasi logbook, dan pelaporan progres tahapan lomba.
                     @endif
                 </p>
             </div>
@@ -600,23 +749,83 @@
         </div>
     </div>
 
+    @if($role === 'mahasiswa')
+        <!-- Panduan Visual Urutan Alur Bimbingan Mahasiswa -->
+        <div class="bimbingan-flow-strip">
+            <div class="flow-step {{ $hasLomba ? 'completed' : 'active' }}">
+                <span class="step-num"><i class="bi {{ $hasLomba ? 'bi-check-lg' : 'bi-1-circle-fill' }}"></i></span>
+                <div class="step-info">
+                    <span class="step-title">1. Tim &amp; Kompetisi</span>
+                    <span class="step-desc">{{ $hasLomba ? ($selectedTim->nama_tim ?? 'Tim Terdaftar') : 'Pilih / Bentuk Tim' }}</span>
+                </div>
+            </div>
+            <div class="flow-divider"><i class="bi bi-chevron-right"></i></div>
+            <div class="flow-step {{ !$hasLomba ? 'pending' : ($pengajuan && $pengajuan->status === 'disetujui' ? 'completed' : 'active') }}">
+                <span class="step-num">
+                    @if($pengajuan && $pengajuan->status === 'disetujui')
+                        <i class="bi bi-check-lg"></i>
+                    @else
+                        2
+                    @endif
+                </span>
+                <div class="step-info">
+                    <span class="step-title">2. Dosen Pembimbing</span>
+                    <span class="step-desc">
+                        @if(!$hasLomba)
+                            Terkunci (Butuh Tim)
+                        @elseif(!$pengajuan)
+                            Belum Diajukan
+                        @elseif($pengajuan->status === 'menunggu')
+                            Menunggu Konfirmasi
+                        @elseif($pengajuan->status === 'ditolak')
+                            Pengajuan Ditolak
+                        @else
+                            {{ Str::limit($pengajuan->dosen->nama ?? 'Disetujui', 20) }}
+                        @endif
+                    </span>
+                </div>
+            </div>
+            <div class="flow-divider"><i class="bi bi-chevron-right"></i></div>
+            <div class="flow-step {{ ($pengajuan && $pengajuan->status === 'disetujui') ? 'active' : 'pending' }}">
+                <span class="step-num">3</span>
+                <div class="step-info">
+                    <span class="step-title">3. Logbook &amp; Progres</span>
+                    <span class="step-desc">
+                        @if($pengajuan && $pengajuan->status === 'disetujui')
+                            {{ ($pengajuan->logbook ?? collect())->count() }} Sesi Konsultasi
+                        @else
+                            Terkunci (Butuh Dosen)
+                        @endif
+                    </span>
+                </div>
+            </div>
+        </div>
+    @endif
+
     {{-- ========================================================================= --}}
-    {{-- KONDISI 1: MAHASISWA BELUM IKUT LOMBA (Empty State Sesuai Permintaan User) --}}
+    {{-- KONDISI 1: MAHASISWA BELUM IKUT LOMBA (Empty State Sederhana & Berpoin)   --}}
     {{-- ========================================================================= --}}
     @if($role === 'mahasiswa' && !$hasLomba)
         <div class="empty-lomba-card">
             <div class="empty-icon-wrap">
                 <i class="bi bi-trophy"></i>
             </div>
-            <h2 style="font-size: 1.5rem; font-weight: 800; color: var(--primary-dark); margin-bottom: 10px;">
-                Anda Belum Terdaftar dalam Tim Lomba
+            <h2 style="font-size: 1.4rem; font-weight: 800; color: var(--primary-dark); margin-bottom: 8px;">
+                Modul Bimbingan Belum Aktif
             </h2>
-            <p style="font-size: 0.95rem; color: var(--text-muted); max-width: 680px; margin: 0 auto; line-height: 1.7;">
-                Modul bimbingan ini diperuntukkan bagi mahasiswa yang telah berpartisipasi dalam kompetisi.
-                Untuk dapat <strong>mengajukan Dosen Pembimbing</strong> dan <strong>mengisi logbook konsultasi</strong>, Anda harus terlebih dahulu mendaftarkan tim pada lomba yang tersedia.
+
+            <!-- Ringkasan Poin Singkat -->
+            <div class="info-pills-wrap">
+                <span class="info-pill"><i class="bi bi-people-fill"></i> Langkah 1: Tim Kompetisi</span>
+                <span class="info-pill"><i class="bi bi-person-check-fill"></i> Langkah 2: Dosen Pembimbing</span>
+                <span class="info-pill"><i class="bi bi-journal-check"></i> Langkah 3: Logbook Konsultasi</span>
+            </div>
+
+            <p style="font-size: 0.9rem; color: var(--text-muted); max-width: 620px; margin: 10px auto 22px; line-height: 1.6;">
+                Modul ini aktif otomatis setelah Anda bergabung dalam tim kompetisi. Ikuti salah satu cara berikut untuk memulai:
             </p>
 
-            <!-- Tiga Kartu Panduan Modul Bimbingan Mahasiswa (Sesuai Referensi Desain) -->
+            <!-- Tiga Kartu Panduan Berpoin Ringkas -->
             <div class="guide-cards-grid">
                 <!-- Kartu 1 — 01. Cari & Telusuri Lomba -->
                 <div class="guide-card">
@@ -624,13 +833,14 @@
                         <div class="guide-icon-box icon-box-blue">
                             <i class="bi bi-search"></i>
                         </div>
-                        <h3 class="guide-card-title">01. Cari & Telusuri Lomba</h3>
-                        <p class="guide-card-desc">
-                            Jelajahi kompetisi yang sedang membuka pendaftaran dan temukan lomba sesuai minat serta bidang keahlianmu.
-                        </p>
+                        <h3 class="guide-card-title">01. Temukan Lomba</h3>
+                        <ul class="guide-bullet-list">
+                            <li><i class="bi bi-check2"></i> Lihat kompetisi aktif di lingkungan JTI</li>
+                            <li><i class="bi bi-check2"></i> Cek persyaratan, tenggat, dan buku panduan</li>
+                        </ul>
                     </div>
                     <a href="{{ route('lomba.index') }}" class="btn btn-primary guide-card-btn">
-                        Lihat Katalog Lomba <i class="bi bi-arrow-right"></i>
+                        Katalog Lomba <i class="bi bi-arrow-right"></i>
                     </a>
                 </div>
 
@@ -640,13 +850,14 @@
                         <div class="guide-icon-box icon-box-amber">
                             <i class="bi bi-people-fill"></i>
                         </div>
-                        <h3 class="guide-card-title">02. Gabung Lowongan Tim</h3>
-                        <p class="guide-card-desc">
-                            Temukan tim mahasiswa JTI Polinema yang sedang membuka lowongan anggota, lalu ajukan diri untuk bergabung sesuai kebutuhan tim.
-                        </p>
+                        <h3 class="guide-card-title">02. Gabung Tim</h3>
+                        <ul class="guide-bullet-list">
+                            <li><i class="bi bi-check2"></i> Lamar tim mahasiswa yang membuka lowongan</li>
+                            <li><i class="bi bi-check2"></i> Kirim pesan &amp; lampirkan CV portofolio</li>
+                        </ul>
                     </div>
                     <a href="{{ route('tim.index') }}" class="btn btn-outline-primary guide-card-btn" style="background: #fff;">
-                        Modul Tim (Cari Tim) <i class="bi bi-arrow-right"></i>
+                        Cari Tim Mahasiswa <i class="bi bi-arrow-right"></i>
                     </a>
                 </div>
 
@@ -656,10 +867,11 @@
                         <div class="guide-icon-box icon-box-green">
                             <i class="bi bi-flag-fill"></i>
                         </div>
-                        <h3 class="guide-card-title">03. Bentuk Tim Sendiri</h3>
-                        <p class="guide-card-desc">
-                            Inisiasi tim delegasi baru, tentukan lomba yang ingin diikuti, dan ajukan diri sebagai Ketua Tim.
-                        </p>
+                        <h3 class="guide-card-title">03. Buat Tim Baru</h3>
+                        <ul class="guide-bullet-list">
+                            <li><i class="bi bi-check2"></i> Inisiasi tim delegasi baru sebagai Ketua</li>
+                            <li><i class="bi bi-check2"></i> Pilih lomba dan tentukan kuota anggota</li>
+                        </ul>
                     </div>
                     <a href="{{ route('tim.create') }}" class="btn btn-primary guide-card-btn" style="background: #EFF6FF; color: var(--primary); border: 1px solid #BFDBFE;">
                         <i class="bi bi-plus-circle-fill"></i> Bentuk Tim Baru
@@ -767,8 +979,9 @@
                 <div class="card" style="border-left: 4px solid var(--primary);">
                     <div class="card-header" style="background: linear-gradient(90deg, #F8FAFC 0%, #EFF6FF 100%);">
                         <div>
-                            <div class="card-title">
-                                <i class="bi bi-shield-shaded" style="color: var(--primary);"></i> Identitas Tim & Kompetisi
+                            <div class="card-title" style="display: flex; align-items: center; gap: 8px;">
+                                <span class="card-step-badge blue">Langkah 1</span>
+                                <span><i class="bi bi-shield-shaded" style="color: var(--primary);"></i> Identitas Tim &amp; Kompetisi</span>
                             </div>
                             <div style="font-size: 0.78rem; color: var(--text-muted);">Informasi partisipasi lomba mahasiswa JTI</div>
                         </div>
@@ -922,8 +1135,9 @@
                 <div class="card" style="border-left: 4px solid var(--primary);">
                     <div class="card-header">
                         <div>
-                            <div class="card-title">
-                                <i class="bi bi-person-workspace" style="color: var(--primary);"></i> Dosen Pembimbing
+                            <div class="card-title" style="display: flex; align-items: center; gap: 8px;">
+                                <span class="card-step-badge purple">Langkah 2</span>
+                                <span><i class="bi bi-person-workspace" style="color: var(--primary);"></i> Dosen Pembimbing</span>
                             </div>
                             <div style="font-size: 0.78rem; color: var(--text-muted);">Pendamping resmi karya kompetisi</div>
                         </div>
@@ -932,18 +1146,24 @@
                         @if(! $pengajuan)
                             <!-- Sub-kondisi A: Belum mengajukan Dosen Pembimbing -->
                             @if($isKetua ?? ($selectedTim->nim === $authUser['id']))
-                                <div style="background: #FEF3C7; border: 1px solid #FDE68A; border-radius: var(--radius-sm); padding: 14px; margin-bottom: 18px; color: #92400E; font-size: 0.85rem;">
-                                    <div style="font-weight: 700; margin-bottom: 2px;">
-                                        <i class="bi bi-exclamation-circle-fill"></i> Belum Memiliki Dosen Pembimbing
+                                <div style="background: #FEF3C7; border: 1px solid #FDE68A; border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 16px; color: #92400E; font-size: 0.82rem;">
+                                    <div style="font-weight: 800; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                                        <i class="bi bi-exclamation-circle-fill"></i> Tugas Ketua Tim: Ajukan Dosen Pembimbing
                                     </div>
-                                    Sebagai <strong>Ketua Tim</strong>, silakan pilih salah satu dosen di Jurusan Teknologi Informasi untuk diajukan sebagai pembimbing karya tim Anda.
+                                    <ul class="guide-bullet-list" style="margin-bottom: 0;">
+                                        <li><i class="bi bi-1-circle-fill" style="color: #D97706;"></i> Pilih dosen JTI dari daftar (atau pakai rekomendasi AI).</li>
+                                        <li><i class="bi bi-2-circle-fill" style="color: #D97706;"></i> Tulis ringkasan ide/topik karya tim.</li>
+                                        <li><i class="bi bi-3-circle-fill" style="color: #D97706;"></i> Klik <strong>Kirim Pengajuan Bimbingan</strong>.</li>
+                                    </ul>
                                 </div>
                             @else
-                                <div style="background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: var(--radius-sm); padding: 16px; margin-bottom: 18px; color: #1E40AF; font-size: 0.85rem;">
-                                    <div style="font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
-                                        <i class="bi bi-shield-lock-fill"></i> Hak Akses Khusus Ketua Tim
+                                <div style="background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 16px; color: #1E40AF; font-size: 0.82rem;">
+                                    <div style="font-weight: 800; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                                        <i class="bi bi-shield-lock-fill"></i> Hak Pengajuan Dosen
                                     </div>
-                                    Tim Anda saat ini belum memiliki dosen pembimbing. Hak memilih dan mengajukan dosen pembimbing hanya dimiliki oleh <strong>Ketua Tim ({{ $selectedTim->ketua->nama ?? 'Ketua Tim' }})</strong>.
+                                    <div style="color: #475569;">
+                                        Pengajuan dosen pembimbing dilakukan oleh <strong>Ketua Tim ({{ $selectedTim->ketua->nama ?? 'Ketua Tim' }})</strong>.
+                                    </div>
                                 </div>
                             @endif
 
@@ -958,9 +1178,10 @@
                                             <i class="bi bi-cpu-fill"></i> Gemini AI
                                         </span>
                                     </div>
-                                    <p style="font-size: 0.79rem; color: #4B5563; margin-bottom: 12px; line-height: 1.4;">
-                                        Berdasarkan analisis kompetensi dengan bidang lomba <strong>{{ $selectedTim->lomba->nama_lomba ?? 'Kompetisi' }}</strong> (Kategori: <em>{{ $selectedTim->lomba->kategori ?? '-' }}</em>), berikut dosen yang paling cocok:
-                                    </p>
+                                    <div style="font-size: 0.78rem; color: #4B5563; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+                                        <i class="bi bi-bullseye" style="color: #6366F1;"></i>
+                                        <span>Rekomendasi dosen untuk kategori <strong>{{ $selectedTim->lomba->kategori ?? 'Lomba' }}</strong>:</span>
+                                    </div>
 
                                     @foreach($aiRekomendasi['top'] as $recDsn)
                                         <div class="ai-rec-card">
@@ -1131,8 +1352,9 @@
                 <div class="card" style="border-left: 4px solid var(--primary);">
                     <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                            <div class="card-title">
-                                <i class="bi bi-journal-check" style="color: var(--primary);"></i> Logbook Aktivitas Bimbingan
+                            <div class="card-title" style="display: flex; align-items: center; gap: 8px;">
+                                <span class="card-step-badge green">Langkah 3</span>
+                                <span><i class="bi bi-journal-check" style="color: var(--primary);"></i> Logbook Aktivitas Bimbingan</span>
                             </div>
                             <div style="font-size: 0.78rem; color: var(--text-muted);">Rekam jejak evaluasi dan konsultasi bersama dosen</div>
                         </div>
@@ -1151,12 +1373,17 @@
                     </div>
                     <div class="card-body">
                         @if(! $pengajuan || $pengajuan->status !== 'disetujui')
-                            <div style="text-align: center; padding: 35px 20px; color: var(--text-muted);">
-                                <i class="bi bi-lock-fill" style="font-size: 2rem; color: #94A3B8; display: block; margin-bottom: 8px;"></i>
-                                <h4 style="font-size: 0.98rem; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">Fitur Logbook Terkunci</h4>
-                                <p style="font-size: 0.83rem; max-width: 400px; margin: 0 auto; line-height: 1.5;">
-                                    Pengisian logbook bimbingan akan aktif secara otomatis setelah pengajuan Dosen Pembimbing telah <strong>disetujui</strong>.
-                                </p>
+                            <div style="text-align: center; padding: 26px 16px; color: var(--text-muted);">
+                                <div style="width: 46px; height: 46px; border-radius: 50%; background: #F1F5F9; color: #64748B; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; margin: 0 auto 10px;">
+                                    <i class="bi bi-lock-fill"></i>
+                                </div>
+                                <h4 style="font-size: 0.95rem; font-weight: 800; color: var(--primary-dark); margin-bottom: 6px;">Fitur Logbook Terkunci</h4>
+                                <div style="font-size: 0.8rem; max-width: 400px; margin: 0 auto; text-align: left; background: #F8FAFC; border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px;">
+                                    <div style="font-weight: 700; color: var(--text-main); margin-bottom: 6px;">Alur Pembukaan Logbook:</div>
+                                    <div style="display: flex; gap: 8px; margin-bottom: 5px;"><i class="bi bi-1-circle-fill" style="color: var(--primary);"></i> <span>Ajukan Dosen Pembimbing pada kartu di Langkah 2.</span></div>
+                                    <div style="display: flex; gap: 8px; margin-bottom: 5px;"><i class="bi bi-2-circle-fill" style="color: var(--primary);"></i> <span>Dosen Pembimbing menyetujui pengajuan bimbingan.</span></div>
+                                    <div style="display: flex; gap: 8px;"><i class="bi bi-3-circle-fill" style="color: #10B981;"></i> <span>Formulir <strong>"+ Isi Logbook Baru"</strong> akan aktif otomatis.</span></div>
+                                </div>
                             </div>
                         @else
                             @php
@@ -1259,10 +1486,11 @@
                     <div class="card" style="border-left: 4px solid var(--primary);">
                         <div class="card-header">
                             <div>
-                                <div class="card-title">
-                                    <i class="bi bi-flag-fill" style="color: var(--primary);"></i> Monitoring Progres Babak
+                                <div class="card-title" style="display: flex; align-items: center; gap: 8px;">
+                                    <span class="card-step-badge blue">Langkah 4</span>
+                                    <span><i class="bi bi-flag-fill" style="color: var(--primary);"></i> Monitoring Progres Babak</span>
                                 </div>
-                                <div style="font-size: 0.78rem; color: var(--text-muted);">Tahapan kompetisi yang ditempuh tim bimbingan</div>
+                                <div style="font-size: 0.78rem; color: var(--text-muted);">Tahapan kompetisi: Penyisihan &bull; Semifinal &bull; Final &bull; Juara</div>
                             </div>
                             @if($isKetua ?? ($selectedTim->nim === $authUser['id'] && \App\Models\Tim::ketuaDisetujui($authUser['id'])))
                                 <div>
@@ -1387,11 +1615,12 @@
                     <div class="card" style="border-left: 4px solid var(--primary);">
                         <div class="card-header" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
                             <div style="flex: 1; min-width: 0;">
-                                <div class="card-title">
-                                    <i class="bi bi-cash-stack" style="color: var(--primary);"></i> Pengajuan RAB
+                                <div class="card-title" style="display: flex; align-items: center; gap: 8px;">
+                                    <span class="card-step-badge purple">SBM 2026</span>
+                                    <span><i class="bi bi-cash-stack" style="color: var(--primary);"></i> Pengajuan RAB Kompetisi</span>
                                 </div>
                                 <div style="font-size: 0.78rem; color: var(--text-muted);">
-                                    Rencana Anggaran Biaya sesuai SBM Keuangan TA 2026 (PMK Nomor 32 Tahun 2025)
+                                    Bantuan biaya delegasi sesuai standar SBM Keuangan Polinema
                                 </div>
                             </div>
                             <div style="display: flex; flex-direction: column; align-items: flex-end; text-align: right; margin-left: auto; flex-shrink: 0;">

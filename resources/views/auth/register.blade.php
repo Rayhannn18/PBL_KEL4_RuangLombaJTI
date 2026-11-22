@@ -222,6 +222,107 @@
             box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
         }
 
+        /* Password Requirements Box */
+        .password-rules-box {
+            background: #F8FAFC;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin-top: 6px;
+            margin-bottom: 14px;
+            transition: all 0.25s ease;
+        }
+        .password-rules-box.focused {
+            border-color: #BFDBFE;
+            background: #F0F7FF;
+        }
+        .rules-header {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+        .rules-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px 12px;
+        }
+        @media (max-width: 540px) {
+            .rules-list {
+                grid-template-columns: 1fr;
+            }
+        }
+        .rule-item {
+            font-size: 0.76rem;
+            color: #64748B;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            transition: color 0.2s ease, transform 0.15s ease;
+        }
+        .rule-item i {
+            font-size: 0.85rem;
+            color: #94A3B8;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+        .rule-item.rule-valid {
+            color: #047857;
+            font-weight: 600;
+        }
+        .rule-item.rule-valid i {
+            color: #10B981;
+        }
+        .rule-item.rule-invalid {
+            color: #DC2626;
+        }
+        .rule-item.rule-invalid i {
+            color: #EF4444;
+        }
+
+        /* Strength meter */
+        .password-meter-wrap {
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px solid #E2E8F0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .meter-bar-track {
+            flex: 1;
+            height: 6px;
+            background: #E2E8F0;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+        .meter-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: #CBD5E1;
+            border-radius: 999px;
+            transition: width 0.3s ease, background-color 0.3s ease;
+        }
+        .meter-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #64748B;
+            min-width: 90px;
+            text-align: right;
+        }
+        .pulse-warning {
+            animation: pulseBox 0.4s ease-in-out;
+            border-color: #EF4444 !important;
+            background-color: #FEF2F2 !important;
+        }
+        @keyframes pulseBox {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
         /* Alert */
         .alert {
             padding: 12px 16px;
@@ -301,7 +402,7 @@
                                    name="nim_nip"
                                    class="form-control"
                                    placeholder="Contoh: 244107060116"
-                                   value="{{ old('nim') }}"
+                                   value="{{ old('nim_nip', old('nim')) }}"
                                    required
                                    autofocus>
                         </div>
@@ -315,7 +416,7 @@
                                    name="name"
                                    class="form-control"
                                    placeholder="Contoh: Sastra Maheva Zaky"
-                                   value="{{ old('nama') }}"
+                                   value="{{ old('name', old('nama')) }}"
                                    required>
                         </div>
                     </div>
@@ -329,7 +430,7 @@
                                name="email"
                                class="form-control"
                                placeholder="Contoh: sastra22@student.polinema.ac.id"
-                               value="{{ old('email_kampus') }}"
+                               value="{{ old('email', old('email_kampus')) }}"
                                required>
                     </div>
                 </div>
@@ -370,7 +471,7 @@
                             <input id="password" type="password"
                                    name="password"
                                    class="form-control password-input"
-                                   placeholder="Minimal 6 karakter"
+                                   placeholder="Minimal 6 karakter &amp; simbol"
                                    required>
                             <button type="button" class="password-toggle" data-toggle-password="password" aria-label="Tampilkan atau sembunyikan kata sandi" aria-pressed="false">
                                 <i class="bi bi-eye" data-eye></i><i class="bi bi-eye-slash hidden" data-eye-off></i>
@@ -391,6 +492,39 @@
                                 <i class="bi bi-eye" data-eye></i><i class="bi bi-eye-slash hidden" data-eye-off></i>
                             </button>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Password Requirements & Real-time Indicator -->
+                <div class="password-rules-box" id="passwordRulesBox">
+                    <div class="rules-header">
+                        <i class="bi bi-shield-lock-fill" style="color: var(--primary);"></i>
+                        <span>Ketentuan Format Kata Sandi:</span>
+                    </div>
+                    <div class="rules-list">
+                        <div class="rule-item" id="rule-length">
+                            <i class="bi bi-circle"></i>
+                            <span>Minimal <strong>6 karakter</strong></span>
+                        </div>
+                        <div class="rule-item" id="rule-letter">
+                            <i class="bi bi-circle"></i>
+                            <span>Mengandung <strong>huruf</strong> (a-z / A-Z)</span>
+                        </div>
+                        <div class="rule-item" id="rule-special">
+                            <i class="bi bi-circle"></i>
+                            <span>Karakter khusus / simbol (<strong>! @ # $ %</strong> dll.)</span>
+                        </div>
+                        <div class="rule-item" id="rule-match">
+                            <i class="bi bi-circle"></i>
+                            <span><strong>Konfirmasi kata sandi</strong> cocok</span>
+                        </div>
+                    </div>
+
+                    <div class="password-meter-wrap">
+                        <div class="meter-bar-track">
+                            <div class="meter-bar-fill" id="pwdStrengthBar"></div>
+                        </div>
+                        <div class="meter-label" id="pwdStrengthLabel">Belum diisi</div>
                     </div>
                 </div>
 
@@ -432,6 +566,134 @@
                 eyeOff?.classList.toggle('hidden', !reveal);
             });
         });
+
+        // Real-time Password Validation & Indicator
+        (function () {
+            const pwdInput = document.getElementById('password');
+            const pwdConfirmInput = document.getElementById('password_confirmation');
+            const rulesBox = document.getElementById('passwordRulesBox');
+            const ruleLength = document.getElementById('rule-length');
+            const ruleLetter = document.getElementById('rule-letter');
+            const ruleSpecial = document.getElementById('rule-special');
+            const ruleMatch = document.getElementById('rule-match');
+            const strengthBar = document.getElementById('pwdStrengthBar');
+            const strengthLabel = document.getElementById('pwdStrengthLabel');
+            const regForm = document.querySelector('form');
+
+            function updateRuleItem(el, isValid, isDirty) {
+                if (!el) return;
+                const icon = el.querySelector('i');
+                if (isValid) {
+                    el.classList.add('rule-valid');
+                    el.classList.remove('rule-invalid');
+                    if (icon) {
+                        icon.className = 'bi bi-check-circle-fill';
+                    }
+                } else if (isDirty) {
+                    el.classList.remove('rule-valid');
+                    el.classList.add('rule-invalid');
+                    if (icon) {
+                        icon.className = 'bi bi-x-circle-fill';
+                    }
+                } else {
+                    el.classList.remove('rule-valid', 'rule-invalid');
+                    if (icon) {
+                        icon.className = 'bi bi-circle';
+                    }
+                }
+            }
+
+            function validatePasswordRealtime() {
+                const pwd = pwdInput ? pwdInput.value : '';
+                const pwdConf = pwdConfirmInput ? pwdConfirmInput.value : '';
+                const isDirty = pwd.length > 0;
+                const isConfDirty = pwdConf.length > 0;
+
+                const hasMinLength = pwd.length >= 6;
+                const hasLetter = /[a-zA-Z]/.test(pwd);
+                const hasSpecial = /[^a-zA-Z0-9\s]/.test(pwd);
+                const isMatch = isDirty && isConfDirty && pwd === pwdConf;
+
+                updateRuleItem(ruleLength, hasMinLength, isDirty);
+                updateRuleItem(ruleLetter, hasLetter, isDirty);
+                updateRuleItem(ruleSpecial, hasSpecial, isDirty);
+                updateRuleItem(ruleMatch, isMatch, isConfDirty);
+
+                // Strength calculation
+                let validCount = 0;
+                if (hasMinLength) validCount++;
+                if (hasLetter) validCount++;
+                if (hasSpecial) validCount++;
+
+                if (!isDirty) {
+                    strengthBar.style.width = '0%';
+                    strengthBar.style.backgroundColor = '#CBD5E1';
+                    strengthLabel.textContent = 'Belum diisi';
+                    strengthLabel.style.color = '#64748B';
+                } else if (validCount === 1) {
+                    strengthBar.style.width = '33%';
+                    strengthBar.style.backgroundColor = '#EF4444';
+                    strengthLabel.textContent = 'Lemah';
+                    strengthLabel.style.color = '#EF4444';
+                } else if (validCount === 2) {
+                    strengthBar.style.width = '66%';
+                    strengthBar.style.backgroundColor = '#F59E0B';
+                    strengthLabel.textContent = 'Sedang';
+                    strengthLabel.style.color = '#F59E0B';
+                } else if (validCount === 3) {
+                    if (isMatch) {
+                        strengthBar.style.width = '100%';
+                        strengthBar.style.backgroundColor = '#10B981';
+                        strengthLabel.textContent = 'Kuat & Cocok ✓';
+                        strengthLabel.style.color = '#10B981';
+                    } else {
+                        strengthBar.style.width = '85%';
+                        strengthBar.style.backgroundColor = '#3B82F6';
+                        strengthLabel.textContent = 'Kuat (Cek Ulang)';
+                        strengthLabel.style.color = '#3B82F6';
+                    }
+                }
+            }
+
+            if (pwdInput && pwdConfirmInput) {
+                pwdInput.addEventListener('input', validatePasswordRealtime);
+                pwdConfirmInput.addEventListener('input', validatePasswordRealtime);
+
+                pwdInput.addEventListener('focus', () => rulesBox?.classList.add('focused'));
+                pwdInput.addEventListener('blur', () => rulesBox?.classList.remove('focused'));
+                pwdConfirmInput.addEventListener('focus', () => rulesBox?.classList.add('focused'));
+                pwdConfirmInput.addEventListener('blur', () => rulesBox?.classList.remove('focused'));
+
+                validatePasswordRealtime();
+            }
+
+            // Pre-submit validation guard
+            if (regForm && pwdInput && pwdConfirmInput) {
+                regForm.addEventListener('submit', function (e) {
+                    const pwd = pwdInput.value;
+                    const pwdConf = pwdConfirmInput.value;
+
+                    const hasMinLength = pwd.length >= 6;
+                    const hasLetter = /[a-zA-Z]/.test(pwd);
+                    const hasSpecial = /[^a-zA-Z0-9\s]/.test(pwd);
+                    const isMatch = pwd === pwdConf;
+
+                    if (!hasMinLength || !hasLetter || !hasSpecial || !isMatch) {
+                        e.preventDefault();
+                        validatePasswordRealtime();
+                        rulesBox?.classList.remove('pulse-warning');
+                        void rulesBox?.offsetWidth; // trigger reflow
+                        rulesBox?.classList.add('pulse-warning');
+
+                        if (!hasMinLength || !hasLetter || !hasSpecial) {
+                            pwdInput.focus();
+                        } else if (!isMatch) {
+                            pwdConfirmInput.focus();
+                        }
+                    }
+                });
+            }
+        })();
     </script>
 </body>
 </html>
